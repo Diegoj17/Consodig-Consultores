@@ -1,5 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaUser, FaEnvelope, FaUniversity, FaLink, FaEye, FaEyeSlash, FaExclamationTriangle, FaCheck
 } from "react-icons/fa";
@@ -35,6 +36,8 @@ export default function Register() {
 
   const [showRules, setShowRules] = useState(false);
   const [rulesTimeout, setRulesTimeout] = useState(null);
+  const navigate = useNavigate();
+
 
   const rules = [
     { id: 1, text: "Mínimo 6 caracteres", valid: formData.password.length >= 6 },
@@ -131,6 +134,10 @@ export default function Register() {
     }, 10);
   };
 
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
   return (
     <div className="register-portal-container">
       {/* IZQUIERDA: Bienvenida */}
@@ -145,7 +152,7 @@ export default function Register() {
             <p className="register-welcome-extra-info">
               ¿Ya tienes cuenta? Ingresa con tus credenciales.
             </p>
-            <button className="register-welcome-btn" onClick={() => (window.location.href = "/login")}>
+            <button className="register-welcome-btn" onClick={handleLoginClick}>
               Iniciar Sesión
             </button>
           </div>
