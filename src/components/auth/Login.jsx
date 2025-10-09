@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import '/src/styles/auth/Login.css';
-import Button from "../common/Button"; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +10,14 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const pwdRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/login' && location.key !== 'default') {
+      window.location.reload();
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,26 +47,32 @@ const Login = () => {
     }, 10);
   };
 
+  const handleRegisterClick = () => {
+    navigate('/register'); // Quita { replace: true }
+  };
+
   return (
     <div className="auth-portal-container">
       {/* Left Panel - Login Form */}
-      <div className="login-section">
-        <div className="login-form-container">
-          <div className="login-header">
-            <h2 className="login-title">Iniciar Sesión</h2>
+      <div className="auth-login-section">
+        <div className="auth-login-form-container">
+          <div className="auth-login-header">
+            <h2 className="auth-login-title">Iniciar Sesión</h2>
           </div>
+
           <form onSubmit={handleSubmit}>
-            {error && <div className="error-message">{error}</div>}
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
+            {error && <div className="auth-error-message">{error}</div>}
+
+            <div className="auth-form-group">
+              <label htmlFor="email" className="auth-form-label">
                 Email
               </label>
-              <div className="input-container">
-                <FaEnvelope className="input-icon" />
+              <div className="auth-input-container">
+                <FaEnvelope className="auth-input-icon" />
                 <input
                   type="email"
                   id="email"
-                  className="form-input"
+                  className="auth-form-input"
                   placeholder="Ingresa tu correo electrónico"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -68,17 +82,18 @@ const Login = () => {
                 />
               </div>
             </div>
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
+
+            <div className="auth-form-group">
+              <label htmlFor="password" className="auth-form-label">
                 Password
               </label>
-              <div className="input-container">
-                <FaLock className="input-icon" />
+              <div className="auth-input-container">
+                <FaLock className="auth-input-icon" />
                 <input
                   ref={pwdRef}
                   type={showPassword ? "text" : "password"}
                   id="password"
-                  className="form-input"
+                  className="auth-form-input"
                   placeholder="Ingresa tu contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -89,7 +104,7 @@ const Login = () => {
                 {password.length > 0 && (
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="auth-password-toggle"
                     tabIndex={-1}
                     onClick={togglePasswordVisibility}
                   >
@@ -97,46 +112,49 @@ const Login = () => {
                   </button>
                 )}
               </div>
-              <div className="forgot-password">
+              <div className="auth-forgot-password">
                 <a href="/reset-password">¿Olvidaste tu contraseña?</a>
               </div>
             </div>
-            <Button
-              type="submit"
-              loading={isLoading}
-              fullWidth
-              variant="primary"
+
+            <button 
+              type="submit" 
+              className={`auth-login-button ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
             >
-              Iniciar Sesión
-            </Button>
+              {isLoading ? (
+                <div className="auth-spinner"></div>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </button>
           </form>
         </div>
       </div>
       
       {/* Right Panel - Welcome Section */}
-      <div className="welcome-section">
-        <div className="welcome-circle">
-          <div className="welcome-content">
+      <div className="auth-welcome-section">
+        <div className="auth-welcome-circle">
+          <div className="auth-welcome-content">
             <img
               src="/img/logo.png"
               alt="Logo"
-              className="welcome-logo"
+              className="auth-welcome-logo"
             />
-            <h1 className="welcome-title">¡Bienvenido!</h1>
-            <p className="welcome-text">
+            <h1 className="auth-welcome-title">¡Bienvenido!</h1>
+            <p className="auth-welcome-text">
               Ingrese sus datos personales para poder ingresar al sistema.
             </p>
-            <div className="welcome-extra-info">
+            <div className="auth-welcome-extra-info">
               ¿No tiene cuenta? <br />
               Ingrese al Banco de los Evaluadores para registrarse y formar parte de nuestra comunidad profesional.
             </div>
-            <Button
-              variant="outline"
-              className="welcome-register-btn-custom"
-              onClick={() => window.location.href = "/register"}
+            <button
+              className="auth-welcome-button"
+              onClick={handleRegisterClick}
             >
               Registrarse
-            </Button>
+            </button>
           </div>
         </div>
       </div>

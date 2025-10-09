@@ -1,13 +1,90 @@
+
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gestion-proyectos</title>
+    <!-- El título se actualizará dinámicamente desde React -->
+    <title>Gestión de Proyectos</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      function computeTitle(path) {
+        // Rutas de autenticación
+        if (path === "/login" || path === "/iniciar-sesion") return "Iniciar Sesión | Gestión de Proyectos";
+        if (path === "/register" || path === "/registro" || path === "/registrarse") return "Registrarse | Gestión de Proyectos";
+        if (path === "/reset-password" || path === "/restablecer-contrasena") return "Restablecer Contraseña | Gestión de Proyectos";
+        if (path === "/forgot-password" || path === "/olvide-contrasena") return "Olvidé mi Contraseña | Gestión de Proyectos";
+        
+        // Rutas principales de la aplicación
+        if (path === "/" || path === "/inicio") return "Inicio | Gestión de Proyectos";
+        if (path === "/dashboard") return "Dashboard | Gestión de Proyectos";
+        if (path === "/projects" || path === "/proyectos") return "Proyectos | Gestión de Proyectos";
+        if (path.startsWith("/project/") || path.startsWith("/proyecto/")) return "Detalles del Proyecto | Gestión de Proyectos";
+        if (path === "/tasks" || path === "/tareas") return "Tareas | Gestión de Proyectos";
+        if (path === "/team" || path === "/equipo") return "Equipo | Gestión de Proyectos";
+        if (path === "/profile" || path === "/perfil") return "Perfil | Gestión de Proyectos";
+        if (path === "/settings" || path === "/configuracion") return "Configuración | Gestión de Proyectos";
+        
+        // Rutas de administración
+        if (path === "/admin") return "Administración | Gestión de Proyectos";
+        if (path === "/admin/users") return "Gestión de Usuarios | Gestión de Proyectos";
+        if (path === "/admin/reports") return "Reportes | Gestión de Proyectos";
+        
+        // Rutas de error
+        if (path === "/404" || path === "/not-found") return "Página No Encontrada | Gestión de Proyectos";
+        if (path === "/500" || path === "/error") return "Error del Servidor | Gestión de Proyectos";
+        
+        // Fallback
+        return "Gestión de Proyectos";
+      }
+
+      function actualizarTitulo() {
+        const path = window.location.pathname;
+        document.title = computeTitle(path);
+      }
+
+      // Inicializar título al cargar la página
+      actualizarTitulo();
+
+      // Actualizar título al navegar con los botones del navegador
+      window.addEventListener("popstate", actualizarTitulo);
+      window.addEventListener("hashchange", actualizarTitulo);
+
+      // Interceptar pushState y replaceState para SPA (Single Page Application)
+      (function (history) {
+        const pushState = history.pushState;
+        const replaceState = history.replaceState;
+
+        history.pushState = function () {
+          const ret = pushState.apply(history, arguments);
+          actualizarTitulo();
+          return ret;
+        };
+
+        history.replaceState = function () {
+          const ret = replaceState.apply(history, arguments);
+          actualizarTitulo();
+          return ret;
+        };
+      })(window.history);
+
+      // También actualizar título cuando cambia la URL programáticamente
+      window.addEventListener('locationchange', actualizarTitulo);
+      
+      // Detectar cambios de URL en aplicaciones SPA
+      let currentUrl = window.location.href;
+      const observer = new MutationObserver(() => {
+        if (window.location.href !== currentUrl) {
+          currentUrl = window.location.href;
+          actualizarTitulo();
+        }
+      });
+      
+      observer.observe(document, { subtree: true, childList: true });
+    </script>
   </body>
 </html>
