@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
-import { RiLockPasswordFill } from "react-icons/ri";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import '/src/styles/auth/Login.css';
+import Button from "../common/Button"; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,140 +14,131 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
     if (!email || !password) {
       setError('Por favor, ingresa usuario y contraseña');
       return;
     }
-    
     setIsLoading(true);
-    
+    setTimeout(() => {
+      setIsLoading(false);
+      // Aquí iría tu lógica real de autenticación
+    }, 2000);
   };
 
   const togglePasswordVisibility = () => {
     const el = pwdRef.current;
-    
     if (!el) return;
-    
-    // Guardar posición actual del cursor
     const start = el.selectionStart;
     const end = el.selectionEnd;
-    
-    // Cambiar visibilidad
     setShowPassword(v => !v);
-    
-    // Usar setTimeout para asegurar que el re-render haya ocurrido
     setTimeout(() => {
       if (pwdRef.current) {
         pwdRef.current.focus();
-        // Restaurar posición del cursor
         pwdRef.current.setSelectionRange(start, end);
       }
     }, 10);
   };
 
   return (
-    <div className="login-main-container">
-      <div className="login-background">
-        <div className="login-background-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
+    <div className="auth-portal-container">
+      {/* Left Panel - Login Form */}
+      <div className="login-section">
+        <div className="login-form-container">
+          <div className="login-header">
+            <h2 className="login-title">Iniciar Sesión</h2>
+          </div>
+          <form onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Email
+              </label>
+              <div className="input-container">
+                <FaEnvelope className="input-icon" />
+                <input
+                  type="email"
+                  id="email"
+                  className="form-input"
+                  placeholder="Ingresa tu correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <div className="input-container">
+                <FaLock className="input-icon" />
+                <input
+                  ref={pwdRef}
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  className="form-input"
+                  placeholder="Ingresa tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                  disabled={isLoading}
+                />
+                {password.length > 0 && (
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    tabIndex={-1}
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  </button>
+                )}
+              </div>
+              <div className="forgot-password">
+                <a href="/reset-password">¿Olvidaste tu contraseña?</a>
+              </div>
+            </div>
+            <Button
+              type="submit"
+              loading={isLoading}
+              fullWidth
+              variant="primary"
+            >
+              Iniciar Sesión
+            </Button>
+          </form>
         </div>
       </div>
-
-      <div className="login-content">
-        {/* Logo */}
-        <div className="logo-container">
-          <img
-            src="/public/img/logo.png"
-            alt="Logo"
-            className="login-logo"
-          />
+      
+      {/* Right Panel - Welcome Section */}
+      <div className="welcome-section">
+        <div className="welcome-circle">
+          <div className="welcome-content">
+            <img
+              src="/img/logo.png"
+              alt="Logo"
+              className="welcome-logo"
+            />
+            <h1 className="welcome-title">¡Bienvenido!</h1>
+            <p className="welcome-text">
+              Ingrese sus datos personales para poder ingresar al sistema.
+            </p>
+            <div className="welcome-extra-info">
+              ¿No tiene cuenta? <br />
+              Ingrese al Banco de los Evaluadores para registrarse y formar parte de nuestra comunidad profesional.
+            </div>
+            <Button
+              variant="outline"
+              className="welcome-register-btn-custom"
+              onClick={() => window.location.href = "/register"}
+            >
+              Registrarse
+            </Button>
+          </div>
         </div>
-
-        {/* Card */}
-        <form onSubmit={handleSubmit} className="login-card">
-          <div className="login-card-header">
-            <h2>Iniciar Sesión</h2>
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Correo Electrónico
-            </label>
-            <div className="input-wrapper">
-              <FaUser className="input-icon" />
-              <input
-                type="email"
-                id="email"
-                className="form-input-login"
-                placeholder="Ingresa tu correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="username"
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Contraseña
-            </label>
-            <div className="input-wrapper">
-              <RiLockPasswordFill className="input-icon" />
-              <input
-                ref={pwdRef}
-                type={showPassword ? "text" : "password"}
-                id="password"
-                className="form-input-login"
-                placeholder="Ingresa tu contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-                disabled={isLoading}
-              />
-              {password.length > 0 && (
-                <button
-                  type="button"
-                  className="toggle-visibility"
-                  tabIndex={-1}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                </button>
-              )}
-            </div>
-            <div className="reset-password">
-              <a href="/reset-password">¿Olvidaste tu contraseña?</a>
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            className={`login-btn ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="spinner"></div>
-            ) : (
-              'Iniciar Sesión'
-            )}
-          </button>
-
-          <div className="login-footer">
-            <p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
-          </div>
-        </form>
       </div>
     </div>
   );
