@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { FaEnvelope, FaArrowLeft } from "react-icons/fa";
-import { Link } from 'react-router-dom';
-import '/src/styles/auth/Register.css';
-
+import { Link, useNavigate } from 'react-router-dom';
+import '/src/styles/auth/PasswordReset.css';
+import Footer from '../common/Footer';
 
 const PasswordReset = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [okModal, setOkModal] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,78 +22,117 @@ const PasswordReset = () => {
       return;
     }
     
+    if (!email.includes('@')) {
+      setError('Por favor, ingresa un correo electrónico válido');
+      return;
+    }
+    
     setIsLoading(true);
     
+    // Simulación de envío de correo
+    setTimeout(() => {
+      setIsLoading(false);
+      setOkModal(true);
+      setSuccess('Se ha enviado un enlace de restablecimiento a tu correo electrónico');
+    }, 1600);
+  };
+
+  const handleLoginClick = () => {
+    navigate('/login');
   };
 
   return (
-    <div className="auth-main-container">
-      <div className="auth-background">
-        <div className="auth-background-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-        </div>
-      </div>
-
-      <div className="auth-content">
-        <div className="logo-container">
-          <img
-            src="/public/img/logo.png"
-            alt="Logo"
-            className="auth-logo"
-          />
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-card">
-          <div className="auth-card-header">
-            <h2>Restablecer Contraseña</h2>
-            <p>Ingresa tu correo electrónico para recibir instrucciones</p>
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Correo Electrónico
-            </label>
-            <div className="input-wrapper">
-              <FaEnvelope className="input-icon" />
-              <input
-                type="email"
-                id="email"
-                className="form-input-login"
-                placeholder="Ingresa tu correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-                disabled={isLoading}
-              />
+    <div className="auth-page-container">
+      <div className="reset-main-container">
+        {/* IZQUIERDA: Bienvenida */}
+        <section className="reset-welcome-section">
+          <div className="reset-welcome-circle">
+            <div className="reset-welcome-content">
+              <img src="/img/logo.png" alt="Logotipo" className="reset-welcome-logo" />
+              <h1 className="reset-welcome-title">¡Hola!</h1>
+              <p className="reset-welcome-text">
+                ¿Olvidaste tu contraseña? No te preocupes, te ayudamos a recuperarla.
+              </p>
+              <p className="reset-welcome-extra-info">
+                ¿Recuerdas tu contraseña? Inicia sesión con tus credenciales.
+              </p>
+              <button className="reset-welcome-btn" onClick={handleLoginClick}>
+                Iniciar Sesión
+              </button>
             </div>
           </div>
+        </section>
 
-          <button 
-            type="submit" 
-            className={`auth-btn ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="spinner"></div>
-            ) : (
-              'Enviar Enlace'
-            )}
-          </button>
+        {/* DERECHA: Formulario */}
+        <section className="reset-form-section">
+          <div className="reset-content">
+            <header style={{ width: "100%", marginBottom: "2rem" }}>
+              <h2 className="reset-title">Restablecer Contraseña</h2>
+              <p className="reset-subtitle">Ingresa tu correo electrónico para recibir instrucciones</p>
+            </header>
 
-          <div className="auth-footer">
-            <Link to="/login" className="back-link">
-              <FaArrowLeft className="back-icon" />
-              Volver al Inicio de Sesión
-            </Link>
+            {error && <div className="reset-error-message">{error}</div>}
+            {success && <div className="reset-success-message">{success}</div>}
+
+            <form onSubmit={handleSubmit} noValidate style={{ width: "100%" }}>
+              <div className="reset-form-group">
+                <label htmlFor="email" className="reset-form-label">
+                  Correo Electrónico
+                </label>
+                <div className="reset-input-wrapper">
+                  <FaEnvelope className="reset-input-icon" />
+                  <input
+                    type="email"
+                    id="email"
+                    className="reset-form-input"
+                    placeholder="Ingresa tu correo electrónico"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className={`reset-btn ${isLoading ? 'loading' : ''}`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="reset-spinner"></div>
+                ) : (
+                  'Enviar Enlace'
+                )}
+              </button>
+            </form>
           </div>
-        </form>
+        </section>
+
+        {/* MODAL DE ÉXITO */}
+        {okModal && (
+          <div className="reset-modal-overlay">
+            <div className="reset-modal">
+              <h3 style={{ color: "#10b981", marginBottom: 15 }}>¡Correo enviado!</h3>
+              <p className="reset-modal-text">
+                Se ha enviado un enlace de restablecimiento a tu correo electrónico. 
+                Revisa tu bandeja de entrada y sigue las instrucciones.
+              </p>
+              <button 
+                className="reset-modal-button success" 
+                onClick={() => { 
+                  setOkModal(false); 
+                  navigate('/login');
+                }}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   );
 };
