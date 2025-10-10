@@ -3,9 +3,6 @@ import Login from './pages/LoginPage'
 import Register from './pages/RegisterPage';
 import Reset from './pages/PasswordResetPage';
 
-
-
-
 function App() {
 
   return (
@@ -16,10 +13,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<Reset />} />
-
-
-
-
 
         </Routes>
       </BrowserRouter>
