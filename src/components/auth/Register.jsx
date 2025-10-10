@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,6 +6,7 @@ import {
 import { RiLockPasswordFill } from "react-icons/ri";
 import { MdSchool } from "react-icons/md";
 import "/src/styles/auth/Register.css";
+import Footer from "../common/Footer";
 
 function isPasswordValid(pwd) {
   return pwd.length >= 6 && /[A-Z]/.test(pwd) && /\d/.test(pwd) && /[@#$%^&*]/.test(pwd);
@@ -139,6 +139,7 @@ export default function Register() {
   };
 
   return (
+    <div className="auth-page-container">
     <div className="register-portal-container">
       {/* IZQUIERDA: Bienvenida */}
       <section className="register-welcome-section">
@@ -170,34 +171,54 @@ export default function Register() {
           {error && <div className="register-error-message">{error}</div>}
 
           <form onSubmit={onSubmit} noValidate style={{ width: "100%" }}>
-            {/* Fila 1 */}
-            <div className="register-form-row">
-              <div className="register-form-group">
-                <label className="register-form-label" htmlFor="name">
-                  Nombre Completo *
-                </label>
-                <div className="register-input-wrapper">
-                  <FaUser className="register-input-icon" />
-                  <input
-                    id="name" name="name" type="text" className="register-form-input"
-                    placeholder="Ingresa tu nombre completo" value={formData.name}
-                    onChange={onChange} disabled={loading} required
-                  />
-                </div>
-              </div>
-              <div className="register-form-group">
-                <label className="register-form-label" htmlFor="email">
-                  Correo Electrónico *
-                </label>
-                <div className="register-input-wrapper">
-                  <FaEnvelope className="register-input-icon" />
-                  <input
-                    id="email" name="email" type="email" className="register-form-input"
-                    placeholder="Ingresa tu correo electrónico" value={formData.email}
-                    onChange={onChange} disabled={loading} required
-                  />
-                </div>
-              </div>
+                  <div className="register-form-row">
+                    <div className="register-form-group">
+                    <label className="register-form-label" htmlFor="name">
+                      Nombre Completo *
+                    </label>
+                    <div className="register-input-wrapper">
+                      <FaUser className="register-input-icon" />
+                      <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      className="register-form-input"
+                      placeholder="Ingresa tu nombre completo"
+                      value={formData.name}
+                      onChange={e => {
+                        // Solo permitir letras y espacios
+                        const value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                        setFormData(s => ({ ...s, name: value }));
+                        }}
+                        disabled={loading}
+                        required
+                        />
+                      </div>
+                      </div>
+                      
+                      <div className="register-form-group">
+                      <label className="register-form-label" htmlFor="email">
+                        Correo Electrónico *
+                      </label>
+                      <div className="register-input-wrapper">
+                        <FaEnvelope className="register-input-icon" />
+                        <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        className={`register-form-input${formData.email && !formData.email.includes('@') ? ' register-input-error' : ''}`}
+                        placeholder="Ingresa tu correo electrónico"
+                        value={formData.email}
+                        onChange={onChange}
+                        disabled={loading}
+                        required
+                        />
+                      </div>
+                      {/* Mostrar error si no contiene @ */}
+                      {formData.email && !formData.email.includes('@') && (
+                        <div className="register-error-text">El correo debe contener el carácter @</div>
+                      )}
+                      </div>
             </div>
 
             {/* Fila 2 */}
@@ -417,6 +438,8 @@ export default function Register() {
           </div>
         </div>
       )}
+    </div>
+    <Footer />
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import '/src/styles/auth/Login.css';
+import Footer from '../common/Footer';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,13 +12,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const pwdRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.pathname === '/login' && location.key !== 'default') {
-      window.location.reload();
-    }
-  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,10 +42,11 @@ const Login = () => {
   };
 
   const handleRegisterClick = () => {
-    navigate('/register'); // Quita { replace: true }
+    navigate('/register');
   };
 
   return (
+    <div className="auth-page-container">
     <div className="auth-portal-container">
       {/* Left Panel - Login Form */}
       <div className="auth-login-section">
@@ -65,7 +60,7 @@ const Login = () => {
 
             <div className="auth-form-group">
               <label htmlFor="email" className="auth-form-label">
-                Email
+                Correo Electrónico
               </label>
               <div className="auth-input-container">
                 <FaEnvelope className="auth-input-icon" />
@@ -85,7 +80,7 @@ const Login = () => {
 
             <div className="auth-form-group">
               <label htmlFor="password" className="auth-form-label">
-                Password
+                Contraseña
               </label>
               <div className="auth-input-container">
                 <FaLock className="auth-input-icon" />
@@ -158,6 +153,8 @@ const Login = () => {
           </div>
         </div>
       </div>
+    </div>
+    <Footer />
     </div>
   );
 };
