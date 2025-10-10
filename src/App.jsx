@@ -17,7 +17,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<Reset />} />
 
-          <Route path="/admin/dashboard" element={<Dashboard />} />
 
 
 
