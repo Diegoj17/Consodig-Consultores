@@ -1,0 +1,17 @@
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .users-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .users-grid {
+    grid-template-columns: 1fr;
+  }
+}
