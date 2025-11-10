@@ -1,11 +1,15 @@
 .user-card {
   background: white;
-  margin-top: -5rem;
   border-radius: 12px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
   overflow: hidden;
   transition: all 0.22s ease;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  margin-bottom: 1.5rem; /* Espacio entre cards */
+  width: 100%; /* Asegura que ocupe el ancho completo del contenedor */
 }
 
 .user-card:hover {
@@ -35,9 +39,14 @@
   flex-shrink: 0;
 }
 
+.user-meta {
+  flex: 1;
+  min-width: 0;
+}
+
 .user-meta h3 {
   margin: 0 0 0.25rem 0;
-  color: #1f2937;
+  color: #000000;
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -46,6 +55,31 @@
   color: #000000;
   font-size: 0.85rem;
   margin: 0;
+}
+
+.user-role {
+  display: inline-block;
+  margin: 0.25rem 0 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.user-role.evaluador {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0f2ff 100%);
+  color: #0f172a;
+  border: 1px solid rgba(29,78,216,0.12);
+  box-shadow: 0 4px 14px rgba(14,165,233,0.06);
+}
+
+.user-role.evaluando {
+  background: linear-gradient(135deg, #fffef0 0%, #fffaf5 100%);
+  color: #000000;
+  border: 1px solid rgba(124,58,237,0.12);
+  box-shadow: 0 4px 14px rgba(124,58,237,0.06);
 }
 
 .status-indicator {
@@ -75,6 +109,7 @@
 
 .card-body {
   padding: 1.25rem;
+  flex: 1 1 auto; /* toma el espacio disponible para empujar el footer abajo */
 }
 
 .info-group {
@@ -99,13 +134,18 @@
 
 .research-lines {
   line-height: 1.4;
+  max-height: 3.6em; /* Limita la altura para consistencia */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Muestra máximo 3 líneas */
+  -webkit-box-orient: vertical;
 }
 
 .user-links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: auto;
 }
 
 .link-item {

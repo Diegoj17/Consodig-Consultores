@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../styles/dashboard/StatCard.css';
+import '../../../styles/dashboard/admin/StatCard.css';
 
 const StatCard = ({ title, value, type = 'default' }) => {
   const getTypeClass = () => {

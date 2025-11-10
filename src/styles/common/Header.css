@@ -72,9 +72,9 @@
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #111827;
+  color: #000000;
   margin: 0;
   line-height: 1.2;
 }
@@ -140,49 +140,24 @@
   justify-content: center;
 }
 
-.notification-btn:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.notification-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #ef4444;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  border: 2px solid white;
-}
-
-/* User Menu Styles */
+/* Container for the user trigger so the absolute menu positions relative to it */
 .user-menu-container {
   position: relative;
+  display: inline-block;
 }
 
+/* Trigger button that shows the profile dropdown */
 .user-menu-trigger {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all 0.18s ease;
   cursor: pointer;
   background: none;
   border: 1px solid transparent;
-  min-width: 180px;
+  min-width: 140px;
 }
 
 .user-menu-trigger:hover {
@@ -195,95 +170,38 @@
   align-items: center;
   justify-content: center;
   color: #007bbf;
-  flex-shrink: 0;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
 }
 
-.user-avatar svg {
-  width: 20px;
-  height: 20px;
-}
+.user-avatar svg { width: 20px; height: 20px; }
 
 .user-details {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  flex: 1;
   min-width: 0;
 }
 
-.user-name {
-  font-weight: 600;
-  color: #000000;
-  font-size: 0.9rem;
-  font-weight: 650;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
+.user-name { font-weight: 600; color: #000000; font-size: 0.9rem; }
+.user-role { color: #000000; font-size: 0.5rem; }
 
-.user-role {
-  color: #000000;
-  font-size: 0.8rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
+.chevron-icon { color: #9ca3af; transition: transform 0.2s ease; }
+.chevron-icon.rotated { transform: rotate(180deg); }
 
-.chevron-icon {
-  color: #9ca3af;
-  transition: transform 0.3s ease;
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-}
-
-.chevron-icon.rotated {
-  transform: rotate(180deg);
-}
-
-/* Dropdown Menu */
-.user-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0rem;
-  background: #ffffff;
-  color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  min-width: 280px;
-  z-index: 1300;
-  animation: dropdownFadeIn 0.2s ease-out;
-}
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dropdown-header {
+.user-dropdown-menu .dropdown-header {
   padding: 1.25rem;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 12px 12px 0 0;
 }
-
-.user-info {
+.user-dropdown-menu .user-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
-.user-avatar-large {
+.user-dropdown-menu .user-avatar-large {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -291,19 +209,19 @@
   flex-shrink: 0;
 }
 
-.user-avatar-large svg {
+.user-dropdown-menu .user-avatar-large svg {
   width: 48px;
   height: 48px;
 }
 
-.user-info-details {
+.user-dropdown-menu .user-info-details {
   display: flex;
   flex-direction: column;
   min-width: 0;
   flex: 1;
 }
 
-.user-fullname {
+.user-dropdown-menu .user-fullname {
   font-weight: 600;
   color: #ffffff;
   font-size: 1rem;
@@ -313,7 +231,7 @@
   text-overflow: ellipsis;
 }
 
-.user-email {
+.user-dropdown-menu .user-email {
   color: #ffffff;
   font-size: 0.85rem;
   line-height: 1.3;
@@ -322,17 +240,17 @@
   text-overflow: ellipsis;
 }
 
-.dropdown-divider {
+.user-dropdown-menu .dropdown-divider {
   height: 1px;
   background: #f1f5f9;
   margin: 0;
 }
 
-.menu-items {
+.user-dropdown-menu .menu-items {
   padding: 0.5rem;
 }
 
-.menu-item {
+.user-dropdown-menu .menu-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -348,45 +266,58 @@
   text-align: left;
 }
 
-.menu-item:hover {
+.user-dropdown-menu .menu-item:hover {
   background-color: #f1f5f9;
   color: #ffffff;
   transform: translateX(2px);
 }
 
-.menu-item.danger {
+.user-dropdown-menu .menu-item.danger {
   color: #dc2626;
 }
 
-.menu-item.danger:hover {
+.user-dropdown-menu .menu-item.danger:hover {
   background-color: #fef2f2;
   color: #b91c1c;
 }
 
-.menu-item-icon {
+.user-dropdown-menu .menu-item-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   opacity: 0.8;
 }
 
-.menu-item-label {
+.user-dropdown-menu .menu-item-label {
   flex: 1;
   font-weight: 500;
 }
 
-.dropdown-footer {
+.user-dropdown-menu .dropdown-footer {
   padding: 0.75rem 1rem;
   background: #f8fafc;
   border-radius: 0 0 12px 12px;
   border-top: 1px solid #f1f5f9;
 }
 
-.session-info {
+.user-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0rem;
+  background: #ffffff;
   color: #ffffff;
-  font-size: 0.75rem;
-  text-align: center;
-  display: block;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  min-width: 280px;
+  z-index: 1300;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.08);
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive Design */
@@ -478,25 +409,25 @@
     color: #f1f5f9;
   }
   
-  .dropdown-header {
+  .user-dropdown-menu .dropdown-header {
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
   }
-  
-  .menu-item {
+
+  .user-dropdown-menu .menu-item {
     color: #cbd5e1;
   }
-  
-  .menu-item:hover {
+
+  .user-dropdown-menu .menu-item:hover {
     background-color: #334155;
     color: #f1f5f9;
   }
-  
-  .dropdown-footer {
+
+  .user-dropdown-menu .dropdown-footer {
     background: #0f172a;
     border-color: #1e293b;
   }
-  
-  .session-info {
+
+  .user-dropdown-menu .session-info {
     color: #64748b;
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
-import DashboardContent from '../../components/dashboard/DashboardContent';
+import DashboardContent from '../../components/dashboard/admin/DashboardContent';
 import '../../styles/pages/admin/DashboardPage.css';
 
 function DashboardPage() {

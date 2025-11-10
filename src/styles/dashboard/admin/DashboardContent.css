@@ -2,6 +2,13 @@
   animation: fadeIn 0.4s ease-in-out;
 }
 
+/* Asegurar que el contenido use todo el ancho del contenedor principal */
+.dashboard-content {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
 /* Variables para personalizar tipografía y colores de los títulos y párrafos */
 :root {
   --dashboard-title-color: #ffffff;
@@ -13,11 +20,15 @@
 .welcome-section {
   text-align: center;
   margin-bottom: 2.5rem;
-  padding: 2rem;
+  padding: 2rem 1rem;
   background: #007bbf;
   color: white;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section {
+  width: 100%;
 }
 
 .welcome-section h2 {

@@ -140,6 +140,11 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  display: none; /* oculto por defecto; se muestra sólo cuando el botón tiene .loading */
+}
+
+.auth-submit-button.loading .auth-spinner {
+  display: block;
 }
 
 @keyframes auth-spin {

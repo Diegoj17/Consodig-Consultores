@@ -1,51 +1,85 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaBell, FaSearch, FaUserCircle, FaCog, FaKey, FaSignOutAlt, FaChevronDown, FaUser, FaEnvelope } from 'react-icons/fa';
-import '../../styles/common/Header.css';
+"use client"
 
-const Header = ({ onToggleSidebar, pageTitle = 'Dashboard' }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
+import { useState, useRef, useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
+import {
+  FaBars,
+  FaBell,
+  FaUserCircle,
+  FaCog,
+  FaKey,
+  FaSignOutAlt,
+  FaChevronDown,
+  FaUser,
+  FaEnvelope,
+} from "react-icons/fa"
+import "../../styles/common/Header.css"
+import ProfileMenu from "./ProfileMenu"
+import { useAuth } from "../../contexts/AuthContext"
+
+const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
+  const { user, roleLabel, logout } = useAuth()
+
+  // 🔍 Debug para verificar datos cargados
+  useEffect(() => {
+    console.log("🧠 Header → Usuario actual:", user)
+    console.log("🧠 Header → Rol label:", roleLabel)
+  }, [user, roleLabel])
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
+        setIsUserMenuOpen(false)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleUserMenuToggle = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
-  };
+    setIsUserMenuOpen(!isUserMenuOpen)
+  }
 
   const handleMenuAction = (action) => {
-    console.log(`Acción seleccionada: ${action}`);
-    setIsUserMenuOpen(false);
-    // Navegación u otras lógicas según la acción
-    if (action === 'edit-profile') {
-      // ir a la página de edición de perfil y pasar la ruta de origen
-      navigate('/edit-profile', { state: { from: location.pathname } });
-      return;
+    console.log(`⚙ Acción seleccionada: ${action}`)
+    setIsUserMenuOpen(false)
+
+    switch (action) {
+      case "edit-profile":
+        navigate("/edit-profile", { state: { from: location.pathname } })
+        break
+      case "logout":
+        logout()
+        navigate("/login")
+        break
+      default:
+        console.log("Acción sin manejar:", action)
     }
-    // Aquí puedes agregar la lógica para el resto de acciones
-  };
+  }
+
+  // 🧾 Nombre completo
+  const getFullName = () => {
+    if (!user) return "Usuario"
+    if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`
+    if (user.nombre) return user.nombre
+    if (user.name) return user.name
+    if (user.fullname) return user.fullname
+    return "Usuario"
+  }
 
   const menuItems = [
-    { icon: FaUser, label: 'Editar Perfil', action: 'edit-profile' },
-    { icon: FaKey, label: 'Cambiar Contraseña', action: 'change-password' },
-    { icon: FaCog, label: 'Configuración', action: 'settings' },
-    { icon: FaEnvelope, label: 'Preferencias de Email', action: 'email-preferences' },
-    { icon: FaSignOutAlt, label: 'Cerrar Sesión', action: 'logout', isDanger: true }
-  ];
+    { icon: FaUser, label: "Editar Perfil", action: "edit-profile" },
+    { icon: FaKey, label: "Cambiar Contraseña", action: "change-password" },
+    { icon: FaCog, label: "Configuración", action: "settings" },
+    { icon: FaEnvelope, label: "Preferencias de Email", action: "email-preferences" },
+    { icon: FaSignOutAlt, label: "Cerrar Sesión", action: "logout", isDanger: true },
+  ]
 
   return (
     <header className="dashboard-header">
@@ -57,68 +91,36 @@ const Header = ({ onToggleSidebar, pageTitle = 'Dashboard' }) => {
           <h1 className="page-title">{pageTitle}</h1>
         </div>
       </div>
-      
+
       <div className="header-right">
-        <div className="search-container">
-          <FaSearch className="search-icon" />
-          <input type="text" placeholder="Buscar proyectos, usuarios..." className="search-input" />
-        </div>
-        
         <button className="notification-btn">
           <FaBell />
           <span className="notification-badge">3</span>
         </button>
-        
+
         <div className="user-menu-container" ref={userMenuRef}>
           <button className="user-menu-trigger" onClick={handleUserMenuToggle}>
             <div className="user-avatar">
               <FaUserCircle />
             </div>
             <div className="user-details">
-              <span className="user-name">Pepe</span>
-              <span className="user-role">Administrador</span>
+              <span className="user-name">{getFullName()}</span>
+              <span className="user-role">{roleLabel || "Usuario"}</span>
             </div>
-            <FaChevronDown className={`chevron-icon ${isUserMenuOpen ? 'rotated' : ''}`} />
+            <FaChevronDown className={`chevron-icon ${isUserMenuOpen ? "rotated" : ""}`} />
           </button>
-          
-          {isUserMenuOpen && (
-            <div className="user-dropdown-menu">
-              <div className="dropdown-header">
-                <div className="user-info">
-                  <div className="user-avatar-large">
-                    <FaUserCircle />
-                  </div>
-                  <div className="user-info-details">
-                    <span className="user-fullname">Administrador del Sistema</span>
-                    <span className="user-email">admin@sistema.edu</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="dropdown-divider"></div>
-              
-              <div className="menu-items">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.action}
-                    className={`menu-item ${item.isDanger ? 'danger' : ''}`}
-                    onClick={() => handleMenuAction(item.action)}
-                  >
-                    <item.icon className="menu-item-icon" />
-                    <span className="menu-item-label">{item.label}</span>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="dropdown-footer">
-                <span className="session-info">Sesión activa · Último acceso: Hoy</span>
-              </div>
-            </div>
-          )}
+
+          <ProfileMenu
+            isOpen={isUserMenuOpen}
+            user={user}
+            menuItems={menuItems}
+            onAction={handleMenuAction}
+            onClose={() => setIsUserMenuOpen(false)}
+          />
         </div>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

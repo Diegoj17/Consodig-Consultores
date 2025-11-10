@@ -15,6 +15,18 @@
   margin-bottom: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* espacio entre botones */
+  justify-content: flex-end;
+}
+
+.header-actions .btn-primary {
+  min-width: 170px; /* ancho mínimo para botones consistentes */
+  white-space: nowrap;
+}
+
 .header-title h1 {
   font-size: 2.25rem;
   font-weight: 700;
@@ -95,6 +107,16 @@
   background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
+/* Estilos para los iconos de evaluador y evaluando (antes no estaban definidos)
+   Esto asegura que el icono blanco sea visible sobre un fondo coloreado */
+.stat-icon.evaluador {
+  background: linear-gradient(135deg, #2563eb, #7c3aed); /* azul intenso -> morado */
+}
+
+.stat-icon.evaluando {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6); /* cian -> azul */
+}
+
 .stat-info {
   display: flex;
   flex-direction: column;
@@ -120,6 +142,18 @@
   .header-content {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .header-actions .btn-primary {
+    width: 100%;
+    min-width: 0;
   }
   
   .header-title h1 {
