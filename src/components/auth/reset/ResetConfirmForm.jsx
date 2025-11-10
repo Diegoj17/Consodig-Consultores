@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import '../../../styles/auth/reset/ResetConfirmForm.css';
 
@@ -15,10 +16,8 @@ const ResetConfirmForm = ({
   isLoading, 
   onSubmit 
 }) => {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit();
-  };
+  const [localError, setLocalError] = useState(null);
+  const [localSuccess, setLocalSuccess] = useState(null);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -26,6 +25,32 @@ const ResetConfirmForm = ({
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLocalError(null);
+    setLocalSuccess(null);
+
+    console.log("🔧 ResetConfirmForm - handleSubmit");
+    
+    // Validaciones locales adicionales
+    if (!newPassword || newPassword.length < 8) {
+      setLocalError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setLocalError('Las contraseñas no coinciden');
+      return;
+    }
+
+    // ✅ USAR EL onSubmit DEL PADRE que hace la petición REAL
+    if (onSubmit) {
+      console.log("🔄 Usando onSubmit del padre");
+      return onSubmit();
+    }
+
+    console.warn("⚠️ No se proporcionó onSubmit prop");
   };
 
   return (
@@ -36,8 +61,8 @@ const ResetConfirmForm = ({
           <p className="reset-confirm-subtitle">Crea una nueva contraseña para tu cuenta</p>
         </header>
 
-        {error && <div className="reset-confirm-error-message">{error}</div>}
-        {success && <div className="reset-confirm-success-message">{success}</div>}
+        {(error || localError) && <div className="reset-confirm-error-message">{error || localError}</div>}
+        {(success || localSuccess) && <div className="reset-confirm-success-message">{success || localSuccess}</div>}
 
         <form onSubmit={handleSubmit} noValidate style={{ width: "100%" }}>
           <div className="reset-confirm-form-group">
