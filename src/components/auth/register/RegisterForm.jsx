@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FaUser, FaEnvelope, FaUniversity, FaLink
 } from "react-icons/fa";
 import { MdSchool } from "react-icons/md";
+import { researchService } from '../../../services/researchService';
 import RegisterPasswordInputWithRules from './RegisterPasswordInputWithRules';
-import { authService } from '../../../services/authService';
+import { userService } from '../../../services/userService';
 import '../../../styles/auth/register/RegisterForm.css';
 
 const RegisterForm = ({ 
@@ -19,6 +20,14 @@ const RegisterForm = ({
 }) => {
   const [emailError, setEmailError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Multi-select para líneas de investigación (paralelo a UserModal)
+  const [selectedLineIds, setSelectedLineIds] = useState([]);
+  const [researchOptions, setResearchOptions] = useState([]);
+  const [showLinesDropdown, setShowLinesDropdown] = useState(false);
+  const linesRef = useRef(null);
+  const isAnySubmitting = isSubmitting || loading;
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const successTimeoutRef = useRef(null);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
@@ -48,30 +57,36 @@ const RegisterForm = ({
       }
 
       // Preparar datos para el backend
-      const userData = {
-        name: formData.name,
+      const userDataToSubmit = {
+        nombre: formData.name || "",
+        apellido: "",
         email: formData.email,
-        password: formData.password,
-        password_confirmation: formData.confirmPassword,
-        affiliation: formData.affiliation,
+        afiliacionInstitucional: formData.affiliation,
         cvlac: formData.cvlac,
-        google_scholar: formData.googleScholar,
+        googleScholar: formData.googleScholar,
         orcid: formData.orcid,
-        education_level: formData.educationLevel,
-        research_lines: formData.researchLines
+        nivelEducativo: formData.educationLevel,
+        lineasInvestigacion: formData.researchLines,
+        lineasInvestigacionIds: selectedLineIds,
+        password: formData.password,
+        estado: 'ACTIVO'
       };
 
-      // Llamar al servicio de registro real
-      const result = await authService.register(userData);
+      // Llamar al servicio de usuarios para crear evaluador
+      await userService.createEvaluador(userDataToSubmit);
       
       // Si hay callback del padre, ejecutarlo
       if (onSubmit) {
-        onSubmit(userData);
+        onSubmit(userDataToSubmit);
       }
       
-      // Mostrar mensaje de éxito y redirigir
-      alert('¡Registro exitoso! Por favor inicia sesión.');
-      window.location.href = '/login';
+      // Mostrar modal de éxito y programar redirect
+      setShowSuccessModal(true);
+      // Auto-redirect a login en 3s
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+      successTimeoutRef.current = setTimeout(() => {
+        window.location.href = '/login';
+      }, 3000);
       
     } catch (err) {
       if (onSubmit) {
@@ -88,6 +103,67 @@ const RegisterForm = ({
       setIsSubmitting(false);
     }
   };
+
+  // Cargar líneas de investigación desde backend al montar
+  useEffect(() => {
+    let mounted = true;
+    ;(async () => {
+      try {
+        const rows = await researchService.getAll()
+        const opts = Array.isArray(rows) ? rows.map((r) => ({ id: Number(r.id), nombre: r.nombre })).filter(o => o.nombre) : []
+        if (mounted) setResearchOptions(opts)
+      } catch (e) {
+        console.error("No se pudieron cargar las líneas de investigación:", e)
+        if (mounted) setResearchOptions([])
+      }
+    })()
+
+    return () => { mounted = false }
+  }, [])
+
+  // Sincronizar selectedLineIds cuando cambia researchOptions o formData.researchLines (por si viene prellenado)
+  useEffect(() => {
+    if (researchOptions.length > 0 && formData.researchLines) {
+      const names = (formData.researchLines || "").split(',').map(s => s.trim()).filter(Boolean)
+      const ids = researchOptions
+        .filter(opt => names.some(n => n.toLowerCase() === (opt.nombre || '').toLowerCase()))
+        .map(opt => opt.id)
+      setSelectedLineIds(ids)
+    }
+  }, [researchOptions, formData.researchLines])
+
+  // Mantener formData.researchLines en sincronía cuando cambian los ids seleccionados
+  useEffect(() => {
+    const names = researchOptions
+      .filter((o) => selectedLineIds.includes(o.id))
+      .map((o) => o.nombre)
+    onChange({ target: { name: 'researchLines', value: names.join(', ') } })
+  }, [selectedLineIds, researchOptions, onChange])
+
+  const handleOptionToggle = (id) => {
+    setSelectedLineIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+      return next
+    })
+  }
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (linesRef.current && !linesRef.current.contains(e.target)) {
+        setShowLinesDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Limpiar timeout de success al desmontar
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current)
+    }
+  }, [])
 
   return (
     <section className="register-form-section">
@@ -225,24 +301,58 @@ const RegisterForm = ({
                   required
                 >
                   <option value="">Seleccionar nivel</option>
-                  <option value="Pregrado">Pregrado</option>
-                  <option value="Maestría">Maestría</option>
-                  <option value="Doctorado">Doctorado</option>
-                  <option value="Postdoctorado">Postdoctorado</option>
+                  <option value="PREGRADO">Pregrado</option>
+                  <option value="TECNICO">Técnico</option>
+                  <option value="TECNOLOGO">Tecnólogo</option>
+                  <option value="PROFESIONAL">Profesional</option>
+                  <option value="ESPECIALIZACION">Especialización</option>
+                  <option value="MAESTRIA">Maestría</option>
+                  <option value="DOCTORADO">Doctorado</option>
+                  <option value="POSTDOCTORADO">Postdoctorado</option>
                 </select>
               </div>
             </div>
+
             <div className="register-form-group">
               <label className="register-form-label" htmlFor="researchLines">
                 Líneas de Investigación
               </label>
               <div className="register-input-wrapper">
                 <FaLink className="register-input-icon" />
-                <input
-                  id="researchLines" name="researchLines" type="text" className="register-form-input"
-                  placeholder="Separa por comas" value={formData.researchLines}
-                  onChange={onChange} disabled={isSubmitting}
-                />
+                <div ref={linesRef} className="multi-select" aria-expanded={showLinesDropdown}>
+                  <button
+                    type="button"
+                    className={`register-form-input multi-select__control ${formData.researchLines ? '' : 'placeholder'}`}
+                      onClick={() => setShowLinesDropdown(s => !s)}
+                      disabled={isAnySubmitting}
+                    aria-haspopup="listbox"
+                  >
+                    {(!formData.researchLines || formData.researchLines.trim() === '') ? (
+                      <span className="multi-select__placeholder">Seleccionar líneas</span>
+                    ) : (
+                      <div className="multi-select__chips">
+                        {formData.researchLines.split(',').map((n) => (
+                          <span key={n.trim()} className="multi-select__chip">{n.trim()}</span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+
+                  {showLinesDropdown && (
+                    <div className="multi-select__dropdown" role="listbox">
+                      {researchOptions.map((opt) => (
+                        <label key={opt.id} className="multi-select__option">
+                          <input
+                            type="checkbox"
+                            checked={selectedLineIds.includes(opt.id)}
+                            onChange={() => handleOptionToggle(opt.id)}
+                          />
+                          <span className="multi-select__option-label">{opt.nombre}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -264,6 +374,27 @@ const RegisterForm = ({
             {isSubmitting ? <div className="register-spinner" /> : "Crear Cuenta"}
           </button>
         </form>
+
+        {showSuccessModal && (
+          <div className="register-success-overlay">
+            <div className="register-success-modal">
+              <h3>Cuenta creada</h3>
+              <p>¡Registro exitoso! Serás redirigido a iniciar sesión en breve.</p>
+              <div className="register-success-actions">
+                <button
+                  type="button"
+                  className="register-success-btn"
+                  onClick={() => {
+                    if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current)
+                    window.location.href = '/login'
+                  }}
+                >
+                  Ir a iniciar sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
