@@ -1,0 +1,127 @@
+.reset-confirm-welcome-section {
+  flex: 1 1 50%;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.reset-confirm-welcome-circle {
+  height: 100%;
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(120deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border-radius: 0 80% 80% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(79, 140, 255, 0.10);
+  transition: all 0.3s;
+}
+
+.reset-confirm-welcome-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-align: center;
+  max-width: 350px;
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-confirm-welcome-logo {
+  width: 20rem;
+  height: auto;
+  margin-bottom: 2rem;
+  margin-top: 0;
+  filter: drop-shadow(0 2px 12px rgba(0,0,0,0.10));
+}
+
+.reset-confirm-welcome-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  margin-bottom: 0.2rem;
+  text-align: center;
+  letter-spacing: -1px;
+  color: #fff;
+}
+
+.reset-confirm-welcome-text {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  margin-bottom: 2.2rem;
+  opacity: 0.97;
+  color: #fff;
+}
+
+.reset-confirm-welcome-extra-info {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+  color: #fff;
+}
+
+.reset-confirm-welcome-btn {
+  min-width: 210px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-top: 1.5rem;
+  border: 2.5px solid #fff;
+  color: #fff;
+  background: transparent;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.04);
+  padding: 0.9rem 0;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  outline: none;
+  display: block;
+  opacity: 1 !important;
+}
+
+.reset-confirm-welcome-btn:hover,
+.reset-confirm-welcome-btn:focus {
+  background: #fff;
+  color: var(--primary-color);
+  border-color: #fff;
+  box-shadow: 0 4px 24px 0 rgba(54,179,232,0.10);
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .reset-confirm-welcome-section {
+    flex: none;
+    height: 40vh;
+  }
+  
+  .reset-confirm-welcome-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 0 0 80% 80%;
+    aspect-ratio: unset;
+  }
+}
+
+@media (max-width: 768px) {
+  .reset-confirm-welcome-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .reset-confirm-welcome-logo {
+    width: 15rem;
+  }
+  
+  .reset-confirm-welcome-title {
+    font-size: 1.8rem;
+  }
+}

@@ -80,11 +80,56 @@ const Footer = () => {
             </div>
             <div className="footer-contact-item">
               <FaPhone className="footer-contact-icon" />
-              <span>+57 300 528 4209</span>
+              <a
+                className="footer-contact-link"
+                href="https://wa.me/573005284209"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Abrir chat de WhatsApp con Consodig"
+              >
+                +57 300 528 4209
+              </a>
             </div>
             <div className="footer-contact-item">
               <FaEnvelope className="footer-contact-icon" />
-              <span>gerencia@consodigconsultores.com</span>
+              <a
+                className="footer-contact-link"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const to = 'gerencia@consodigconsultores.com';
+                  const gmailHome = 'https://mail.google.com';
+                  const gmailCompose = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}`;
+
+                  // Abrir primero la página principal de Gmail en una nueva pestaña
+                  // y después navegar esa pestaña a la URL de composición (para que el usuario vea Gmail antes de la ventana de composición).
+                  try {
+                    // Abrir sin 'noopener' para poder manipular la pestaña desde este script
+                    const newWin = window.open(gmailHome, '_blank');
+                    if (!newWin) {
+                      // popup bloqueado, fallback a mailto:
+                      window.location.href = `mailto:${to}`;
+                    } else {
+                      // Dar un pequeño tiempo a la pestaña para cargar y luego redirigir a la composición
+                      setTimeout(() => {
+                        try {
+                          newWin.location.href = gmailCompose;
+                          try { newWin.focus(); } catch { void 0; }
+                        } catch {
+                          // Si por alguna razón no se puede redirigir, dejar al usuario en Gmail
+                        }
+                      }, 700);
+                    }
+                  } catch {
+                    window.location.href = `mailto:${to}`;
+                  }
+                }}
+                aria-label="Enviar correo a gerencia@consodigconsultores.com (abre Gmail en nueva pestaña si está disponible)"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                gerencia@consodigconsultores.com
+              </a>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import Reset from './pages/PasswordResetPage';
+import ResetConfirm from './pages/PasswordResetConfirmPage';
 import AdminLayout from './layouts/AdminLayout';
 import EvaluadorLayout from './layouts/EvaluadorLayout';
 import EvaluandoLayout from './layouts/EvaluandoLayout';
@@ -15,6 +16,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<Reset />} />
+        <Route path="/reset-password-confirm" element={<ResetConfirm />} />
 
         {/* Rutas de Administrador */}
         <Route path="/admin/*" element={<AdminLayout />} />
