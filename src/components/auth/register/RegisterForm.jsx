@@ -4,6 +4,7 @@ import {
 } from "react-icons/fa";
 import { MdSchool } from "react-icons/md";
 import RegisterPasswordInputWithRules from './RegisterPasswordInputWithRules';
+import { authService } from '../../../services/authService';
 import '../../../styles/auth/register/RegisterForm.css';
 
 const RegisterForm = ({ 
@@ -17,6 +18,7 @@ const RegisterForm = ({
   showPasswordRules 
 }) => {
   const [emailError, setEmailError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
@@ -25,7 +27,6 @@ const RegisterForm = ({
   };
 
   const handleNameChange = (e) => {
-    // Solo permitir letras y espacios
     const value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
     const syntheticEvent = {
       target: {
@@ -34,6 +35,58 @@ const RegisterForm = ({
       }
     };
     onChange(syntheticEvent);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Validar contraseñas
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Las contraseñas no coinciden');
+      }
+
+      // Preparar datos para el backend
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        affiliation: formData.affiliation,
+        cvlac: formData.cvlac,
+        google_scholar: formData.googleScholar,
+        orcid: formData.orcid,
+        education_level: formData.educationLevel,
+        research_lines: formData.researchLines
+      };
+
+      // Llamar al servicio de registro real
+      const result = await authService.register(userData);
+      
+      // Si hay callback del padre, ejecutarlo
+      if (onSubmit) {
+        onSubmit(userData);
+      }
+      
+      // Mostrar mensaje de éxito y redirigir
+      alert('¡Registro exitoso! Por favor inicia sesión.');
+      window.location.href = '/login';
+      
+    } catch (err) {
+      if (onSubmit) {
+        // Pasar el error al componente padre
+        const syntheticEvent = {
+          target: {
+            name: 'error',
+            value: err.message || 'Error en el registro'
+          }
+        };
+        onChange(syntheticEvent);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -46,7 +99,7 @@ const RegisterForm = ({
 
         {error && <div className="register-error-message">{error}</div>}
 
-        <form onSubmit={onSubmit} noValidate style={{ width: "100%" }}>
+        <form onSubmit={handleSubmit} noValidate style={{ width: "100%" }}>
           <div className="register-form-row">
             <div className="register-form-group">
               <label className="register-form-label" htmlFor="name">
@@ -62,7 +115,7 @@ const RegisterForm = ({
                   placeholder="Ingresa tu nombre completo"
                   value={formData.name}
                   onChange={handleNameChange}
-                  disabled={loading}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
@@ -82,7 +135,7 @@ const RegisterForm = ({
                   placeholder="Ingresa tu correo electrónico"
                   value={formData.email}
                   onChange={handleEmailChange}
-                  disabled={loading}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
@@ -103,7 +156,7 @@ const RegisterForm = ({
                 <input
                   id="affiliation" name="affiliation" type="text" className="register-form-input"
                   placeholder="Universidad o institución" value={formData.affiliation}
-                  onChange={onChange} disabled={loading} required
+                  onChange={onChange} disabled={isSubmitting} required
                 />
               </div>
             </div>
@@ -117,7 +170,7 @@ const RegisterForm = ({
                 <input
                   id="cvlac" name="cvlac" type="url" className="register-form-input"
                   placeholder="https://..." value={formData.cvlac}
-                  onChange={onChange} disabled={loading}
+                  onChange={onChange} disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -134,7 +187,7 @@ const RegisterForm = ({
                 <input
                   id="googleScholar" name="googleScholar" type="url" className="register-form-input"
                   placeholder="https://... (opcional)" value={formData.googleScholar}
-                  onChange={onChange} disabled={loading}
+                  onChange={onChange} disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -148,7 +201,7 @@ const RegisterForm = ({
                 <input
                   id="orcid" name="orcid" type="url" className="register-form-input"
                   placeholder="https://orcid.org/... (opcional)" value={formData.orcid}
-                  onChange={onChange} disabled={loading}
+                  onChange={onChange} disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -162,11 +215,21 @@ const RegisterForm = ({
               </label>
               <div className="register-input-wrapper">
                 <MdSchool className="register-input-icon" />
-                <input
-                  id="educationLevel" name="educationLevel" type="text" className="register-form-input"
-                  placeholder="Ej: Doctorado, Maestría, Pregrado" value={formData.educationLevel}
-                  onChange={onChange} disabled={loading} required
-                />
+                <select
+                  id="educationLevel"
+                  name="educationLevel"
+                  className="register-form-input"
+                  value={formData.educationLevel}
+                  onChange={onChange}
+                  disabled={isSubmitting}
+                  required
+                >
+                  <option value="">Seleccionar nivel</option>
+                  <option value="Pregrado">Pregrado</option>
+                  <option value="Maestría">Maestría</option>
+                  <option value="Doctorado">Doctorado</option>
+                  <option value="Postdoctorado">Postdoctorado</option>
+                </select>
               </div>
             </div>
             <div className="register-form-group">
@@ -178,7 +241,7 @@ const RegisterForm = ({
                 <input
                   id="researchLines" name="researchLines" type="text" className="register-form-input"
                   placeholder="Separa por comas" value={formData.researchLines}
-                  onChange={onChange} disabled={loading}
+                  onChange={onChange} disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -190,15 +253,15 @@ const RegisterForm = ({
             confirmPassword={formData.confirmPassword}
             onPasswordChange={onChange}
             onConfirmPasswordChange={onChange}
-            loading={loading}
+            loading={isSubmitting}
             showRules={showPasswordRules}
             onPasswordFocus={onPasswordFocus}
             onPasswordBlur={onPasswordBlur}
           />
 
           {/* Botón de registro */}
-          <button className={`register-btn ${loading ? "loading" : ""}`} type="submit" disabled={loading}>
-            {loading ? <div className="register-spinner" /> : "Crear Cuenta"}
+          <button className={`register-btn ${isSubmitting ? "loading" : ""}`} type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <div className="register-spinner" /> : "Crear Cuenta"}
           </button>
         </form>
       </div>

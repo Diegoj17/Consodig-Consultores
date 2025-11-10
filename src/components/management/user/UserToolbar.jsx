@@ -7,6 +7,8 @@ const UserToolbar = ({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  roleFilter,
+  onRoleFilterChange,
   viewMode,
   onViewModeChange,
   onExport
@@ -18,7 +20,7 @@ const UserToolbar = ({
           <FaSearch className="search-icon" />
           <input
             type="text"
-            placeholder="Buscar evaluadores..."
+            placeholder="Buscar usuarios..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="search-input"
@@ -28,15 +30,28 @@ const UserToolbar = ({
 
       <div className="filters-section">
         <div className="filter-group">
-          <label>Filtrar por:</label>
+          <label>Estado</label>
           <select 
             value={statusFilter} 
             onChange={(e) => onStatusFilterChange(e.target.value)}
             className="filter-select"
           >
-            <option value="all">Todos los estados</option>
+            <option value="all">Todos</option>
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>Rol</label>
+          <select
+            value={roleFilter}
+            onChange={(e) => onRoleFilterChange(e.target.value)}
+            className="filter-select"
+          >
+            <option value="all">Todos los roles</option>
+            <option value="evaluador">Evaluador</option>
+            <option value="evaluando">Evaluando</option>
           </select>
         </div>
 

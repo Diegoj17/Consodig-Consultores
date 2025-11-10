@@ -1,6 +1,6 @@
 import React from 'react';
 import StatCard from './StatCard';
-import '../../styles/dashboard/StatsGrid.css';
+import '../../../styles/dashboard/admin/StatsGrid.css';
 
 const StatsGrid = ({ stats }) => {
   return (
