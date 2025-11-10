@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Configuración base de axios
-const API_BASE_URL = 'https://consodigconsultores-be-production.up.railway.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://consodigconsultores-be-production.up.railway.app/api';
 
 // Crear instancia de axios
 const api = axios.create({

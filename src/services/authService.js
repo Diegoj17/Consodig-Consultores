@@ -60,28 +60,73 @@ export const authService = {
     }
   },
 
-  // Recuperar contraseña
+  // 🆕 SOLICITAR recuperación de contraseña (envía email)
   async resetPassword(email) {
+    console.group("🔧 authService.resetPassword");
     try {
-      console.log("🔑 Solicitando recuperación de contraseña...")
-      const response = await api.post("/auth/forgot-password", { email })
-      return response.data
+      console.log("📧 Email recibido:", email);
+      console.log("🔄 Preparando petición...");
+      
+      // ENVIAR CON EL NOMBRE CORRECTO
+      const requestData = { correo: email };
+      console.log("📤 Datos a enviar:", requestData);
+      console.log("🌐 Endpoint: /auth/forgot-password");
+      
+      const response = await api.post("/auth/forgot-password", requestData);
+      
+      console.log("✅ Respuesta del servidor - Status:", response.status);
+      console.log("📨 Datos de respuesta:", response.data);
+      console.groupEnd();
+      
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: "Error de conexión" }
+      console.error("❌ Error en authService.resetPassword:");
+      console.log("🔍 Detalles del error:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      console.groupEnd();
+      
+      throw error.response?.data || { message: "Error de conexión" };
     }
   },
 
-  // Cambiar contraseña
+  // 🆕 CONFIRMAR/CAMBIAR contraseña (con token)
   async changePassword(token, newPassword) {
+    console.group("🔧 authService.changePassword");
     try {
-      console.log("🔐 Cambiando contraseña...")
-      const response = await api.post("/auth/reset-password", {
-        token,
-        newPassword,
-      })
-      return response.data
+      console.log("🔑 Token recibido:", token);
+      console.log("🔄 Preparando petición...");
+      
+      // Enviar los datos que el backend espera
+      const requestData = {
+        token: token,
+        newPassword: newPassword
+      };
+      
+      console.log("📤 Datos a enviar:", requestData);
+      console.log("🌐 Endpoint: /auth/reset-password");
+      
+      const response = await api.post("/auth/reset-password", requestData);
+      
+      console.log("✅ Respuesta del servidor - Status:", response.status);
+      console.log("📨 Datos de respuesta:", response.data);
+      console.groupEnd();
+      
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: "Error de conexión" }
+      console.error("❌ Error en authService.changePassword:");
+      console.log("🔍 Detalles del error:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      console.groupEnd();
+      
+      throw error.response?.data || { message: "Error de conexión" };
     }
   },
 
