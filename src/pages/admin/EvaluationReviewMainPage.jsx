@@ -133,15 +133,47 @@ const EvaluationReviewMainPage = () => {
   try {
     console.log('🔍 Cargando evaluación completa:', evaluation.id);
     
+    /const handleViewEvaluation = async (evaluation) => {
+  try {
+    console.log('🔍 Cargando evaluación completa:', evaluation.id);
+    
     // Obtener la evaluación completa por ID
     const fullEvaluation = await evaluationService.getEvaluationById(evaluation.id);
     console.log('📊 Evaluación completa obtenida:', fullEvaluation);
     
-    setSelectedEvaluation(fullEvaluation);
+    // Enriquecer con información del evaluador
+    let evaluatorName = 'Evaluador no disponible';
+    if (fullEvaluation.evaluadorId) {
+      try {
+        const evaluador = await userService.getEvaluadorById(fullEvaluation.evaluadorId);
+        evaluatorName = `${evaluador.nombre} ${evaluador.apellido || ''}`.trim();
+        console.log('👤 Información del evaluador obtenida:', evaluatorName);
+      } catch (error) {
+        console.warn('⚠️ No se pudo obtener información del evaluador:', error);
+        // Si falla, usar el nombre que ya teníamos de la lista
+        evaluatorName = evaluation.evaluatorName || 'Evaluador no disponible';
+      }
+    }
+    
+    // Combinar datos
+    const enrichedEvaluation = {
+      ...fullEvaluation,
+      evaluatorName: evaluatorName,
+      // Preservar otros datos importantes
+      project: fullEvaluation.proyecto || evaluation.project,
+      formato: fullEvaluation.formato || evaluation.formato
+    };
+    
+    console.log('🎯 Evaluación enriquecida:', enrichedEvaluation);
+    setSelectedEvaluation(enrichedEvaluation);
     setShowModal(true);
+    
   } catch (error) {
     console.error('❌ Error cargando evaluación completa:', error);
-    alert('Error al cargar los detalles de la evaluación');
+    // Si falla, usar la evaluación de la lista como fallback
+    setSelectedEvaluation(evaluation);
+    setShowModal(true);
+    alert('Error al cargar los detalles completos, mostrando información básica');
   }
 };
 
