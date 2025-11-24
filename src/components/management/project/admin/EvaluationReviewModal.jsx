@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   FaTimes, FaCheck, FaEdit, FaFileAlt, FaUser, FaCalendar, 
   FaClipboardList, FaSave, FaUndo, FaEye, FaComment,
-  FaExclamationTriangle, FaInfoCircle
+  FaExclamationTriangle, FaInfoCircle, FaCalculator,
+  FaAlignLeft, FaListAlt
 } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import '../../../../styles/management/project/admin/EvaluationReviewModal.css';
@@ -36,6 +37,7 @@ const EvaluationReviewModal = ({
         itemEvaluadoId: item.id,
         calificacion: item.calificacion || 0,
         observacion: item.observacion || '',
+        peso: item.criterio?.peso || item.peso || 100,
         itemOriginal: { ...item }
       })) || [];
       
@@ -49,6 +51,64 @@ const EvaluationReviewModal = ({
     setSuccessMessage(message);
     setModalType(type);
     setShowSuccessModal(true);
+  };
+
+  // FUNCIÓN MEJORADA PARA OBTENER LA DESCRIPCIÓN DEL ITEM
+  const getItemDescription = (item) => {
+    // Buscar descripción en diferentes ubicaciones posibles
+    const description = 
+      item.criterio?.descripcion || 
+      item.descripcion || 
+      item.criterioDescripcion ||
+      item.itemDescripcion ||
+      'Sin descripción disponible';
+    
+    return description;
+  };
+
+  // FUNCIÓN MEJORADA PARA OBTENER EL NOMBRE DEL ITEM
+  const getItemName = (item) => {
+    return item.criterio?.nombre || item.nombre || `Item ${item.id || 'N/A'}`;
+  };
+
+  // FUNCIÓN MEJORADA PARA OBTENER EL PESO DEL ITEM
+  const getItemWeight = (item) => {
+    return item.criterio?.peso || item.peso || 100;
+  };
+
+  // CALCULAR PUNTAJE TOTAL CORREGIDO - Considerando pesos
+  const calculateTotalScore = () => {
+    if (itemsEditados.length === 0) return evaluation.calificacionTotal || 0;
+    
+    // Si hay pesos diferentes, calcular con pesos
+    const hasDifferentWeights = itemsEditados.some(item => item.peso !== 100);
+    
+    if (hasDifferentWeights) {
+      // Calcular con pesos
+      const totalWeight = itemsEditados.reduce((sum, item) => sum + (item.peso || 100), 0);
+      const weightedScore = itemsEditados.reduce((sum, item) => {
+        const itemScore = item.calificacion || 0;
+        const itemWeight = item.peso || 100;
+        return sum + (itemScore * itemWeight) / 100;
+      }, 0);
+      
+      // Normalizar al total de pesos
+      return Math.round((weightedScore / totalWeight) * 100);
+    } else {
+      // Calcular promedio simple si todos los pesos son 100
+      const total = itemsEditados.reduce((sum, item) => sum + (item.calificacion || 0), 0);
+      return Math.round(total / itemsEditados.length);
+    }
+  };
+
+  // CALCULAR PUNTAJE MÁXIMO POSIBLE
+  const calculateMaxPossibleScore = () => {
+    return 100; // Siempre es sobre 100%
+  };
+
+  // CALCULAR PROMEDIO (es el mismo que el total en este caso)
+  const calculateAverageScore = () => {
+    return calculateTotalScore();
   };
 
   const handleSubmitObservation = async () => {
@@ -71,16 +131,12 @@ const EvaluationReviewModal = ({
   const handleSaveEdits = async () => {
     try {
       setSaving(true);
-      // Llamar a la función para editar evaluación
       await onEditEvaluation(evaluation.id, itemsEditados);
       setEditingItems(false);
       showModalMessage('✅ Cambios guardados correctamente');
       
-      // Forzar actualización inmediata del modal padre
-      // Esto asegura que los cambios se reflejen al instante
       setTimeout(() => {
         if (typeof onClose === 'function') {
-          // Recargar los datos o forzar actualización
           window.dispatchEvent(new CustomEvent('evaluationUpdated'));
         }
       }, 1000);
@@ -98,6 +154,7 @@ const EvaluationReviewModal = ({
       itemEvaluadoId: item.id,
       calificacion: item.calificacion || 0,
       observacion: item.observacion || '',
+      peso: getItemWeight(item),
       itemOriginal: { ...item }
     })) || [];
     
@@ -118,17 +175,6 @@ const EvaluationReviewModal = ({
     setItemsEditados(updatedItems);
   };
 
-  const calculateTotalScore = () => {
-    if (itemsEditados.length === 0) return evaluation.calificacionTotal || 0;
-    return itemsEditados.reduce((total, item) => total + (item.calificacion || 0), 0);
-  };
-
-  const calculateAverageScore = () => {
-    if (itemsEditados.length === 0) return 0;
-    const total = calculateTotalScore();
-    return Math.round(total / itemsEditados.length);
-  };
-
   const hasChanges = () => {
     return itemsEditados.some((item, index) => {
       const originalItem = evaluation.items?.[index];
@@ -142,7 +188,6 @@ const EvaluationReviewModal = ({
       try {
         await onApprove(evaluation.id);
         showModalMessage('✅ Evaluación aprobada correctamente');
-        // Cerrar el modal después de aprobar
         setTimeout(() => {
           onClose();
         }, 1500);
@@ -159,7 +204,6 @@ const EvaluationReviewModal = ({
       try {
         await onRequestChanges(evaluation.id, reason);
         showModalMessage('✅ Cambios solicitados correctamente');
-        // Cerrar el modal después de solicitar cambios
         setTimeout(() => {
           onClose();
         }, 1500);
@@ -183,6 +227,19 @@ const EvaluationReviewModal = ({
         return <span className="status-badge status-unknown">{evaluation.estado || 'Desconocido'}</span>;
     }
   };
+
+  // Función para obtener el color basado en el score
+  const getScoreColorClass = (score) => {
+    if (score >= 90) return 'score-excellent';
+    if (score >= 80) return 'score-good';
+    if (score >= 70) return 'score-average';
+    if (score >= 60) return 'score-poor';
+    return 'score-fail';
+  };
+
+  const totalScore = calculateTotalScore();
+  const averageScore = calculateAverageScore();
+  const maxScore = calculateMaxPossibleScore();
 
   return (
     <>
@@ -231,7 +288,7 @@ const EvaluationReviewModal = ({
               className={`evaluation-review-modal-tab ${activeTab === 'items' ? 'active' : ''}`}
               onClick={() => setActiveTab('items')}
             >
-              <FaClipboardList /> Items ({evaluation.items?.length || 0})
+              <FaListAlt /> Items ({evaluation.items?.length || 0})
             </button>
             <button 
               className={`evaluation-review-modal-tab ${activeTab === 'observations' ? 'active' : ''}`}
@@ -255,23 +312,33 @@ const EvaluationReviewModal = ({
                       <span className="project-title">{evaluation.project?.titulo || 'Proyecto no disponible'}</span>
                     </div>
                     <div className="evaluation-review-detail-item">
-                      <strong>ID Proyecto:</strong>
+                      <strong>Proyecto:</strong>
                       <span className="project-id">{evaluation.project?.id || 'N/A'}</span>
                     </div>
                     <div className="evaluation-review-detail-item">
                       <strong>Formato:</strong>
                       <span>{evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}</span>
                     </div>
+                    
+                    {/* PUNTUACIÓN TOTAL CORREGIDA */}
                     <div className="evaluation-review-detail-item">
-                      <strong>Puntuación Total:</strong>
-                      <span className="evaluation-review-score total-score">
-                        {calculateTotalScore()} / {itemsEditados.length * 100}
+                      <strong>
+                        <FaCalculator className="evaluation-inline-icon" />
+                        Puntuación Total:
+                      </strong>
+                      <span className={`evaluation-review-score total-score ${getScoreColorClass(totalScore)}`}>
+                        {totalScore} / {maxScore}
                       </span>
                     </div>
+                    
+                    {/* PROMEDIO CORREGIDO */}
                     <div className="evaluation-review-detail-item">
-                      <strong>Promedio:</strong>
-                      <span className="evaluation-review-score average-score">
-                        {calculateAverageScore()}%
+                      <strong>
+                        <FaCalculator className="evaluation-inline-icon" />
+                        Promedio:
+                      </strong>
+                      <span className={`evaluation-review-score average-score ${getScoreColorClass(averageScore)}`}>
+                        {averageScore}%
                       </span>
                     </div>
                   </div>
@@ -300,6 +367,24 @@ const EvaluationReviewModal = ({
                         {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleString() : 'No disponible'}
                       </span>
                     </div>
+                    
+                    {/* Información adicional de cálculos */}
+                    <div className="evaluation-review-stat">
+                      <span className="stat-label">Sistema de Calificación:</span>
+                      <span className="stat-value">0-100 puntos</span>
+                    </div>
+                    
+                    {/* Barra de progreso visual */}
+                    <div className="evaluation-review-stat full-width">
+                      <span className="stat-label">Progreso de Calificación:</span>
+                      <div className="score-progress-bar">
+                        <div 
+                          className="score-progress-fill"
+                          style={{ width: `${totalScore}%` }}
+                        ></div>
+                        <span className="score-progress-text">{totalScore}%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -315,11 +400,14 @@ const EvaluationReviewModal = ({
               </div>
             )}
 
-            {/* Tab: Items Evaluados */}
+            {/* Tab: Items Evaluados - MEJORADO */}
             {activeTab === 'items' && (
               <div className="evaluation-review-items">
                 <div className="evaluation-review-items-header">
-                  <h4>Items de Evaluación</h4>
+                  <h4>
+                    <FaListAlt className="evaluation-inline-icon" />
+                    Items de Evaluación
+                  </h4>
                   <div className="evaluation-review-items-actions">
                     {!editingItems ? (
                       <button 
@@ -359,14 +447,18 @@ const EvaluationReviewModal = ({
                       editedItem.observacion !== (originalItem.observacion || '')
                     );
 
+                    const itemName = getItemName(originalItem);
+                    const itemDescription = getItemDescription(originalItem);
+                    const itemWeight = getItemWeight(originalItem);
+
                     return (
                       <div key={originalItem.id} className={`evaluation-review-item ${isChanged ? 'item-changed' : ''}`}>
                         <div className="evaluation-review-item-header">
-                          <h5>{originalItem.criterio?.nombre || `Item ${index + 1}`}</h5>
+                          <h5>{itemName}</h5>
                           <div className="evaluation-review-item-meta">
-                            {originalItem.criterio?.peso && (
+                            {itemWeight && itemWeight !== 100 && (
                               <span className="evaluation-review-item-weight">
-                                Peso: {originalItem.criterio.peso}%
+                                Peso: {itemWeight}%
                               </span>
                             )}
                             {isChanged && editingItems && (
@@ -375,13 +467,20 @@ const EvaluationReviewModal = ({
                           </div>
                         </div>
                         
-                        <p className="evaluation-review-item-description">
-                          {originalItem.criterio?.descripcion || 'Sin descripción disponible'}
-                        </p>
+                        {/* DESCRIPCIÓN MEJORADA */}
+                        <div className="evaluation-review-item-description-container">
+                          <FaAlignLeft className="evaluation-review-description-icon" />
+                          <div className="evaluation-review-item-description-content">
+                            <label className="evaluation-review-description-label">Descripción:</label>
+                            <p className="evaluation-review-item-description">
+                              {itemDescription}
+                            </p>
+                          </div>
+                        </div>
 
                         <div className="evaluation-review-item-controls">
                           <div className="evaluation-review-item-score">
-                            <label>Calificación:</label>
+                            <label>Calificación (0-100 puntos):</label>
                             {editingItems ? (
                               <div className="score-input-container">
                                 <input
@@ -434,7 +533,10 @@ const EvaluationReviewModal = ({
             {/* Tab: Observaciones */}
             {activeTab === 'observations' && (
               <div className="evaluation-review-observations">
-                <h4>Observaciones del Administrador</h4>
+                <h4>
+                  <FaComment className="evaluation-inline-icon" />
+                  Observaciones del Administrador
+                </h4>
                 
                 <div className="evaluation-review-observation-input">
                   <label>Nueva Observación General:</label>
@@ -482,7 +584,7 @@ const EvaluationReviewModal = ({
                         .filter(item => item.observacion)
                         .map((item, index) => (
                           <div key={item.id} className="evaluation-review-item-observation">
-                            <strong>{item.criterio?.nombre || `Item ${index + 1}`}:</strong>
+                            <strong>{getItemName(item)}:</strong>
                             <p>{item.observacion}</p>
                           </div>
                         ))
@@ -501,22 +603,6 @@ const EvaluationReviewModal = ({
           {/* Footer */}
           <div className="evaluation-review-modal-footer">
             <div className="evaluation-review-modal-footer-actions">
-              <div className="evaluation-review-modal-primary-actions">
-                <button 
-                  onClick={handleRequestChanges} 
-                  className="evaluation-review-btn-request-changes"
-                  disabled={editingItems || saving}
-                >
-                  <FaTimes /> Solicitar Cambios
-                </button>
-                <button 
-                  onClick={handleApprove} 
-                  className="evaluation-review-btn-approve"
-                  disabled={editingItems || saving}
-                >
-                  <FaCheck /> Aprobar Evaluación
-                </button>
-              </div>
               <button 
                 onClick={onClose} 
                 className="evaluation-review-btn-close"
