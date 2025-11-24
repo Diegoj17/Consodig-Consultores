@@ -5,7 +5,7 @@ import {
   FaEnvelope, FaCog, FaSignOutAlt, FaUser, FaClipboardList, 
   FaChartBar, FaProjectDiagram, FaChevronDown, FaChevronRight,
   FaFileAlt, FaUserCheck, FaHistory, FaListAlt, FaTasks,
-  FaHome, FaUserCircle, FaCogs
+  FaHome, FaUserCircle, FaCogs, FaSearch, FaEdit, FaCheckCircle
 } from 'react-icons/fa';
 import { MdDashboard } from "react-icons/md";
 import { authService } from '../../services/authService';
@@ -19,7 +19,7 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   const [evaluationsMenuOpen, setEvaluationsMenuOpen] = useState(false);
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
 
-  // Menú base para admin
+  // Menú base para admin - AGREGAR NUEVA OPCIÓN
   const baseAdminMenu = [
     { key: 'dashboard', label: 'Inicio', path: '/admin/dashboard', icon: <MdDashboard /> },
     { key: 'users', label: 'Gestión de Usuarios', path: '/admin/users', icon: <FaUsers /> },
@@ -28,6 +28,12 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
       label: 'Proyectos', 
       isParent: true,
       icon: <FaFolderOpen /> 
+    },
+    { 
+      key: 'evaluations-admin-parent', 
+      label: 'Evaluaciones', 
+      isParent: true,
+      icon: <FaClipboardList /> 
     },
     { key: 'reports', label: 'Reportes', path: '/admin/reports', icon: <FaChartLine /> },
     { key: 'messages', label: 'Mensajes', path: '/admin/messages', icon: <FaEnvelope /> },
@@ -39,6 +45,13 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
     { key: 'evaluations', label: 'Formatos de Evaluación', path: '/admin/evaluations', icon: <FaFileAlt /> },
     { key: 'assign', label: 'Asignar Evaluadores', path: '/admin/assign', icon: <FaUserCheck /> },
     { key: 'history', label: 'Historial', path: '/admin/history', icon: <FaHistory /> }
+  ];
+
+  // NUEVO: Submenú de Evaluaciones para Admin
+  const adminEvaluationsSubmenu = [
+    { key: 'evaluations-review', label: 'Revisar Evaluaciones', path: '/admin/evaluations/review', icon: <FaSearch /> },
+    { key: 'evaluations-completed', label: 'Evaluaciones Completadas', path: '/admin/evaluations/completed', icon: <FaCheckCircle /> },
+    { key: 'evaluations-feedback', label: 'Gestión de Observaciones', path: '/admin/evaluations/feedback', icon: <FaEdit /> }
   ];
 
   // Menú para Evaluador
@@ -110,6 +123,9 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
     if (userType === 'admin' && parentKey === 'projects-parent') {
       return adminProjectsSubmenu;
     }
+    if (userType === 'admin' && parentKey === 'evaluations-admin-parent') {
+      return adminEvaluationsSubmenu;
+    }
     if (userType === 'evaluador' && parentKey === 'evaluations-parent') {
       return evaluadorEvaluationsSubmenu;
     }
@@ -133,8 +149,13 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   // Efecto para abrir automáticamente el submenú si activeSection está dentro
   useEffect(() => {
     // Para admin
-    if (userType === 'admin' && checkIfActiveInSubmenu('projects-parent')) {
-      setProjectsMenuOpen(true);
+    if (userType === 'admin') {
+      if (checkIfActiveInSubmenu('projects-parent')) {
+        setProjectsMenuOpen(true);
+      }
+      if (checkIfActiveInSubmenu('evaluations-admin-parent')) {
+        setEvaluationsMenuOpen(true);
+      }
     }
     
     // Para evaluador
@@ -165,6 +186,11 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
         setEvaluationsMenuOpen(false);
         setReportsMenuOpen(false);
         break;
+      case 'evaluations-admin-parent':
+        setEvaluationsMenuOpen(!evaluationsMenuOpen);
+        setProjectsMenuOpen(false);
+        setReportsMenuOpen(false);
+        break;
       case 'evaluations-parent':
         setEvaluationsMenuOpen(!evaluationsMenuOpen);
         setProjectsMenuOpen(false);
@@ -183,10 +209,10 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   const handleSubmenuClick = (path, parentKey) => {
     handleNavigation(path);
     
-    // Cerrar todos los submenús después de la navegación
-    setProjectsMenuOpen(false);
-    setEvaluationsMenuOpen(false);
-    setReportsMenuOpen(false);
+    // Cerrar todos los submenús después de la navegación (opcional)
+    // setProjectsMenuOpen(false);
+    // setEvaluationsMenuOpen(false);
+    // setReportsMenuOpen(false);
   };
 
   const handleLogout = () => {
@@ -203,6 +229,7 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   const isSubmenuOpen = (parentKey) => {
     switch (parentKey) {
       case 'projects-parent': return projectsMenuOpen;
+      case 'evaluations-admin-parent': return evaluationsMenuOpen;
       case 'evaluations-parent': return evaluationsMenuOpen;
       case 'results-parent': return reportsMenuOpen;
       default: return false;

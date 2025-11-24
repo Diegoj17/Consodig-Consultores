@@ -8,7 +8,7 @@ import ProjectsMainPage from '../pages/admin/ProjectsMainPage';
 import ProjectEvaluationsMainPage from '../pages/admin/ProjectEvaluationsMainPage';
 import ProjectAssignmentMainPage from '../pages/admin/ProjectAssignmentMainPage';
 import ProjectHistoryMainPage from '../pages/admin/ProjectHistoryMainPage';
-
+import EvaluationReviewMainPage from '../pages/admin/EvaluationReviewMainPage'; // NUEVA PÁGINA
 import '../styles/pages/admin/DashboardPage.css';
 
 function AdminLayout() {
@@ -23,6 +23,9 @@ function AdminLayout() {
     if (path.includes('/admin/evaluations')) return 'evaluations';
     if (path.includes('/admin/assign')) return 'assign';
     if (path.includes('/admin/history')) return 'history';
+    if (path.includes('/admin/evaluations/review')) return 'evaluations-review';
+    if (path.includes('/admin/evaluations/completed')) return 'evaluations-completed';
+    if (path.includes('/admin/evaluations/feedback')) return 'evaluations-feedback';
     if (path.includes('/admin/reports')) return 'reports';
     if (path.includes('/admin/templates')) return 'templates';
     if (path.includes('/admin/messages')) return 'messages';
@@ -31,6 +34,13 @@ function AdminLayout() {
   };
 
   const getPageTitle = () => {
+    const path = location.pathname;
+
+    // Títulos específicos para las nuevas rutas
+    if (path.includes('/admin/evaluations/review')) return 'Revisar Evaluaciones';
+    if (path.includes('/admin/evaluations/completed')) return 'Evaluaciones Completadas';
+    if (path.includes('/admin/evaluations/feedback')) return 'Gestión de Observaciones';
+    
     const titles = {
       dashboard: 'Inicio',
       users: 'Gestión de Usuarios',
@@ -61,16 +71,27 @@ function AdminLayout() {
         />
         <main className="main-content">
           <Routes>
+            {/* Rutas principales */}
             <Route path="/dashboard" element={<DashboardPage userType="admin" />} />
             <Route path="/users" element={<UserManagement />} />
+            
+            {/* Rutas de proyectos */}
             <Route path="/projects" element={<ProjectsMainPage initialTab="projects" />} />
             <Route path="/evaluations" element={<ProjectEvaluationsMainPage initialTab="evaluations" />} />
             <Route path="/assign" element={<ProjectAssignmentMainPage initialTab="assign" />} />
             <Route path="/history" element={<ProjectHistoryMainPage initialTab="history" />} />
+            
+            {/* NUEVAS RUTAS: Revisión de Evaluaciones */}
+            <Route path="/evaluations/review" element={<EvaluationReviewMainPage />} />
+            <Route path="/evaluations/completed" element={<EvaluationReviewMainPage />} /> {/* Puedes crear una página específica después */}
+            <Route path="/evaluations/feedback" element={<EvaluationReviewMainPage />} /> {/* Puedes crear una página específica después */}
+            
+            {/* Otras rutas */}
             <Route path="/reports" element={<div>Reportes (Admin)</div>} />
             <Route path="/templates" element={<div>Plantillas (Admin)</div>} />
             <Route path="/messages" element={<div>Mensajes (Admin)</div>} />
             <Route path="/settings" element={<div>Configuración (Admin)</div>} />
+            
             {/* Ruta por defecto */}
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>

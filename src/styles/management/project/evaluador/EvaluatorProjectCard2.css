@@ -1,0 +1,403 @@
+/* EvaluatorProjectCard2.css - Estilos EXACTAMENTE iguales a ProjectCard pero con prefijo evaluator-project-card-2- */
+
+.evaluator-project-card-2 {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  transition: all 0.22s ease;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0rem;
+  width: 100%;
+  padding: 0rem;
+}
+
+.evaluator-project-card-2:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-user-avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #007bbf, #005a8f);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-user-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-user-meta h3,
+.evaluator-project-card-2 .evaluator-project-card-2-project-title {
+  margin: 0 0 0.25rem 0;
+  color: #000000;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-researcher,
+.evaluator-project-card-2 .evaluator-project-card-2-user-email {
+  color: #000000;
+  font-size: 0.85rem;
+  margin: 0;
+  display: block;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-category {
+  display: inline-block;
+  margin: 0.25rem 0 0 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0f2ff 100%);
+  color: #0f172a;
+  border: 1px solid rgba(29,78,216,0.12);
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-indicator {
+  margin-left: auto;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge {
+  padding: 0.4rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge.evaluator-project-card-2-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge.evaluator-project-card-2-status-preasigned {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge.evaluator-project-card-2-status-evaluation {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge.evaluator-project-card-2-status-evaluated {
+  background: #dcfce7;
+  color: #14532d;
+  border: 1px solid #86efac;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-status-badge.evaluator-project-card-2-status-default {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-card-body {
+  padding: 1.25rem;
+  flex: 1 1 auto;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-info-group {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-info-group label {
+  display: block;
+  font-weight: 700;
+  color: #000000;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-info-group p {
+  margin: 0;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-summary,
+.evaluator-project-card-2 .evaluator-project-card-2-research-lines {
+  line-height: 1.4;
+  max-height: 3.6em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-objectives {
+  margin-top: 0.5rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-objective-general {
+  margin: 0.25rem 0 0.75rem 0;
+  color: #000000;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-objective-list {
+  margin: 0.25rem 0 0 0;
+  padding-left: 1.25rem;
+  color: #000000;
+  font-size: 0.95rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-objective-list li {
+  margin-bottom: 0.35rem;
+  line-height: 1.4;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-keyword-badge {
+  padding: 0.25rem 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #000000;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-keyword-more {
+  padding: 0.25rem 0.5rem;
+  background: #007bbf;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Estilos para lista de archivos en la tarjeta */
+.evaluator-project-card-2 .evaluator-project-card-2-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-file-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-file-icon {
+  font-size: 1rem;
+  color: #007bbf;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-file-name {
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-btn-download {
+  background: transparent;
+  border: none;
+  color: #007bbf;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-btn-download:hover {
+  background: rgba(0,123,191,0.06);
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-file-more {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-no-files {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-inline-icon {
+  font-size: 0.8rem;
+  color: #007bbf;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-card-footer {
+  padding: 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-btn-icon {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-btn-edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-btn-edit:hover {
+  background: #1d4ed8;
+  color: white;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-view {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-view:hover {
+  background: #059669;
+  color: white;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-evaluate {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-evaluate:hover {
+  background: #d97706;
+  color: white;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-review {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-project-btn-review:hover {
+  background: #16a34a;
+  color: white;
+}
+
+.evaluator-project-card-2 .evaluator-project-card-2-registration-date {
+  font-size: 0.75rem;
+  color: #000000;
+}
+
+.evaluator-project-card-2-project-btn-pdf {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.evaluator-project-card-2-project-btn-pdf:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.evaluator-project-card-2-project-btn-pdf:active {
+  transform: translateY(0);
+}
+
+/* Ajustar el grid de botones para acomodar el nuevo botón */
+.evaluator-project-card-2-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+
+/* Responsive */
+@media (max-width: 480px) {
+  .evaluator-project-card-2 {
+    margin: 0.5rem;
+  }
+  
+  .evaluator-project-card-2 .evaluator-project-card-2-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .evaluator-project-card-2 .evaluator-project-card-2-status-indicator {
+    margin-left: 0;
+  }
+  
+  .evaluator-project-card-2 .evaluator-project-card-2-card-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .evaluator-project-card-2 .evaluator-project-card-2-action-buttons {
+    justify-content: center;
+  }
+}

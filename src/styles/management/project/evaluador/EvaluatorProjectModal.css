@@ -1,0 +1,609 @@
+/* src/styles/management/project/evaluador/EvaluatorProjectModal.css */
+.evaluator-project-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  padding: 1rem;
+  animation: evaluatorProjectModalFadeIn 0.3s ease;
+}
+
+@keyframes evaluatorProjectModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.evaluator-project-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  height: 90vh;
+  overflow: visible;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: evaluatorProjectModalSlideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+@keyframes evaluatorProjectModalSlideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Header */
+.evaluator-project-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.75rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--primary-color);
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.evaluator-project-modal-title-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluator-project-modal-header h3 {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluator-project-modal-title-icon {
+  font-size: 1.5rem;
+}
+
+.evaluator-project-modal-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.evaluator-project-modal-investigator {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluator-project-id,
+.evaluator-evaluation-id {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluator-inline-icon {
+  font-size: 0.8rem;
+}
+
+.evaluator-project-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluator-project-modal-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  transition: var(--transition);
+  padding: 0.5rem;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.evaluator-project-modal-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Modal Body */
+.evaluator-project-modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+  background: var(--background-light);
+}
+
+.evaluator-project-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evaluator-project-modal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.evaluator-project-modal-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.evaluator-project-modal-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.evaluator-project-modal-readonly-text {
+  margin: 0;
+  padding: 0.875rem 0;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Secciones */
+.evaluator-project-modal-section {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  overflow: visible;
+  margin-bottom: -0.5rem;
+}
+
+.evaluator-project-modal-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--background-light);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.evaluator-project-modal-section-icon {
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.evaluator-project-modal-section-header h3 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.evaluator-project-modal-section-content {
+  padding: 1.5rem;
+}
+
+/* Objetivos */
+.evaluator-project-modal-objectives-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.evaluator-project-modal-objective-label {
+  font-weight: 700;
+  color: var(--text-dark);
+  padding-top: 0.875rem;
+}
+
+.evaluator-project-modal-objective-field {
+  flex: 1;
+}
+
+.evaluator-project-modal-objectives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluator-project-modal-objective-item {
+  padding: 0.5rem 0;
+  line-height: 1.5;
+}
+
+/* Keywords */
+.evaluator-project-modal-keywords {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.evaluator-project-modal-keyword-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* File Styles */
+.evaluator-project-modal-files-list {
+  margin-top: 1rem;
+}
+
+.evaluator-project-modal-files-list h4 {
+  margin-bottom: 1rem;
+  color: var(--text-dark);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.evaluator-project-modal-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.evaluator-project-modal-file-item:hover {
+  background-color: #e9ecef;
+}
+
+.evaluator-project-modal-file-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 1rem;
+}
+
+.evaluator-project-modal-file-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.evaluator-file-icon-pdf {
+  color: #dc3545;
+}
+
+.evaluator-file-icon-excel {
+  color: #28a745;
+}
+
+.evaluator-file-icon-default {
+  color: #6c757d;
+}
+
+.evaluator-project-modal-file-details {
+  flex: 1;
+}
+
+.evaluator-project-modal-file-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.evaluator-project-modal-file-type {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.evaluator-project-modal-file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.evaluator-project-modal-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.evaluator-project-modal-btn-open {
+  background: var(--primary-color);
+  color: white;
+}
+
+.evaluator-project-modal-btn-open:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.evaluator-project-modal-btn-download {
+  background: var(--success-color);
+  color: white;
+}
+
+.evaluator-project-modal-btn-download:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+}
+
+.evaluator-project-modal-no-files {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-light);
+}
+
+.evaluator-project-modal-no-files-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #dee2e6;
+}
+
+.evaluator-project-modal-loading-files {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-left: auto;
+}
+
+.evaluator-spinning {
+  animation: evaluatorSpin 1s linear infinite;
+}
+
+@keyframes evaluatorSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Modal Footer */
+.evaluator-project-modal-footer {
+  padding: 1.5rem 2rem;
+  border-top: 2px solid var(--border-color);
+  background: var(--background-light);
+  flex-shrink: 0;
+}
+
+.evaluator-project-modal-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.evaluator-project-modal-primary-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.evaluator-project-modal-btn-secondary,
+.evaluator-project-modal-btn-download {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.95rem;
+}
+
+.evaluator-project-modal-btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.evaluator-project-modal-btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.evaluator-project-modal-btn-download {
+  background: var(--success-color);
+  color: white;
+}
+
+.evaluator-project-modal-btn-download:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.evaluator-project-modal-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0.875rem 0;
+}
+
+.evaluator-project-modal-status-completado {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.evaluator-project-modal-status-en-evaluacion {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.evaluator-project-modal-status-asignada {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.evaluator-project-modal-status-rechazada {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.evaluator-project-modal-status-default {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+/* Botones de descarga en footer */
+.evaluator-project-modal-btn-csv {
+  background: var(--success-color);
+  color: white;
+}
+
+.evaluator-project-modal-btn-csv:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.evaluator-project-modal-btn-pdf {
+  background: #dc3545;
+  color: white;
+}
+
+.evaluator-project-modal-btn-pdf:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.evaluator-file-icon-word {
+  color: #2b579a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-project-modal {
+    width: 95%;
+    height: 95vh;
+  }
+  
+  .evaluator-project-modal-header {
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .evaluator-project-modal-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .evaluator-project-modal-body {
+    padding: 1.5rem;
+  }
+  
+  .evaluator-project-modal-form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .evaluator-project-modal-objectives-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluator-project-modal-objective-label {
+    padding-top: 0;
+  }
+  
+  .evaluator-project-modal-footer {
+    padding: 1.25rem;
+  }
+  
+  .evaluator-project-modal-footer-actions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  
+  .evaluator-project-modal-primary-actions {
+    width: 100%;
+  }
+  
+  .evaluator-project-modal-btn-secondary,
+  .evaluator-project-modal-btn-download {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .evaluator-project-modal-subtitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .evaluator-project-modal-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .evaluator-project-modal-file-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-project-modal-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .evaluator-project-modal-body {
+    padding: 1.25rem;
+  }
+}

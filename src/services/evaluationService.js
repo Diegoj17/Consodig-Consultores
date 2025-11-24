@@ -78,6 +78,19 @@ class EvaluationService {
     }
   }
 
+  // Asignar una evaluación a un evaluador
+  async assignEvaluation(asignDto) {
+    try {
+      // esperar que el backend exponga un endpoint para asignaciones
+      // POST /evaluaciones/asignar { proyectoId, formatoId, evaluadorId, tiempoLimiteHoras }
+      const response = await projectApi.post(`${this.basePath}/asignar`, asignDto);
+      return response.data;
+    } catch (error) {
+      console.error('Error asignando evaluación:', error);
+      throw error;
+    }
+  }
+
   // Aceptar evaluación (cambia estado de ASIGNADA a ACEPTADA)
   async acceptEvaluation(id) {
     try {
@@ -119,6 +132,39 @@ class EvaluationService {
       return response.data;
     } catch (error) {
       console.error('Error calificando ítem:', error);
+      throw error;
+    }
+  }
+
+  async editEvaluation(evaluationId, itemsEditados) {
+    try {
+      console.log('🔄 Editando evaluación:', evaluationId, itemsEditados);
+      
+      // Validar que itemsEditados sea un array
+      if (!Array.isArray(itemsEditados)) {
+        throw new Error('Los datos de edición deben ser un array');
+      }
+
+      // Validar que cada item tenga la estructura correcta
+      const isValidPayload = itemsEditados.every(item => 
+        item && 
+        typeof item.itemEvaluadoId !== 'undefined' &&
+        typeof item.calificacion !== 'undefined' &&
+        typeof item.observacion !== 'undefined'
+      );
+
+      if (!isValidPayload) {
+        throw new Error('Estructura de datos de edición inválida');
+      }
+
+      console.log('📤 Enviando payload al backend:', itemsEditados);
+      
+      const response = await projectApi.put(`${this.basePath}/${evaluationId}/editar`, itemsEditados);
+      console.log('✅ Evaluación editada exitosamente:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error editando evaluación:', error);
+      console.error('📡 Detalles del error:', error.response?.data || error.message);
       throw error;
     }
   }
