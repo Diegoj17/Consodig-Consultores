@@ -94,8 +94,8 @@ const EvaluationDetailsModal = ({
                   </div>
                   
                   <div className="evaluation-details-modal-info-item">
-                    <span className="evaluation-details-modal-info-label">Código:</span>
-                    <span className="evaluation-details-modal-info-value">{project.codigo || 'N/A'}</span>
+                    <span className="evaluation-details-modal-info-label">Proyecto:</span>
+                    <span className="evaluation-details-modal-info-value">{project.id || 'N/A'}</span>
                   </div>
                   
                   <div className="evaluation-details-modal-info-item">
