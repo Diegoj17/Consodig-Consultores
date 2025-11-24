@@ -1,43 +1,26 @@
-import React, { useState } from 'react';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import DashboardContent from '../../components/dashboard/admin/DashboardContent';
 import '../../styles/pages/admin/DashboardPage.css';
 
 function DashboardPage() {
-  const [activeSection, setActiveSection] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
 
-  const getPageTitle = () => {
-    const titles = {
-      dashboard: 'Inicio',
-      users: 'Gestión de Usuarios',
-      projects: 'Gestión de Proyectos',
-      evaluations: 'Evaluaciones',
-      reports: 'Reportes y Estadísticas',
-      templates: 'Plantillas de Evaluación',
-      messages: 'Mensajes y Notificaciones',
-      settings: 'Configuración del Sistema'
-    };
-    return titles[activeSection] || 'Dashboard';
+  const getActiveSection = () => {
+    const path = location.pathname;
+    if (path.includes('/admin/users')) return 'users';
+    if (path.includes('/admin/projects')) return 'projects';
+    if (path.includes('/admin/evaluations')) return 'evaluations';
+    if (path.includes('/admin/reports')) return 'reports';
+    if (path.includes('/admin/templates')) return 'templates';
+    if (path.includes('/admin/messages')) return 'messages';
+    if (path.includes('/admin/settings')) return 'settings';
+    return 'dashboard';
   };
 
   return (
-    <div className={`dashboard-app ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-      <Sidebar 
-        isOpen={sidebarOpen}
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-      />
-      <div className="dashboard-main">
-        <Header 
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          pageTitle={getPageTitle()}
-        />
-        <main className="main-content">
-          <DashboardContent activeSection={activeSection} />
-        </main>
-      </div>
+    <div className="dashboard-page-content">
+      <DashboardContent activeSection={getActiveSection()} />
     </div>
   );
 }

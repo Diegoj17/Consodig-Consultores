@@ -22,7 +22,7 @@ function EvaluandoLayout() {
 
   const getPageTitle = () => {
     const titles = {
-      dashboard: 'Mi Dashboard',
+      dashboard: 'Inicio',
       evaluations: 'Mis Evaluaciones',
       projects: 'Mis Proyectos',
       results: 'Resultados',

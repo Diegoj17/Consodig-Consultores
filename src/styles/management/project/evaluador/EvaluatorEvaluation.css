@@ -1,0 +1,252 @@
+.evaluator-no-selection {
+  text-align: center;
+  padding: 3rem;
+}
+
+.evaluator-no-selection h2 {
+  color: var(--evaluator-text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-no-selection p {
+  color: var(--evaluator-text-light);
+}
+
+.evaluator-evaluation-form {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.evaluator-project-info {
+  background: var(--evaluator-bg-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.evaluator-project-info h3 {
+  margin: 0 0 1rem 0;
+  color: var(--evaluator-text-dark);
+  font-weight: 700;
+}
+
+.evaluator-info-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.evaluator-info-grid strong {
+  display: block;
+  color: var(--evaluator-text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.evaluator-info-grid p {
+  margin: 0;
+  color: var(--evaluator-text-light);
+}
+
+.evaluator-criteria-section {
+  margin-bottom: 2rem;
+}
+
+.evaluator-criteria-section h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--evaluator-text-dark);
+  font-weight: 700;
+}
+
+.evaluator-criterion {
+  background: var(--evaluator-bg-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.evaluator-criterion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.evaluator-criterion-header label {
+  font-weight: 700;
+  color: var(--evaluator-text-dark);
+  font-size: 1.05rem;
+}
+
+.evaluator-criterion-weight {
+  background: var(--evaluator-primary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.evaluator-range {
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.evaluator-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--evaluator-primary);
+  cursor: pointer;
+}
+
+.evaluator-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--evaluator-primary);
+  cursor: pointer;
+}
+
+.evaluator-range-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--evaluator-text-light);
+  font-size: 0.85rem;
+}
+
+.evaluator-comments-section {
+  margin-bottom: 2rem;
+}
+
+.evaluator-comments-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--evaluator-text-dark);
+  font-weight: 700;
+}
+
+.evaluator-help-text {
+  color: var(--evaluator-text-light);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.evaluator-comments-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--evaluator-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.evaluator-comments-textarea:focus {
+  outline: none;
+  border-color: var(--evaluator-primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.evaluator-final-score {
+  background: linear-gradient(135deg, var(--evaluator-primary), var(--evaluator-primary-dark));
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.evaluator-final-score h3 {
+  margin: 0 0 1rem 0;
+  font-weight: 700;
+}
+
+.evaluator-score-display {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.evaluator-score-value {
+  font-size: 4rem;
+  font-weight: 700;
+}
+
+.evaluator-score-label {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.evaluator-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.evaluator-btn-primary,
+.evaluator-btn-secondary {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.evaluator-btn-primary {
+  background: var(--evaluator-success);
+  color: white;
+}
+
+.evaluator-btn-secondary {
+  background: white;
+  color: var(--evaluator-text-dark);
+  border: 2px solid var(--evaluator-border);
+}
+
+.evaluator-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.evaluator-btn-secondary:hover {
+  border-color: var(--evaluator-primary);
+  color: var(--evaluator-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-evaluation-form {
+    padding: 0;
+  }
+  
+  .evaluator-criterion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .evaluator-form-actions {
+    flex-direction: column;
+  }
+  
+  .evaluator-btn-primary,
+  .evaluator-btn-secondary {
+    width: 100%;
+  }
+  
+  .evaluator-score-value {
+    font-size: 3rem;
+  }
+  
+  .evaluator-score-label {
+    font-size: 1.5rem;
+  }
+}

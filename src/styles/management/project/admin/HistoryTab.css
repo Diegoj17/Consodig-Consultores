@@ -1,0 +1,180 @@
+.project-admin-history-tab {
+  width: 100%;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.project-admin-history-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-admin-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  gap: 1.5rem;
+}
+
+.project-admin-history-row:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-admin-history-evaluator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.project-admin-evaluator-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.project-admin-evaluator-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.project-admin-evaluator-profile {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  background: var(--background-light);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.project-admin-history-stats {
+  display: flex;
+  gap: 2rem;
+  flex: 2;
+  justify-content: center;
+}
+
+.project-admin-history-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--background-light);
+  min-width: 120px;
+}
+
+.project-admin-stat-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.project-admin-stat-icon--assigned {
+  color: var(--primary-color);
+}
+
+.project-admin-stat-icon--completed {
+  color: #28a745;
+}
+
+.project-admin-stat-icon--overdue {
+  color: #dc3545;
+}
+
+.project-admin-stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-admin-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-bottom: 0.25rem;
+}
+
+.project-admin-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.project-admin-stat-value--warning {
+  color: #dc3545;
+}
+
+.project-admin-history-actions {
+  flex-shrink: 0;
+}
+
+.project-admin-btn-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--border-color);
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-dark);
+}
+
+.project-admin-btn-detail:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .project-admin-history-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .project-admin-history-stats {
+    justify-content: space-around;
+  }
+  
+  .project-admin-history-stat {
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-admin-history-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .project-admin-history-stat {
+    min-width: auto;
+    justify-content: flex-start;
+  }
+  
+  .project-admin-evaluator-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .project-admin-btn-detail {
+    width: 100%;
+    justify-content: center;
+  }
+}

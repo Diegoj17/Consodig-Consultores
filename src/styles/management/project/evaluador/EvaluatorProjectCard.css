@@ -1,0 +1,689 @@
+:root {
+  --card-primary: #007bff;
+  --card-primary-dark: #0056b3;
+  --card-primary-light: #e3f2fd;
+  --card-success: #28a745;
+  --card-success-dark: #1e7e34;
+  --card-danger: #dc3545;
+  --card-danger-dark: #bd2130;
+  --card-warning: #ffc107;
+  --card-info: #17a2b8;
+  --card-text-dark: #2c3e50;
+  --card-text-medium: #5a6c7d;
+  --card-text-light: #7f8c8d;
+  --card-border: #e1e8ed;
+  --card-bg-light: #f8f9fa;
+  --card-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --card-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
+  --card-radius-sm: 8px;
+  --card-radius-md: 12px;
+  --card-radius-lg: 16px;
+  --card-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   TARJETA PRINCIPAL
+======================================== */
+.evaluator-project-card {
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius-lg);
+  padding: 1.5rem;
+  transition: var(--card-transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--card-shadow-sm);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Borde lateral colorido según estado */
+.evaluator-project-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--card-primary) 0%, var(--card-primary-dark) 100%);
+  transition: var(--card-transition);
+}
+
+.evaluator-project-card--pending::before {
+  background: linear-gradient(180deg, var(--card-warning) 0%, #e0a800 100%);
+}
+
+.evaluator-project-card--active::before {
+  background: linear-gradient(180deg, var(--card-info) 0%, #138496 100%);
+}
+
+.evaluator-project-card--completed::before {
+  background: linear-gradient(180deg, var(--card-success) 0%, var(--card-success-dark) 100%);
+}
+
+.evaluator-project-card--rejected::before {
+  background: linear-gradient(180deg, var(--card-danger) 0%, var(--card-danger-dark) 100%);
+}
+
+.evaluator-project-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-primary);
+}
+
+/* ========================================
+   HEADER DE TARJETA
+======================================== */
+.evaluator-project-header {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+  align-items: flex-start;
+}
+
+.evaluator-user-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--card-primary) 0%, var(--card-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.evaluator-title-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.evaluator-project-title {
+  font-size: 1.35rem;
+  color: var(--card-text-dark);
+  margin: 0 0 0.75rem 0;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+.evaluator-project-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%; /* asegurar que quede debajo del título y ocupe toda la línea */
+}
+
+.evaluator-project-line-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--card-primary-light);
+  color: var(--card-primary-dark);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: var(--card-transition);
+}
+
+.evaluator-project-line-tag:hover {
+  background: var(--card-primary);
+  color: white;
+  transform: scale(1.05);
+}
+
+.evaluator-project-line-tag .tag-icon {
+  font-size: 0.75rem;
+  color: var(--card-primary-dark);
+}
+
+.evaluator-project-line-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  background: var(--card-bg-light);
+  color: var(--card-text-medium);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ========================================
+   STATUS Y BADGES
+======================================== */
+.evaluator-project-status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.evaluator-project-status {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.evaluator-status-preasignado {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  color: #856404;
+}
+
+.evaluator-status-en-evaluación {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  color: #0c5460;
+}
+
+.evaluator-status-evaluado {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+.evaluator-status-rechazado {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+}
+
+.evaluator-urgent-badge,
+.evaluator-overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+.evaluator-urgent-badge {
+  background: #fff3cd;
+  color: #856404;
+  border: 2px solid var(--card-warning);
+}
+
+.evaluator-overdue-badge {
+  background: #f8d7da;
+  color: #721c24;
+  border: 2px solid var(--card-danger);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ========================================
+   CUERPO DE TARJETA
+======================================== */
+.evaluator-project-body {
+  margin-bottom: 1.75rem;
+  flex: 1;
+}
+
+.evaluator-project-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.evaluator-project-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.evaluator-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--card-text-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluator-section-label .section-icon {
+  color: var(--card-primary);
+  font-size: 1rem;
+}
+
+.evaluator-section-content {
+  color: var(--card-text-medium);
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ========================================
+   PALABRAS CLAVE
+======================================== */
+.evaluator-keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.evaluator-keyword-badge {
+  padding: 0.4rem 0.85rem;
+  background: var(--card-bg-light);
+  color: var(--card-text-dark);
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--card-border);
+  transition: var(--card-transition);
+}
+
+.evaluator-keyword-badge:hover {
+  background: var(--card-primary-light);
+  border-color: var(--card-primary);
+  color: var(--card-primary-dark);
+}
+
+.evaluator-keyword-more {
+  padding: 0.4rem 0.85rem;
+  background: var(--card-primary-light);
+  color: var(--card-primary);
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* ========================================
+   OBJETIVOS
+======================================== */
+.evaluator-objective-group {
+  margin-bottom: 1rem;
+}
+
+.evaluator-objective-group:last-child {
+  margin-bottom: 0;
+}
+
+.evaluator-objective-group strong {
+  display: block;
+  color: var(--card-primary);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-objective-list {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+}
+
+.evaluator-objective-list li {
+  color: var(--card-text-medium);
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.evaluator-objective-list li::marker {
+  color: var(--card-primary);
+  font-weight: 700;
+}
+
+/* ========================================
+   ARCHIVOS
+======================================== */
+.evaluator-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.evaluator-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--card-bg-light);
+  border-radius: var(--card-radius-sm);
+  border: 1px solid var(--card-border);
+  transition: var(--card-transition);
+}
+
+.evaluator-file-item:hover {
+  background: white;
+  border-color: var(--card-primary);
+  transform: translateX(4px);
+}
+
+.evaluator-file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.evaluator-file-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.file-icon-pdf { color: #dc3545; }
+.file-icon-excel { color: #28a745; }
+.file-icon-word { color: #007bff; }
+.file-icon-image { color: #6f42c1; }
+.file-icon-archive { color: #fd7e14; }
+.file-icon-default { color: var(--card-text-light); }
+
+.evaluator-file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.evaluator-file-name {
+  font-weight: 600;
+  color: var(--card-text-dark);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evaluator-file-type {
+  font-size: 0.8rem;
+  color: var(--card-text-light);
+}
+
+.evaluator-file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.evaluator-btn-icon {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--card-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--card-transition);
+  font-size: 0.95rem;
+}
+
+.evaluator-btn-open {
+  background: var(--card-primary-light);
+  color: var(--card-primary);
+}
+
+.evaluator-btn-open:hover {
+  background: var(--card-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.evaluator-btn-download-file {
+  background: var(--card-bg-light);
+  color: var(--card-text-medium);
+}
+
+.evaluator-btn-download-file:hover {
+  background: var(--card-info);
+  color: white;
+  transform: scale(1.1);
+}
+
+.evaluator-file-more {
+  padding: 0.75rem;
+  text-align: center;
+  background: var(--card-primary-light);
+  color: var(--card-primary);
+  border-radius: var(--card-radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* ========================================
+   NOTIFICACIÓN ANÓNIMA
+======================================== */
+.evaluator-blind-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  border: 2px solid var(--card-warning);
+  border-radius: var(--card-radius-md);
+  padding: 1.25rem;
+  font-weight: 700;
+  color: #856404;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.evaluator-blind-notice .blind-icon {
+  font-size: 1.5rem;
+}
+
+/* ========================================
+   METADATA
+======================================== */
+.evaluator-project-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding-top: 1.5rem;
+  margin-top: auto;
+  border-top: 2px solid var(--card-border);
+}
+
+.evaluator-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluator-meta-item .meta-icon {
+  color: var(--card-primary);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.evaluator-meta-item .meta-icon.urgent {
+  color: var(--card-warning);
+  animation: pulse 2s infinite;
+}
+
+.evaluator-meta-item .meta-icon.overdue {
+  color: var(--card-danger);
+  animation: pulse 2s infinite;
+}
+
+.evaluator-meta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.evaluator-meta-label {
+  font-size: 0.8rem;
+  color: var(--card-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.evaluator-meta-value {
+  font-size: 0.95rem;
+  color: var(--card-text-dark);
+  font-weight: 700;
+}
+
+.evaluator-meta-value.deadline.urgent {
+  color: var(--card-warning);
+}
+
+.evaluator-meta-value.deadline.overdue {
+  color: var(--card-danger);
+}
+
+/* ========================================
+   BOTONES DE ACCIÓN
+======================================== */
+.evaluator-project-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+  margin-top: 1.75rem;
+}
+
+.evaluator-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  border-radius: var(--card-radius-md);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--card-transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--card-shadow-sm);
+}
+
+.evaluator-btn .btn-icon {
+  font-size: 1.1rem;
+}
+
+.evaluator-btn-accept {
+  background: linear-gradient(135deg, var(--card-success) 0%, var(--card-success-dark) 100%);
+  color: white;
+}
+
+.evaluator-btn-accept:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.evaluator-btn-reject {
+  background: linear-gradient(135deg, var(--card-danger) 0%, var(--card-danger-dark) 100%);
+  color: white;
+}
+
+.evaluator-btn-reject:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+}
+
+.evaluator-btn-evaluate {
+  background: linear-gradient(135deg, var(--card-primary) 0%, var(--card-primary-dark) 100%);
+  color: white;
+}
+
+.evaluator-btn-evaluate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+}
+
+.evaluator-btn-download {
+  background: linear-gradient(135deg, var(--card-info) 0%, #138496 100%);
+  color: white;
+}
+
+.evaluator-btn-download:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
+}
+
+.evaluator-btn-view {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  color: white;
+}
+
+.evaluator-btn-view:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+@media (max-width: 768px) {
+  .evaluator-project-card {
+    padding: 1.5rem;
+  }
+
+  .evaluator-project-header {
+    flex-wrap: wrap;
+  }
+
+  .evaluator-project-title {
+    font-size: 1.15rem;
+  }
+
+  .evaluator-project-status-container {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .evaluator-project-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluator-project-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluator-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .evaluator-file-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-user-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .evaluator-project-title {
+    font-size: 1.05rem;
+  }
+
+  .evaluator-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}

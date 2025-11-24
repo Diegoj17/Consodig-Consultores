@@ -38,11 +38,6 @@ const EvaluadorDashboardPage = () => {
 
   return (
     <div className="evaluador-dashboard">
-      <div className="dashboard-header">
-        <h1>Mi Dashboard</h1>
-        <p>Bienvenido de vuelta, aquí tienes un resumen de tus actividades</p>
-      </div>
-
       <EvaluadorStats stats={dashboardData.stats} />
       
       <EvaluadorActions 

@@ -1,0 +1,249 @@
+/* src/styles/management/evaluation/evaluador/EvaluatorCriteria.css */
+.evaluator-criteria-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.evaluator-criterion {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.evaluator-criterion:hover {
+  border-color: #007bbf;
+  box-shadow: 0 4px 16px rgba(0, 123, 191, 0.1);
+}
+
+.evaluator-criterion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.evaluator-criterion-title {
+  flex: 1;
+}
+
+.evaluator-criterion-title h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.evaluator-criterion-weight {
+  background: linear-gradient(135deg, #007bbf, #005a8f);
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluator-criterion-score {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluator-score-display {
+  background: #f8fafc;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  min-width: 80px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.evaluator-criterion-description {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #007bbf;
+}
+
+.evaluator-info-icon {
+  color: #007bbf;
+  font-size: 1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.evaluator-criterion-description p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.evaluator-criterion-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evaluator-score-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.evaluator-score-input label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.evaluator-range {
+  width: 100%;
+  height: 8px;
+  border-radius: 10px;
+  background: #e5e7eb;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+}
+
+.evaluator-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #007bbf;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 123, 191, 0.3);
+  transition: all 0.3s ease;
+}
+
+.evaluator-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 123, 191, 0.4);
+}
+
+.evaluator-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #007bbf;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 123, 191, 0.3);
+  transition: all 0.3s ease;
+}
+
+.evaluator-range::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 123, 191, 0.4);
+}
+
+.evaluator-range-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0 0.25rem;
+}
+
+.evaluator-criterion-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.evaluator-criterion-comments label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.evaluator-comments-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.3s ease;
+  background: white;
+  color: #374151;
+}
+
+.evaluator-comments-textarea:focus {
+  outline: none;
+  border-color: #007bbf;
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.evaluator-comments-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-criterion {
+    padding: 1.25rem;
+  }
+
+  .evaluator-criterion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .evaluator-criterion-score {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .evaluator-score-display {
+    min-width: 70px;
+    font-size: 0.95rem;
+  }
+
+  .evaluator-criterion-description {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .evaluator-info-icon {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-criterion {
+    padding: 1rem;
+  }
+
+  .evaluator-criterion-title h4 {
+    font-size: 1rem;
+  }
+
+  .evaluator-criterion-weight {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+}

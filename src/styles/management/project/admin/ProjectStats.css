@@ -1,0 +1,153 @@
+.project-management-header {
+  background: #007bbf;
+  color: white;
+  padding: 1rem 1rem;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 123, 191, 0.12);
+}
+
+.project-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.project-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.project-header-actions .project-btn-primary {
+  min-width: 170px;
+  white-space: nowrap;
+}
+
+.project-header-title p {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.project-btn-primary {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  color: #007bbf;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.project-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}
+
+.project-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.project-stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  color: #000000;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.project-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.project-stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  color: white;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.project-stat-icon.total {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.project-stat-icon.pending {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.project-stat-icon.evaluation {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.project-stat-icon.evaluated {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.project-stat-icon.preassigned {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.project-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.project-stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .project-management-header {
+    padding: 1.5rem;
+  }
+  
+  .project-header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .project-header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .project-header-actions .project-btn-primary {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .project-stats-cards {
+    grid-template-columns: 1fr;
+  }
+}
