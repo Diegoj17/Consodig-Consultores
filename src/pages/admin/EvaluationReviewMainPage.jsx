@@ -129,10 +129,21 @@ const EvaluationReviewMainPage = () => {
     setFilteredEvaluations(filtered);
   };
 
-  const handleViewEvaluation = (evaluation) => {
-    setSelectedEvaluation(evaluation);
+  const handleViewEvaluation = async (evaluation) => {
+  try {
+    console.log('🔍 Cargando evaluación completa:', evaluation.id);
+    
+    // Obtener la evaluación completa por ID
+    const fullEvaluation = await evaluationService.getEvaluationById(evaluation.id);
+    console.log('📊 Evaluación completa obtenida:', fullEvaluation);
+    
+    setSelectedEvaluation(fullEvaluation);
     setShowModal(true);
-  };
+  } catch (error) {
+    console.error('❌ Error cargando evaluación completa:', error);
+    alert('Error al cargar los detalles de la evaluación');
+  }
+};
 
   const handleAddObservation = async (evaluationId, observation) => {
     try {
