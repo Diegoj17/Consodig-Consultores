@@ -78,6 +78,18 @@ class EvaluationService {
     }
   }
 
+  async getEvaluationById(id) {
+  try {
+    console.log('🔄 Obteniendo evaluación por ID:', id);
+    const response = await projectApi.get(`${this.basePath}/${id}`);
+    console.log('✅ Evaluación obtenida:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo evaluación:', error);
+    throw error;
+  }
+}
+
   // Asignar una evaluación a un evaluador
   async assignEvaluation(asignDto) {
     try {
