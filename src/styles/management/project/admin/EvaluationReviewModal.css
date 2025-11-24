@@ -1,0 +1,868 @@
+/* styles/management/project/admin/EvaluationReviewModal.css */
+.evaluation-review-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  padding: 1rem;
+  animation: evaluationReviewModalFadeIn 0.3s ease;
+}
+
+@keyframes evaluationReviewModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.evaluation-review-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: evaluationReviewModalSlideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes evaluationReviewModalSlideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.evaluation-review-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.75rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: var(--evaluator-primary);
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.evaluation-review-modal-title-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluation-review-modal-header h3 {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluation-review-modal-title-icon {
+  font-size: 1.5rem;
+}
+
+.evaluation-review-modal-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.evaluation-review-investigator,
+.evaluation-review-id,
+.evaluation-review-date {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.evaluation-inline-icon {
+  font-size: 0.8rem;
+}
+
+.evaluation-review-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluation-review-modal-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  padding: 0.5rem;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  backdrop-filter: blur(10px);
+}
+
+.evaluation-review-modal-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Tabs */
+.evaluation-review-modal-tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.evaluation-review-modal-tab {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluation-review-modal-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: white;
+}
+
+.evaluation-review-modal-tab:hover {
+  color: #3b82f6;
+  background: #f1f5f9;
+}
+
+/* Body */
+.evaluation-review-modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+  background: #f8fafc;
+}
+
+/* Details Tab */
+.evaluation-review-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.evaluation-review-project-info h4,
+.evaluation-review-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.evaluation-review-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.evaluation-review-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.evaluation-review-detail-item strong {
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.evaluation-review-detail-item span {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.project-title {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+.project-id {
+  color: #f59e0b !important;
+  font-weight: 600 !important;
+}
+
+.evaluation-review-score {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.total-score {
+  color: #10b981;
+}
+
+.average-score {
+  color: #3b82f6;
+}
+
+.evaluation-review-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.evaluation-review-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 150px;
+  flex: 1;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.evaluation-review-general-observation {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.evaluation-review-general-observation h4 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.observation-content {
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.observation-content p {
+  margin: 0;
+  color: #0c4a6e;
+  line-height: 1.5;
+}
+
+/* Items Tab */
+.evaluation-review-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.evaluation-review-items-header h4 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.evaluation-review-items-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.evaluation-review-edit-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-edit-btn:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.evaluation-review-edit-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.editing-badge {
+  background: #f59e0b;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.evaluation-review-cancel-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-cancel-btn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.evaluation-review-save-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-save-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.evaluation-review-save-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.evaluation-review-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evaluation-review-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-item.item-changed {
+  border-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.evaluation-review-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.evaluation-review-item-header h5 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.evaluation-review-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluation-review-item-weight {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.evaluation-review-item-changed-badge {
+  background: #f59e0b;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.evaluation-review-item-description {
+  color: #6b7280;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.evaluation-review-item-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+
+.evaluation-review-item-score {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluation-review-item-score label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.score-input-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluation-review-score-input {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 80px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-score-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.score-range {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.evaluation-review-item-score-value {
+  font-weight: 700;
+  color: #3b82f6;
+  font-size: 1.2rem;
+}
+
+.evaluation-review-item-observation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluation-review-item-observation label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.evaluation-review-observation-textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-observation-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.evaluation-review-observation-display {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.75rem;
+  min-height: 80px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.evaluation-review-no-items {
+  text-align: center;
+  padding: 3rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Observations Tab */
+.evaluation-review-observations h4 {
+  margin: 0 0 1.5rem 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.evaluation-review-observation-input {
+  margin-bottom: 2rem;
+}
+
+.evaluation-review-observation-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.evaluation-review-general-observation-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 1rem;
+  min-height: 120px;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-general-observation-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.evaluation-review-add-observation-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-add-observation-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.evaluation-review-add-observation-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.evaluation-review-existing-observations {
+  margin-bottom: 2rem;
+}
+
+.evaluation-review-existing-observations h5 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.evaluation-review-observations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.evaluation-review-observation-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.evaluation-review-observation-item.general-observation {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.observation-content p {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.observation-content small {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.evaluation-review-item-observations h5 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.evaluation-review-item-observations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.evaluation-review-item-observation {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.evaluation-review-item-observation strong {
+  color: #3b82f6;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.evaluation-review-item-observation p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.evaluation-review-no-observations {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+}
+
+/* Footer */
+.evaluation-review-modal-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.evaluation-review-modal-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.evaluation-review-modal-primary-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.evaluation-review-btn-request-changes,
+.evaluation-review-btn-approve,
+.evaluation-review-btn-close {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.evaluation-review-btn-request-changes {
+  background: #ef4444;
+  color: white;
+}
+
+.evaluation-review-btn-request-changes:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.evaluation-review-btn-approve {
+  background: #10b981;
+  color: white;
+}
+
+.evaluation-review-btn-approve:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.evaluation-review-btn-close {
+  background: #6b7280;
+  color: white;
+}
+
+.evaluation-review-btn-close:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.evaluation-review-btn-request-changes:disabled,
+.evaluation-review-btn-approve:disabled,
+.evaluation-review-btn-close:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluation-review-modal {
+    width: 95%;
+    height: 95vh;
+  }
+  
+  .evaluation-review-modal-header {
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .evaluation-review-modal-subtitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .evaluation-review-modal-body {
+    padding: 1.5rem;
+  }
+  
+  .evaluation-review-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluation-review-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .evaluation-review-items-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .evaluation-review-item-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluation-review-modal-footer-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .evaluation-review-modal-primary-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .evaluation-review-btn-request-changes,
+  .evaluation-review-btn-approve,
+  .evaluation-review-btn-close {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluation-review-modal-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .evaluation-review-modal-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .evaluation-review-item-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .evaluation-review-item-meta {
+    align-self: flex-start;
+  }
+}

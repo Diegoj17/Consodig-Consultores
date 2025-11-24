@@ -8,6 +8,7 @@ import EvaluatorPendingPage from '../pages/user/EvaluatorPendingPage';
 import EvaluatorInProgressPage from '../pages/user/EvaluatorInProgressPage';
 import EvaluatorCompletedPage from '../pages/user/EvaluatorCompletedPage';
 import EvaluatorEvaluationForm from '../components/management/project/evaluador/EvaluatorEvaluationForm';
+import EvaluatorHistoryPage from '../pages/user/EvaluatorHistoryPage';
 import '../styles/pages/admin/DashboardPage.css';
 
 function EvaluadorLayout() {
@@ -66,6 +67,7 @@ function EvaluadorLayout() {
             <Route path="/evaluations/completed" element={<EvaluatorCompletedPage />} />
             <Route path="/evaluation" element={<EvaluatorEvaluationForm />} />
             <Route path="/projects/assigned" element={<EvaluatorProjectsPage />} />
+            <Route path="/projects/history" element={<EvaluatorHistoryPage />} />
             <Route path="/reports" element={<div>Reportes (Evaluador)</div>} />
             <Route path="/messages" element={<div>Mensajes (Evaluador)</div>} />
             <Route path="/profile" element={<div>Mi Perfil (Evaluador)</div>} />
