@@ -4,7 +4,7 @@ import {
   FaTimes, FaCheck, FaEdit, FaFileAlt, FaUser, FaCalendar, 
   FaClipboardList, FaSave, FaUndo, FaEye, FaComment,
   FaExclamationTriangle, FaInfoCircle, FaCalculator,
-  FaAlignLeft, FaListAlt
+  FaAlignLeft, FaListAlt, FaHashtag
 } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import '../../../../styles/management/project/admin/EvaluationReviewModal.css';
@@ -31,16 +31,31 @@ const EvaluationReviewModal = ({
   // Inicializar estados cuando la evaluación cambia
   useEffect(() => {
     if (evaluation) {
+      console.log('📥 Evaluación recibida en modal:', evaluation);
       setObservacionGeneral(evaluation.observacionGeneral || '');
       
-      const initialItems = evaluation.items?.map(item => ({
-        itemEvaluadoId: item.id,
-        calificacion: item.calificacion || 0,
-        observacion: item.observacion || '',
-        peso: item.criterio?.peso || item.peso || 100,
-        itemOriginal: { ...item }
-      })) || [];
+      // Mapear items con información del formato
+      const initialItems = evaluation.items?.map((item, index) => {
+        // Buscar el item correspondiente en el formato
+        const formatoItem = evaluation.formato?.items?.find(
+          fmtItem => fmtItem.id === item.itemFormatoId
+        );
+        
+        console.log(`📋 Item ${index}:`, item);
+        console.log(`📝 Formato item encontrado:`, formatoItem);
+        
+        return {
+          itemEvaluadoId: item.id,
+          calificacion: item.calificacion || 0,
+          observacion: item.observacion || '',
+          peso: formatoItem?.peso || 100,
+          itemFormatoId: item.itemFormatoId,
+          itemOriginal: { ...item },
+          formatoItem: formatoItem
+        };
+      }) || [];
       
+      console.log('🔄 Items inicializados:', initialItems);
       setItemsEditados(initialItems);
     }
   }, [evaluation]);
@@ -53,9 +68,14 @@ const EvaluationReviewModal = ({
     setShowSuccessModal(true);
   };
 
-  // FUNCIÓN MEJORADA PARA OBTENER LA DESCRIPCIÓN DEL ITEM
+  // FUNCIÓN CORREGIDA PARA OBTENER LA DESCRIPCIÓN DEL ITEM
   const getItemDescription = (item) => {
-    // Buscar descripción en diferentes ubicaciones posibles
+    // Buscar en el item del formato primero
+    if (item.formatoItem?.descripcion) {
+      return item.formatoItem.descripcion;
+    }
+    
+    // Buscar en diferentes ubicaciones posibles
     const description = 
       item.criterio?.descripcion || 
       item.descripcion || 
@@ -63,52 +83,50 @@ const EvaluationReviewModal = ({
       item.itemDescripcion ||
       'Sin descripción disponible';
     
+    console.log('🔍 Buscando descripción para item:', item.id, 'Resultado:', description);
     return description;
   };
 
-  // FUNCIÓN MEJORADA PARA OBTENER EL NOMBRE DEL ITEM
+  // FUNCIÓN CORREGIDA PARA OBTENER EL NOMBRE DEL ITEM
   const getItemName = (item) => {
+    // Buscar en el item del formato primero
+    if (item.formatoItem?.nombre) {
+      return item.formatoItem.nombre;
+    }
+    
     return item.criterio?.nombre || item.nombre || `Item ${item.id || 'N/A'}`;
   };
 
-  // FUNCIÓN MEJORADA PARA OBTENER EL PESO DEL ITEM
+  // FUNCIÓN CORREGIDA PARA OBTENER EL PESO DEL ITEM
   const getItemWeight = (item) => {
-    return item.criterio?.peso || item.peso || 100;
+    return item.formatoItem?.peso || item.peso || 100;
   };
 
-  // CALCULAR PUNTAJE TOTAL CORREGIDO - Considerando pesos
+  // CALCULAR PUNTAJE TOTAL CORREGIDO - USAR calificacionTotal DEL BACKEND
   const calculateTotalScore = () => {
-    if (itemsEditados.length === 0) return evaluation.calificacionTotal || 0;
-    
-    // Si hay pesos diferentes, calcular con pesos
-    const hasDifferentWeights = itemsEditados.some(item => item.peso !== 100);
-    
-    if (hasDifferentWeights) {
-      // Calcular con pesos
-      const totalWeight = itemsEditados.reduce((sum, item) => sum + (item.peso || 100), 0);
-      const weightedScore = itemsEditados.reduce((sum, item) => {
-        const itemScore = item.calificacion || 0;
-        const itemWeight = item.peso || 100;
-        return sum + (itemScore * itemWeight) / 100;
-      }, 0);
-      
-      // Normalizar al total de pesos
-      return Math.round((weightedScore / totalWeight) * 100);
-    } else {
-      // Calcular promedio simple si todos los pesos son 100
-      const total = itemsEditados.reduce((sum, item) => sum + (item.calificacion || 0), 0);
-      return Math.round(total / itemsEditados.length);
+    // Usar directamente el calificacionTotal del backend que es 100
+    if (evaluation.calificacionTotal !== undefined && evaluation.calificacionTotal !== null) {
+      console.log('🎯 Usando calificacionTotal del backend:', evaluation.calificacionTotal);
+      return evaluation.calificacionTotal;
     }
+    
+    // Solo calcular si no existe en el backend
+    if (itemsEditados.length === 0) return 0;
+    
+    const total = itemsEditados.reduce((sum, item) => sum + (item.calificacion || 0), 0);
+    const average = Math.round(total / itemsEditados.length);
+    console.log('🧮 CalificacionTotal calculado:', average);
+    return average;
   };
 
-  // CALCULAR PUNTAJE MÁXIMO POSIBLE
-  const calculateMaxPossibleScore = () => {
-    return 100; // Siempre es sobre 100%
-  };
-
-  // CALCULAR PROMEDIO (es el mismo que el total en este caso)
+  // CALCULAR PROMEDIO CORREGIDO - DEBE SER EL MISMO QUE TOTAL
   const calculateAverageScore = () => {
     return calculateTotalScore();
+  };
+
+  // OBTENER PUNTAJE MÁXIMO
+  const calculateMaxPossibleScore = () => {
+    return 100;
   };
 
   const handleSubmitObservation = async () => {
@@ -150,13 +168,21 @@ const EvaluationReviewModal = ({
   };
 
   const handleCancelEdits = () => {
-    const revertedItems = evaluation.items?.map(item => ({
-      itemEvaluadoId: item.id,
-      calificacion: item.calificacion || 0,
-      observacion: item.observacion || '',
-      peso: getItemWeight(item),
-      itemOriginal: { ...item }
-    })) || [];
+    const revertedItems = evaluation.items?.map((item, index) => {
+      const formatoItem = evaluation.formato?.items?.find(
+        fmtItem => fmtItem.id === item.itemFormatoId
+      );
+      
+      return {
+        itemEvaluadoId: item.id,
+        calificacion: item.calificacion || 0,
+        observacion: item.observacion || '',
+        peso: formatoItem?.peso || 100,
+        itemFormatoId: item.itemFormatoId,
+        itemOriginal: { ...item },
+        formatoItem: formatoItem
+      };
+    }) || [];
     
     setItemsEditados(revertedItems);
     setEditingItems(false);
@@ -241,6 +267,15 @@ const EvaluationReviewModal = ({
   const averageScore = calculateAverageScore();
   const maxScore = calculateMaxPossibleScore();
 
+  console.log('📊 Resumen de puntuaciones:', {
+    totalScore,
+    averageScore,
+    maxScore,
+    backendCalificacionTotal: evaluation.calificacionTotal,
+    itemsCount: evaluation.items?.length,
+    itemsEditadosCount: itemsEditados.length
+  });
+
   return (
     <>
       <div className="evaluation-review-modal-overlay">
@@ -259,12 +294,12 @@ const EvaluationReviewModal = ({
                   {evaluation.evaluatorName || 'Evaluador no disponible'}
                 </span>
                 <span className="evaluation-review-id">
-                  <FaFileAlt className="evaluation-inline-icon" />
+                  <FaHashtag className="evaluation-inline-icon" />
                   ID: {evaluation.id}
                 </span>
                 <span className="evaluation-review-date">
                   <FaCalendar className="evaluation-inline-icon" />
-                  {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'Fecha no disponible'}
+                  {evaluation.fechaFinalizacion ? new Date(evaluation.fechaFinalizacion).toLocaleDateString() : 'Fecha no disponible'}
                 </span>
               </div>
             </div>
@@ -309,19 +344,19 @@ const EvaluationReviewModal = ({
                   <div className="evaluation-review-detail-grid">
                     <div className="evaluation-review-detail-item">
                       <strong>Título:</strong>
-                      <span className="project-title">{evaluation.project?.titulo || 'Proyecto no disponible'}</span>
+                      <span className="project-title">{evaluation.proyecto?.titulo || 'Proyecto no disponible'}</span>
                     </div>
                     <div className="evaluation-review-detail-item">
-                      <strong>Proyecto:</strong>
-                      <span className="project-id">{evaluation.project?.id || 'N/A'}</span>
+                      <strong>Proyecto ID:</strong>
+                      <span className="project-id">{evaluation.proyecto?.id || 'N/A'}</span>
                     </div>
                     <div className="evaluation-review-detail-item">
                       <strong>Formato:</strong>
-                      <span>{evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}</span>
+                      <span>{evaluation.formato?.nombre || 'N/A'}</span>
                     </div>
                     
-                    {/* PUNTUACIÓN TOTAL CORREGIDA */}
-                    <div className="evaluation-review-detail-item">
+                    {/* PUNTUACIÓN TOTAL - CORREGIDA */}
+                    <div className="evaluation-review-detail-item highlight-score">
                       <strong>
                         <FaCalculator className="evaluation-inline-icon" />
                         Puntuación Total:
@@ -331,8 +366,8 @@ const EvaluationReviewModal = ({
                       </span>
                     </div>
                     
-                    {/* PROMEDIO CORREGIDO */}
-                    <div className="evaluation-review-detail-item">
+                    {/* PROMEDIO - CORREGIDO */}
+                    <div className="evaluation-review-detail-item highlight-score">
                       <strong>
                         <FaCalculator className="evaluation-inline-icon" />
                         Promedio:
@@ -364,25 +399,19 @@ const EvaluationReviewModal = ({
                     <div className="evaluation-review-stat">
                       <span className="stat-label">Fecha Completada:</span>
                       <span className="stat-value">
-                        {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleString() : 'No disponible'}
+                        {evaluation.fechaFinalizacion ? new Date(evaluation.fechaFinalizacion).toLocaleString() : 'No disponible'}
                       </span>
                     </div>
                     
-                    {/* Información adicional de cálculos */}
-                    <div className="evaluation-review-stat">
-                      <span className="stat-label">Sistema de Calificación:</span>
-                      <span className="stat-value">0-100 puntos</span>
-                    </div>
-                    
-                    {/* Barra de progreso visual */}
-                    <div className="evaluation-review-stat full-width">
-                      <span className="stat-label">Progreso de Calificación:</span>
-                      <div className="score-progress-bar">
-                        <div 
-                          className="score-progress-fill"
-                          style={{ width: `${totalScore}%` }}
-                        ></div>
-                        <span className="score-progress-text">{totalScore}%</span>
+                    {/* Información del cálculo */}
+                    <div className="evaluation-review-stat full-width calculation-info">
+                      <span className="stat-label">Información del Cálculo:</span>
+                      <div className="calculation-details">
+                        <small>
+                          Calificación total del backend: <strong>{evaluation.calificacionTotal}</strong> | 
+                          Items calificados: <strong>{evaluation.items?.length}</strong> | 
+                          Sistema: <strong>0-100 puntos</strong>
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -400,13 +429,13 @@ const EvaluationReviewModal = ({
               </div>
             )}
 
-            {/* Tab: Items Evaluados - MEJORADO */}
+            {/* Tab: Items Evaluados - CORREGIDO */}
             {activeTab === 'items' && (
               <div className="evaluation-review-items">
                 <div className="evaluation-review-items-header">
                   <h4>
                     <FaListAlt className="evaluation-inline-icon" />
-                    Items de Evaluación
+                    Items de Evaluación ({evaluation.items?.length || 0})
                   </h4>
                   <div className="evaluation-review-items-actions">
                     {!editingItems ? (
@@ -440,19 +469,26 @@ const EvaluationReviewModal = ({
                 </div>
 
                 <div className="evaluation-review-items-list">
-                  {evaluation.items?.map((originalItem, index) => {
-                    const editedItem = itemsEditados[index];
+                  {itemsEditados.map((editedItem, index) => {
+                    const originalItem = evaluation.items?.[index];
                     const isChanged = editedItem && (
-                      editedItem.calificacion !== (originalItem.calificacion || 0) ||
-                      editedItem.observacion !== (originalItem.observacion || '')
+                      editedItem.calificacion !== (originalItem?.calificacion || 0) ||
+                      editedItem.observacion !== (originalItem?.observacion || '')
                     );
 
-                    const itemName = getItemName(originalItem);
-                    const itemDescription = getItemDescription(originalItem);
-                    const itemWeight = getItemWeight(originalItem);
+                    const itemName = getItemName(editedItem);
+                    const itemDescription = getItemDescription(editedItem);
+                    const itemWeight = getItemWeight(editedItem);
+
+                    console.log(`📝 Renderizando item ${index}:`, {
+                      itemName,
+                      itemDescription,
+                      itemWeight,
+                      formatoItem: editedItem.formatoItem
+                    });
 
                     return (
-                      <div key={originalItem.id} className={`evaluation-review-item ${isChanged ? 'item-changed' : ''}`}>
+                      <div key={editedItem.itemEvaluadoId} className={`evaluation-review-item ${isChanged ? 'item-changed' : ''}`}>
                         <div className="evaluation-review-item-header">
                           <h5>{itemName}</h5>
                           <div className="evaluation-review-item-meta">
@@ -461,13 +497,16 @@ const EvaluationReviewModal = ({
                                 Peso: {itemWeight}%
                               </span>
                             )}
+                            <span className="evaluation-review-item-id">
+                              ID: {editedItem.itemFormatoId}
+                            </span>
                             {isChanged && editingItems && (
                               <span className="evaluation-review-item-changed-badge">Modificado</span>
                             )}
                           </div>
                         </div>
                         
-                        {/* DESCRIPCIÓN MEJORADA */}
+                        {/* DESCRIPCIÓN - CORREGIDA */}
                         <div className="evaluation-review-item-description-container">
                           <FaAlignLeft className="evaluation-review-description-icon" />
                           <div className="evaluation-review-item-description-content">
@@ -487,7 +526,7 @@ const EvaluationReviewModal = ({
                                   type="number"
                                   min="0"
                                   max="100"
-                                  value={editedItem?.calificacion || 0}
+                                  value={editedItem.calificacion || 0}
                                   onChange={(e) => updateItemScore(index, e.target.value)}
                                   className="evaluation-review-score-input"
                                 />
@@ -495,7 +534,7 @@ const EvaluationReviewModal = ({
                               </div>
                             ) : (
                               <span className="evaluation-review-item-score-value">
-                                {originalItem.calificacion || 0} / 100
+                                {editedItem.calificacion || 0} / 100
                               </span>
                             )}
                           </div>
@@ -504,7 +543,7 @@ const EvaluationReviewModal = ({
                             <label>Observación del Evaluador:</label>
                             {editingItems ? (
                               <textarea
-                                value={editedItem?.observacion || ''}
+                                value={editedItem.observacion || ''}
                                 onChange={(e) => updateItemObservation(index, e.target.value)}
                                 placeholder="Agregar o modificar observación..."
                                 rows="3"
@@ -512,7 +551,7 @@ const EvaluationReviewModal = ({
                               />
                             ) : (
                               <div className="evaluation-review-observation-display">
-                                {originalItem.observacion || 'Sin observaciones'}
+                                {editedItem.observacion || 'Sin observaciones'}
                               </div>
                             )}
                           </div>
@@ -584,7 +623,7 @@ const EvaluationReviewModal = ({
                         .filter(item => item.observacion)
                         .map((item, index) => (
                           <div key={item.id} className="evaluation-review-item-observation">
-                            <strong>{getItemName(item)}:</strong>
+                            <strong>{getItemName({...item, formatoItem: evaluation.formato?.items?.find(fmt => fmt.id === item.itemFormatoId)})}:</strong>
                             <p>{item.observacion}</p>
                           </div>
                         ))
