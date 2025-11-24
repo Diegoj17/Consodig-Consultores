@@ -1,6 +1,6 @@
 // pages/admin/EvaluationReviewMainPage.jsx
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle, FaTimes  } from 'react-icons/fa';
 import { evaluationService } from '../../services/evaluationService';
 import { userService } from '../../services/userService';
 import EvaluationReviewModal from '../../components/management/project/admin/EvaluationReviewModal';
@@ -130,10 +130,6 @@ const EvaluationReviewMainPage = () => {
   };
 
   const handleViewEvaluation = async (evaluation) => {
-  try {
-    console.log('🔍 Cargando evaluación completa:', evaluation.id);
-    
-    /const handleViewEvaluation = async (evaluation) => {
   try {
     console.log('🔍 Cargando evaluación completa:', evaluation.id);
     
