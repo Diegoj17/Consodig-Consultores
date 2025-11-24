@@ -46,6 +46,32 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
     setIsUserMenuOpen(!isUserMenuOpen)
   }
 
+  // Toggle del sidebar: si el padre pasó `onToggleSidebar` lo usamos,
+  // si no, hacemos un toggle global por clase/body + dispatch de evento.
+  const handleSidebarToggle = () => {
+    if (typeof onToggleSidebar === 'function') {
+      onToggleSidebar();
+      return;
+    }
+
+    // fallback global
+    try {
+      const isClosed = document.body.classList.toggle('sidebar-closed');
+      const open = !isClosed;
+      const width = open ? '260px' : '80px';
+      document.documentElement.style.setProperty('--sidebar-width', width);
+      const mains = document.querySelectorAll('.dashboard-main');
+      mains.forEach(el => { el.style.marginLeft = width; });
+      // notificar a listeners (ej. Sidebar)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: { open } }));
+      }
+    } catch (err) {
+      // no crítico
+      console.warn('Toggle sidebar fallback failed', err);
+    }
+  }
+
   const handleMenuAction = (action) => {
     console.log(`⚙ Acción seleccionada: ${action}`)
     setIsUserMenuOpen(false)
@@ -84,7 +110,7 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
   return (
     <header className="dashboard-header">
       <div className="header-left">
-        <button className="mobile-toggle" onClick={onToggleSidebar}>
+        <button className="mobile-toggle" onClick={handleSidebarToggle}>
           <FaBars />
         </button>
         <div className="page-info">

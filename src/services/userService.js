@@ -219,7 +219,6 @@ export const userService = {
     }
   },
 
-  // ... el resto de los métodos se mantienen igual
   async createEvaluador(userData) {
     console.log("🟡 [userService] Enviando datos para crear evaluador:", userData);
     

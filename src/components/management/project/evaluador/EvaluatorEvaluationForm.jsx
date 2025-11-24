@@ -1,0 +1,532 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import Modal from '../../../common/Modal';
+import projectService from '../../../../services/projectService';
+import { evaluationService } from '../../../../services/evaluationService';
+import evaluationFormatService from '../../../../services/evaluationFormatService.js';
+import '../../../../styles/management/project/evaluador/EvaluatorEvaluationForm.css';
+import '../../../../styles/management/project/evaluador/EvaluatorCriterio.css';
+
+const EvaluatorEvaluationForm = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { evaluation, project, format } = location.state || {};
+  
+  console.log('📍 Location state:', location.state);
+  console.log('📋 Evaluation:', evaluation);
+  console.log('🏢 Project:', project);
+  console.log('📝 Format:', format);
+
+  const [evaluationData, setEvaluationData] = useState({
+    items: [],
+    comentarios: '',
+    calificacionFinal: 0
+  });
+  const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [formatItems, setFormatItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [error, setError] = useState(null);
+  const [projectDetails, setProjectDetails] = useState(null);
+  const [loadingProject, setLoadingProject] = useState(false);
+
+  // Cargar items reales del formato desde el backend
+  useEffect(() => {
+    if (format?.id) {
+      loadFormatItems(format.id);
+    } else {
+      setError('No se pudo cargar el formato de evaluación');
+      setLoadingItems(false);
+    }
+  }, [format]);
+
+  // Cargar información completa del proyecto si es necesario
+  useEffect(() => {
+    let mounted = true;
+    const loadProjectDetails = async () => {
+      if (!project) return;
+      // Si ya vienen campos clave, los usamos directamente
+      const needsFullFetch = !project.resumen || !project.objetivoGeneral || !project.lineasInvestigacion;
+      if (!needsFullFetch) {
+        setProjectDetails(project);
+        return;
+      }
+
+      try {
+        setLoadingProject(true);
+        const id = project.id || project.proyectoId || project.proyecto?.id || project.codigo;
+        if (!id) {
+          setProjectDetails(project);
+          return;
+        }
+        const full = await projectService.getById(id);
+        if (mounted) setProjectDetails(full || project);
+      } catch (err) {
+        console.error('❌ Error cargando detalles del proyecto:', err);
+        if (mounted) setProjectDetails(project);
+      } finally {
+        if (mounted) setLoadingProject(false);
+      }
+    };
+
+    loadProjectDetails();
+
+    return () => { mounted = false; };
+  }, [project]);
+
+  const loadFormatItems = async (formatId) => {
+    try {
+      setLoadingItems(true);
+      setError(null);
+      console.log('🔄 Cargando items del formato ID:', formatId);
+      
+      // Obtener el formato completo con sus items
+      const formatData = await evaluationFormatService.getFormatById(formatId);
+      console.log('✅ Formato obtenido:', formatData);
+      
+      // Los items vienen en la propiedad 'items' del formato
+      const items = formatData.items || [];
+      console.log('📋 Items del formato:', items);
+      
+      if (items.length === 0) {
+        setError('El formato de evaluación no tiene criterios configurados');
+      }
+      
+      setFormatItems(items);
+      
+      // Inicializar datos de evaluación con los items reales
+      const initialItems = items.map(item => ({
+        itemFormatoId: item.id,
+        calificacion: 0,
+        observacion: ''
+      }));
+      
+      setEvaluationData(prev => ({
+        ...prev,
+        items: initialItems
+      }));
+      
+    } catch (error) {
+      console.error('❌ Error cargando items del formato:', error);
+      setError(`Error al cargar los criterios: ${error.message}`);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+  const handleItemChange = (itemId, field, value) => {
+    setEvaluationData(prev => ({
+      ...prev,
+      items: prev.items.map(item =>
+        item.itemFormatoId === itemId
+          ? { ...item, [field]: value }
+          : item
+      )
+    }));
+  };
+
+  const calculateFinalScore = () => {
+    const total = evaluationData.items.reduce((sum, item) => {
+      const formatItem = formatItems.find(fi => fi.id === item.itemFormatoId);
+      const peso = formatItem?.peso || 0;
+      return sum + (item.calificacion * peso / 100);
+    }, 0);
+    
+    setEvaluationData(prev => ({
+      ...prev,
+      calificacionFinal: Math.round(total)
+    }));
+  };
+
+  useEffect(() => {
+    calculateFinalScore();
+  }, [evaluationData.items]);
+
+  const handleSubmit = async () => {
+    // Validar que todos los items tengan calificación
+    const itemsIncompletos = evaluationData.items.filter(item => item.calificacion === 0);
+    
+    if (itemsIncompletos.length > 0) {
+      alert('Por favor califica todos los criterios antes de enviar la evaluación.');
+      return;
+    }
+
+    if (!evaluationData.comentarios.trim()) {
+      alert('Por favor ingresa comentarios justificativos.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('📤 Enviando evaluación...');
+      
+      // Calificar cada item individualmente
+      for (const item of evaluationData.items) {
+        console.log('📝 Calificando item:', item);
+        await evaluationService.gradeItem(evaluation.id, {
+          itemFormatoId: item.itemFormatoId,
+          calificacion: item.calificacion,
+          observacion: item.observacion
+        });
+      }
+
+      // Finalizar la evaluación
+      console.log('🏁 Finalizando evaluación...');
+      await evaluationService.finishEvaluation(evaluation.id, {
+        comentarios: evaluationData.comentarios,
+        calificacionFinal: evaluationData.calificacionFinal
+      });
+
+        alert('✅ Evaluación completada exitosamente');
+        navigate('/evaluador/evaluations/completed');
+    } catch (error) {
+      console.error('❌ Error enviando evaluación:', error);
+      alert(`Error al enviar la evaluación: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProgress = async () => {
+    // Guardar progreso parcial sin finalizar
+    setLoading(true);
+    try {
+      const itemsConCalificacion = evaluationData.items.filter(item => item.calificacion > 0);
+      
+      if (itemsConCalificacion.length === 0) {
+        alert('No hay criterios calificados para guardar.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('💾 Guardando progreso...');
+      for (const item of itemsConCalificacion) {
+        console.log('💾 Guardando item:', item);
+        await evaluationService.gradeItem(evaluation.id, {
+          itemFormatoId: item.itemFormatoId,
+          calificacion: item.calificacion,
+          observacion: item.observacion
+        });
+      }
+      
+      alert('✅ Progreso guardado exitosamente');
+        navigate('/evaluador/evaluations/in-progress');
+    } catch (error) {
+      console.error('❌ Error guardando progreso:', error);
+      alert(`Error al guardar progreso: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mostrar estado de error con Modal común
+  if (error) {
+    return (
+      <Modal
+        isOpen={!!error}
+        onClose={() => setError(null)}
+        type="error"
+        title="Error al cargar la evaluación"
+        message={error}
+        confirmText="Volver"
+        showCancel={false}
+        onConfirm={() => {
+          setError(null);
+            navigate('/evaluador/evaluations/pending');
+        }}
+      />
+    );
+  }
+
+  if (!evaluation || !project || !format) {
+    const missingMsg = `Faltan datos necesarios: ${!evaluation ? 'Evaluation ' : ''}${!project ? 'Project ' : ''}${!format ? 'Format' : ''}`;
+    return (
+      <Modal
+        isOpen={true}
+        onClose={() => navigate('/evaluador/evaluations/pending')}
+        type="error"
+        title="Información no disponible"
+        message={missingMsg}
+        confirmText="Volver a la lista"
+        showCancel={false}
+        onConfirm={() => navigate('/evaluador/evaluations/pending')}
+      />
+    );
+  }
+
+  const displayProject = projectDetails || project || {};
+
+  const steps = [
+    { title: 'Información del Proyecto', completed: currentStep > 0 },
+    { title: 'Criterios de Evaluación', completed: currentStep > 1 },
+    { title: 'Comentarios y Envío', completed: currentStep > 2 }
+  ];
+
+  return (
+    <div className="evaluator-evaluation-form">
+      {/* Header */}
+      <div className="evaluator-form-header">
+        <button className="evaluator-back-btn" onClick={() => navigate('/evaluador/evaluations/pending')}>
+          <FaArrowLeft />
+          Volver a la lista
+        </button>
+        
+        <div className="evaluator-form-title">
+          <FaFileAlt className="evaluator-title-icon" />
+          <div>
+            <h1>Evaluación del Proyecto</h1>
+            <p>{project.titulo || 'Sin título'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="evaluator-progress-steps">
+        {steps.map((step, index) => (
+          <div key={index} className={`evaluator-step ${currentStep === index ? 'active' : ''} ${step.completed ? 'completed' : ''}`}>
+            <div className="evaluator-step-number">
+              {step.completed ? '✓' : index + 1}
+            </div>
+            <span className="evaluator-step-label">{step.title}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Step Content */}
+      <div className="evaluator-form-content">
+        {currentStep === 0 && (
+          <div className="evaluator-step-section">
+            <h2>Información del Proyecto</h2>
+            
+            <div className="evaluator-project-details">
+              <div className="evaluator-detail-group">
+                <h3>Datos Básicos</h3>
+                <div className="evaluator-detail-item">
+                  <strong>Título:</strong>
+                  <span>{displayProject.titulo || displayProject.nombre || 'Sin título'}</span>
+                </div>
+                <div className="evaluator-detail-item">
+                  <strong>Código / ID:</strong>
+                  <span>{displayProject.codigo || displayProject.id || displayProject.proyectoId || 'N/A'}</span>
+                </div>
+                <div className="evaluator-detail-item">
+                  <strong>Resumen:</strong>
+                  <p>{displayProject.resumen || displayProject.descripcion || 'Sin resumen disponible'}</p>
+                </div>
+              </div>
+
+              <div className="evaluator-detail-group">
+                <h3>Detalles</h3>
+                <div className="evaluator-detail-item full-width">
+                  <strong>Objetivo General:</strong>
+                  <p>{displayProject.objetivoGeneral || displayProject.objetivo || 'No disponible'}</p>
+                </div>
+                <div className="evaluator-detail-item full-width">
+                  <strong>Palabras Clave:</strong>
+                  <p>{displayProject.palabrasClave || (displayProject.palabrasClaveArray ? displayProject.palabrasClaveArray.join(', ') : '') || 'No disponible'}</p>
+                </div>
+                <div className="evaluator-detail-item full-width">
+                  <strong>Líneas de Investigación:</strong>
+                  <p>{(displayProject.lineasInvestigacionNames && displayProject.lineasInvestigacionNames.join(', ')) || (displayProject.lineasInvestigacion && displayProject.lineasInvestigacion.map(l=>l.nombre).join(', ')) || 'No especificadas'}</p>
+                </div>
+                <div className="evaluator-detail-item full-width">
+                  <strong>Institución:</strong>
+                  <p>{evaluation?.institucion || evaluation?.institucionNombre || evaluation?.institution || 'No especificada'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="evaluator-format-info">
+              <h3>Formato de Evaluación Asignado</h3>
+              <div className="evaluator-format-details">
+                <strong>{format.nombre}</strong>
+                <p>{format.descripcion}</p>
+                <div className="evaluator-format-stats">
+                  <span>{formatItems.length} criterios</span>
+                  <span>Valor total: {formatItems.reduce((sum, item) => sum + (item.peso || 0), 0)}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="evaluator-step-actions">
+              <button
+                className="evaluator-btn evaluator-btn-primary"
+                onClick={() => setCurrentStep(1)}
+                disabled={loadingItems}
+              >
+                {loadingItems ? 'Cargando criterios...' : 'Continuar a Criterios'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 1 && (
+          <div className="evaluator-step-section">
+            <h2>Criterios de Evaluación</h2>
+            <p>Califica cada criterio según el formato establecido</p>
+            
+            {loadingItems ? (
+              <div className="evaluator-loading-items">
+                <div className="evaluator-spinner"></div>
+                <p>Cargando criterios de evaluación...</p>
+              </div>
+            ) : formatItems.length === 0 ? (
+              <div className="evaluator-no-items">
+                <FaInfoCircle className="evaluator-no-items-icon" />
+                <h3>No hay criterios definidos</h3>
+                <p>El formato de evaluación no tiene criterios configurados.</p>
+              </div>
+            ) : (
+              <div className="evaluator-criteria-section">
+                {formatItems.map((formatItem, index) => {
+                  const evaluationItem = evaluationData.items.find(item => item.itemFormatoId === formatItem.id) || {};
+                  
+                  return (
+                    <div key={formatItem.id} className="evaluator-criterion">
+                      <div className="evaluator-criterion-header">
+                        <div className="evaluator-criterion-title">
+                          <h4>{index + 1}. {formatItem.nombre}</h4>
+                          <span className="evaluator-criterion-weight">Peso: {formatItem.peso}%</span>
+                        </div>
+                        <div className="evaluator-criterion-score">
+                          <span className="evaluator-score-display">
+                            {evaluationItem.calificacion || 0} / 100
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="evaluator-criterion-description">
+                        <FaInfoCircle className="evaluator-info-icon" />
+                        <p>{formatItem.descripcion}</p>
+                      </div>
+
+                      <div className="evaluator-criterion-controls">
+                        <div className="evaluator-score-input">
+                          <label>Calificación:</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="5"
+                            value={evaluationItem.calificacion || 0}
+                            onChange={(e) => handleItemChange(formatItem.id, 'calificacion', parseInt(e.target.value))}
+                            className="evaluator-range"
+                          />
+                          <div className="evaluator-range-labels">
+                            <span>0</span>
+                            <span>50</span>
+                            <span>100</span>
+                          </div>
+                        </div>
+
+                        <div className="evaluator-criterion-comments">
+                          <label>Observaciones:</label>
+                          <textarea
+                            rows="3"
+                            placeholder="Observaciones específicas para este criterio..."
+                            value={evaluationItem.observacion || ''}
+                            onChange={(e) => handleItemChange(formatItem.id, 'observacion', e.target.value)}
+                            className="evaluator-comments-textarea"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="evaluator-step-actions">
+              <button
+                className="evaluator-btn evaluator-btn-secondary"
+                onClick={() => setCurrentStep(0)}
+                disabled={loading}
+              >
+                Anterior
+              </button>
+              <button
+                className="evaluator-btn evaluator-btn-primary"
+                onClick={() => setCurrentStep(2)}
+                disabled={loading || formatItems.length === 0}
+              >
+                Continuar a Comentarios
+              </button>
+              <button
+                className="evaluator-btn evaluator-btn-outline"
+                onClick={handleSaveProgress}
+                disabled={loading || formatItems.length === 0}
+              >
+                <FaSave />
+                Guardar Progreso
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="evaluator-step-section">
+            <h2>Comentarios y Finalización</h2>
+            
+            <div className="evaluator-comments-section">
+              <h3>Comentarios Justificativos</h3>
+              <p className="evaluator-help-text">
+                Proporciona observaciones detalladas que justifiquen tu calificación
+              </p>
+              <textarea
+                className="evaluator-comments-textarea"
+                rows="6"
+                placeholder="Describe los aspectos positivos, áreas de mejora y justificación de las calificaciones asignadas..."
+                value={evaluationData.comentarios}
+                onChange={(e) => setEvaluationData(prev => ({
+                  ...prev,
+                  comentarios: e.target.value
+                }))}
+              />
+            </div>
+
+            <div className="evaluator-final-score">
+              <h3>Calificación Final</h3>
+              <div className="evaluator-score-display">
+                <span className="evaluator-score-value">{evaluationData.calificacionFinal}</span>
+                <span className="evaluator-score-label">/ 100</span>
+              </div>
+              <div className="evaluator-score-breakdown">
+                <h4>Desglose por Criterios:</h4>
+                {formatItems.map(formatItem => {
+                  const evaluationItem = evaluationData.items.find(item => item.itemFormatoId === formatItem.id) || {};
+                  return (
+                    <div key={formatItem.id} className="evaluator-criterio-score">
+                      <span>{formatItem.nombre}</span>
+                      <span>{evaluationItem.calificacion || 0} pts ({formatItem.peso}%)</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="evaluator-step-actions">
+              <button
+                className="evaluator-btn evaluator-btn-secondary"
+                onClick={() => setCurrentStep(1)}
+                disabled={loading}
+              >
+                Anterior
+              </button>
+              <button
+                className="evaluator-btn evaluator-btn-primary"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                <FaCheckCircle />
+                {loading ? 'Enviando...' : 'Finalizar Evaluación'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EvaluatorEvaluationForm;

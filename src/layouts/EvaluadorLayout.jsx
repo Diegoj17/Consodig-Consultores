@@ -3,6 +3,11 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import EvaluadorDashboard from '../pages/user/EvaluadorDashboardPage';
+import EvaluatorProjectsPage from '../pages/user/EvaluatorProjectsPage';
+import EvaluatorPendingPage from '../pages/user/EvaluatorPendingPage';
+import EvaluatorInProgressPage from '../pages/user/EvaluatorInProgressPage';
+import EvaluatorCompletedPage from '../pages/user/EvaluatorCompletedPage';
+import EvaluatorEvaluationForm from '../components/management/project/evaluador/EvaluatorEvaluationForm';
 import '../styles/pages/admin/DashboardPage.css';
 
 function EvaluadorLayout() {
@@ -11,18 +16,25 @@ function EvaluadorLayout() {
 
   const getActiveSection = () => {
     const path = location.pathname;
+    if (path.includes('/evaluador/evaluations/pending')) return 'evaluations-pending';
+    if (path.includes('/evaluador/evaluations/in-progress')) return 'evaluations-in-progress';
+    if (path.includes('/evaluador/evaluations/completed')) return 'evaluations-completed';
     if (path.includes('/evaluador/evaluations')) return 'evaluations';
-    if (path.includes('/evaluador/projects')) return 'projects';
+    if (path.includes('/evaluador/projects/assigned')) return 'projects';
     if (path.includes('/evaluador/reports')) return 'reports';
     if (path.includes('/evaluador/messages')) return 'messages';
-    if (path.includes('/evaluador/profile')) return 'profile';
-    if (path.includes('/evaluador/settings')) return 'settings';
     return 'dashboard';
   };
 
   const getPageTitle = () => {
+    const path = location.pathname;
+
+    if (path.includes('/evaluador/evaluations/pending')) return 'Evaluaciones Pendientes';
+    if (path.includes('/evaluador/evaluations/in-progress')) return 'Evaluaciones en Progreso';
+    if (path.includes('/evaluador/evaluations/completed')) return 'Evaluaciones Completadas';
+    if (path.includes('/evaluador/evaluation')) return 'Formulario de Evaluación';
     const titles = {
-      dashboard: 'Mi Dashboard',
+      dashboard: 'Inicio',
       evaluations: 'Mis Evaluaciones',
       projects: 'Proyectos Asignados',
       reports: 'Reportes',
@@ -49,8 +61,11 @@ function EvaluadorLayout() {
         <main className="main-content">
           <Routes>
             <Route path="/dashboard" element={<EvaluadorDashboard />} />
-            <Route path="/evaluations" element={<div>Mis Evaluaciones (Evaluador)</div>} />
-            <Route path="/projects" element={<div>Proyectos Asignados (Evaluador)</div>} />
+            <Route path="/evaluations/pending" element={<EvaluatorPendingPage />} />
+            <Route path="/evaluations/in-progress" element={<EvaluatorInProgressPage />} />
+            <Route path="/evaluations/completed" element={<EvaluatorCompletedPage />} />
+            <Route path="/evaluation" element={<EvaluatorEvaluationForm />} />
+            <Route path="/projects/assigned" element={<EvaluatorProjectsPage />} />
             <Route path="/reports" element={<div>Reportes (Evaluador)</div>} />
             <Route path="/messages" element={<div>Mensajes (Evaluador)</div>} />
             <Route path="/profile" element={<div>Mi Perfil (Evaluador)</div>} />

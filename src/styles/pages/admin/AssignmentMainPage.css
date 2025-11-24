@@ -1,0 +1,512 @@
+.project-admin-assignment-page {
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.project-admin-assignment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  height: 600px;
+}
+
+.project-admin-assignment-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-admin-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.project-admin-column-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.project-admin-column-header h3 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.project-admin-count-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.project-admin-assignment-list,
+.project-admin-evaluators-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-admin-assignment-card {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-admin-assignment-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-admin-assignment-card--selected {
+  border-color: var(--primary-color);
+  background: rgba(0, 123, 191, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 123, 191, 0.15);
+}
+
+.project-admin-assignment-card-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.project-admin-card-field {
+  margin: 0.25rem 0;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-admin-card-icon {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+}
+
+.project-admin-select-indicator {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.project-admin-assignment-options {
+  background: var(--background-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.project-admin-option-group {
+  margin-bottom: 1rem;
+}
+
+.project-admin-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.project-admin-checkbox-label input {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.project-admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-admin-form-group label {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-admin-label-icon {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+}
+
+.project-admin-date-input {
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.project-admin-date-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+.project-admin-evaluator-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  gap: 1rem;
+}
+
+.project-admin-evaluator-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.08);
+}
+
+.project-admin-evaluator-info {
+  flex: 1;
+}
+
+.project-admin-evaluator-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.project-admin-evaluator-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: linear-gradient(90deg,#eef8ff,#e6f2ff);
+  color: #0369a1;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(3,105,161,0.06);
+}
+
+.project-admin-evaluator-specialties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.project-admin-specialty-tag {
+  padding: 0.25rem 0.6rem;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+
+.project-admin-more-specialties {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.project-admin-evaluator-stats {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.project-admin-btn-assign {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg,#10b981,#059669);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.project-admin-btn-assign:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.project-admin-empty-selection {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.project-admin-empty-selection .project-admin-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.project-admin-empty-selection h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+}
+
+.project-admin-empty-selection p {
+  margin: 0;
+}
+
+.compatibility-indicator {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border-radius: 8px;
+  border: 1px solid rgba(2,6,23,0.04);
+}
+
+.compatibility-score {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.compatibility-bar {
+  height: 8px;
+  background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+  border-radius: 999px;
+  margin-right: 0.5rem;
+  flex: 1;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.25);
+}
+
+.compatibility-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.compatibility-match {
+  font-size: 0.75rem;
+  color: #065f46;
+  background: #ecfdf5;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(6,95,70,0.06);
+}
+
+/* Detalles del proyecto */
+.project-details {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+/* Proyecto seleccionado: card limpia y compacta */
+.project-admin-project-selected {
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 1rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  margin-bottom: 1rem;
+}
+
+.project-admin-project-selected h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.project-admin-project-selected p strong {
+  margin-right: 0.5rem;
+  color: var(--text-dark);
+}
+
+/* Opciones de asignación: tarjeta compacta y columnas */
+.project-admin-assignment-options {
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,0.04);
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.03);
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.project-admin-assignment-options .project-admin-option-group,
+.project-admin-assignment-options .project-admin-form-group {
+  margin-bottom: 0;
+}
+
+/* Hacer los checkbox labels más discretos y ocultar la explicación secundaria para limpieza */
+.project-admin-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.project-admin-checkbox-label input {
+  width: 1.15rem;
+  height: 1.15rem;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.project-admin-checkbox-label small {
+  display: none; /* ocultar textos explicativos secundarios para una UI más limpia */
+}
+
+/* Plazo de evaluación: input más compacto */
+.project-admin-form-group label {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.project-admin-date-input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(15,23,42,0.06);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+/* Mostrar la información de líneas y nivel con iconos y texto más sobrio */
+.project-details p {
+  margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #374151;
+  font-size: 0.92rem;
+}
+
+.project-details p {
+  margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Estados de proyectos */
+.status-pendiente {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.status-preasignado {
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.status-asignado {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Mejoras visuales */
+.project-admin-card-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-admin-card-icon {
+  color: #6c757d;
+  min-width: 16px;
+}
+
+.date-info {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+  border-left: 3px solid #17a2b8;
+}
+
+.date-info small {
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Mejoras en los formularios */
+.project-admin-form-group label small {
+  display: block;
+  color: #6c757d;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  font-weight: normal;
+}
+
+/* Estados de botones mejorados */
+.project-admin-btn-assign.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #6c757d;
+}
+
+/* Mejoras en la información de compatibilidad */
+.compatibility-indicator {
+  border-left-color: #17a2b8;
+}
+
+.compatibility-bar {
+  background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+}
+
+@media (max-width: 1024px) {
+  .project-admin-assignment-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  
+  .project-admin-assignment-list,
+  .project-admin-evaluators-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-admin-assignment-grid {
+    gap: 1rem;
+  }
+  
+  .project-admin-assignment-card,
+  .project-admin-evaluator-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .project-admin-btn-assign {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,98 @@
+:root {
+  --project-admin-primary: #2563eb;
+  --project-admin-primary-dark: #1e40af;
+  --project-admin-primary-light: #3b82f6;
+  --project-admin-success: #10b981;
+  --project-admin-success-dark: #059669;
+  --project-admin-warning: #f59e0b;
+  --project-admin-info: #06b6d4;
+  --project-admin-danger: #ef4444;
+  --project-admin-text-dark: #1f2937;
+  --project-admin-text-medium: #4b5563;
+  --project-admin-text-light: #6b7280;
+  --project-admin-bg-light: #f9fafb;
+  --project-admin-bg-card: #ffffff;
+  --project-admin-border: #e5e7eb;
+  --project-admin-border-hover: #d1d5db;
+  --project-admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --project-admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --project-admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --project-admin-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor principal */
+.project-admin-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  box-sizing: border-box;
+}
+
+/* Sección de contenido */
+.project-admin-content-section {
+  flex: 1;
+  padding: 1rem;
+  margin: 0;
+  box-sizing: border-box;
+  width: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Encabezados de sección */
+.project-admin-section-header {
+  margin-bottom: 1.5rem;
+}
+
+.project-admin-section-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--project-admin-text-dark);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.project-admin-section-header p {
+  font-size: 1rem;
+  color: var(--project-admin-text-light);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .project-admin-content-section {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-admin-container {
+    background: var(--project-admin-bg-light);
+  }
+  
+  .project-admin-content-section {
+    padding: 1rem;
+  }
+  
+  .project-admin-section-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .project-admin-section-header p {
+    font-size: 0.9rem;
+  }
+}

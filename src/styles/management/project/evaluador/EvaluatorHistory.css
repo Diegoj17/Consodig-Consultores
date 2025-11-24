@@ -1,0 +1,46 @@
+.evaluator-history-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.evaluator-history-card {
+  background: white;
+  border: 2px solid var(--evaluator-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.evaluator-history-card:hover {
+  border-color: var(--evaluator-primary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.evaluator-history-card h3 {
+  margin: 0 0 1rem 0;
+  color: var(--evaluator-text-dark);
+  font-weight: 700;
+}
+
+.evaluator-history-details {
+  display: flex;
+  justify-content: space-between;
+  color: var(--evaluator-text-light);
+}
+
+.evaluator-history-score {
+  font-weight: 700;
+  color: var(--evaluator-success);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-history-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .evaluator-history-card {
+    padding: 1rem;
+  }
+}

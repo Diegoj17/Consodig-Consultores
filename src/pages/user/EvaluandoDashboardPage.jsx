@@ -37,11 +37,6 @@ const EvaluandoDashboardPage = () => {
 
   return (
     <div className="evaluando-dashboard">
-      <div className="dashboard-header">
-        <h1>Mi Dashboard</h1>
-        <p>Bienvenido, aquí puedes gestionar tus evaluaciones y ver tus resultados</p>
-      </div>
-
       <EvaluandoStats stats={dashboardData.stats} />
       
       <EvaluandoActions 

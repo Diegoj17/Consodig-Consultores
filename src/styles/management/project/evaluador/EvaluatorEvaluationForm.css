@@ -1,0 +1,593 @@
+/* src/styles/management/evaluation/evaluador/EvaluatorEvaluationForm.css */
+.evaluator-evaluation-form {
+  background: #f8fafc;
+  min-height: 100vh;
+  padding: 1.5rem;
+  margin: 0 auto;
+}
+
+.evaluator-form-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.evaluator-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.evaluator-back-btn:hover {
+  background: #4b5563;
+  transform: translateX(-2px);
+}
+
+.evaluator-form-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.evaluator-form-title h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.evaluator-form-title p {
+  margin: 0.25rem 0 0 0;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.evaluator-title-icon {
+  font-size: 2rem;
+  color: #007bbf;
+}
+
+.evaluator-progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  position: relative;
+  padding: 0 2rem;
+}
+
+.evaluator-progress-steps::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #e5e7eb;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.evaluator-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.evaluator-step-number {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: white;
+  border: 3px solid #e5e7eb;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.evaluator-step.active .evaluator-step-number {
+  border-color: #007bbf;
+  background: #007bbf;
+  color: white;
+  transform: scale(1.1);
+}
+
+.evaluator-step.completed .evaluator-step-number {
+  border-color: #10b981;
+  background: #10b981;
+  color: white;
+}
+
+.evaluator-step-label {
+  font-weight: 600;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.evaluator-step.active .evaluator-step-label {
+  color: #007bbf;
+  font-weight: 700;
+}
+
+.evaluator-step.completed .evaluator-step-label {
+  color: #10b981;
+}
+
+.evaluator-form-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.evaluator-step-section {
+  padding: 2.5rem;
+}
+
+.evaluator-step-section h2 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.evaluator-step-section p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.evaluator-project-details {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.evaluator-detail-group {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bbf;
+}
+
+.evaluator-detail-group h3 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.evaluator-detail-item {
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.evaluator-detail-item.full-width {
+  flex-direction: column;
+}
+
+.evaluator-detail-item strong {
+  color: #374151;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.evaluator-detail-item span,
+.evaluator-detail-item p {
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.evaluator-format-info {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #bae6fd;
+}
+
+.evaluator-format-info h3 {
+  margin: 0 0 1rem 0;
+  color: #0369a1;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.evaluator-format-details strong {
+  display: block;
+  color: #1f2937;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-format-details p {
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.evaluator-format-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #007bbf;
+  font-weight: 600;
+}
+
+.evaluator-comments-section {
+  margin-bottom: 2rem;
+}
+
+.evaluator-comments-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.evaluator-help-text {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.evaluator-comments-textarea {
+  width: 100%;
+  padding: 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.3s ease;
+  background: white;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.evaluator-comments-textarea:focus {
+  outline: none;
+  border-color: #007bbf;
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.evaluator-comments-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.evaluator-final-score {
+  background: linear-gradient(135deg, #007bbf, #005a8f);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.evaluator-final-score h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.evaluator-score-display {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.evaluator-score-value {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.evaluator-score-label {
+  font-size: 2rem;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.evaluator-score-breakdown {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.evaluator-score-breakdown h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.evaluator-criterio-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.evaluator-criterio-score:last-child {
+  border-bottom: none;
+}
+
+.evaluator-step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f3f4f6;
+}
+
+.evaluator-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.evaluator-btn-primary {
+  background: linear-gradient(135deg, #007bbf, #005a8f);
+  color: white;
+}
+
+.evaluator-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 191, 0.3);
+}
+
+.evaluator-btn-secondary {
+  background: white;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+.evaluator-btn-secondary:hover {
+  border-color: #007bbf;
+  color: #007bbf;
+  transform: translateY(-2px);
+}
+
+.evaluator-no-selection {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.evaluator-no-selection h2 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.evaluator-no-selection p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-evaluation-form {
+    padding: 1rem;
+  }
+
+  .evaluator-form-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .evaluator-form-title {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .evaluator-progress-steps {
+    padding: 0 1rem;
+  }
+
+  .evaluator-step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .evaluator-step-label {
+    font-size: 0.8rem;
+  }
+
+  .evaluator-step-section {
+    padding: 1.5rem;
+  }
+
+  .evaluator-detail-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .evaluator-format-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .evaluator-score-value {
+    font-size: 3rem;
+  }
+
+  .evaluator-score-label {
+    font-size: 1.5rem;
+  }
+
+  .evaluator-step-actions {
+    flex-direction: column;
+  }
+
+  .evaluator-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.evaluator-loading-items {
+  text-align: center;
+  padding: 3rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #e5e7eb;
+}
+
+.evaluator-no-items {
+  text-align: center;
+  padding: 3rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #e5e7eb;
+}
+
+.evaluator-no-items-icon {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.evaluator-no-items h3 {
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-no-items p {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.evaluator-btn-outline {
+  background: transparent;
+  color: #007bbf;
+  border: 2px solid #007bbf;
+}
+
+.evaluator-btn-outline:hover {
+  background: #007bbf;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.evaluator-error-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 2rem;
+}
+
+.evaluator-error-content {
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.evaluator-error-icon {
+  font-size: 4rem;
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+.evaluator-error-content h2 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.evaluator-error-content p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.evaluator-debug-info {
+  background: #f3f4f6;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+.evaluator-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.evaluator-btn:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 480px) {
+  .evaluator-progress-steps {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0;
+  }
+
+  .evaluator-progress-steps::before {
+    display: none;
+  }
+
+  .evaluator-step {
+    flex-direction: row;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .evaluator-step-label {
+    text-align: left;
+    flex: 1;
+  }
+}

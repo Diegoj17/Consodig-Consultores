@@ -1,0 +1,226 @@
+/* src/styles/pages/admin/HistoryStats.css */
+.history-stats-container {
+  background: #007bbf;
+  color: white;
+  padding: 1.5rem;
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 24px rgba(30, 41, 59, 0.12);
+}
+
+.history-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.history-stats-title h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.history-stats-title p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.history-stats-filter-info {
+  display: flex;
+  align-items: center;
+}
+
+.filter-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.history-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.history-stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  color: #000000;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.history-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.history-stat-card.performance-indicator {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.history-stat-card.performance-indicator .history-stat-info {
+  color: white;
+}
+
+.history-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.history-stat-icon.total-evaluators {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.history-stat-icon.total-assignments {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.history-stat-icon.completed {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.history-stat-icon.violations {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.history-stat-icon.completion-rate {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.history-stat-icon.violation-rate {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.history-stat-icon.average-time {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.history-stat-icon.efficiency {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.history-stat-icon.top-performers {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.history-stat-icon.pending {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.history-stat-icon.success-rate {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.history-stat-icon.overall {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  color: #667eea;
+}
+
+.history-stat-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.history-stat-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.history-stat-label {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+/* Colores para el indicador de desempeño general */
+.history-stat-card.performance-indicator .history-stat-number {
+  color: white;
+}
+
+.history-stat-card.performance-indicator .history-stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .history-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .history-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .history-stats-container {
+    padding: 1.25rem;
+  }
+  
+  .history-stats-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .history-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .history-stat-card {
+    padding: 1rem;
+  }
+  
+  .history-stat-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+  
+  .history-stat-number {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .history-stat-card {
+    padding: 1rem;
+  }
+  
+  .history-stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .history-stat-label {
+    font-size: 0.8rem;
+  }
+}

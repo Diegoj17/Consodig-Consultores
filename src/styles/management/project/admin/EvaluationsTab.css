@@ -1,0 +1,147 @@
+.project-admin-evaluations-tab {
+  width: 100%;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.project-admin-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.project-admin-btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 123, 191, 0.3);
+}
+
+.project-admin-formats-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.project-admin-format-card {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.project-admin-format-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-admin-format-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.project-admin-format-icon {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.project-admin-format-card-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.project-admin-format-description {
+  color: var(--text-light);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.project-admin-format-meta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.project-admin-meta-item {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--background-light);
+  border-radius: 6px;
+}
+
+.project-admin-meta-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.project-admin-meta-status--active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.project-admin-meta-status--inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.project-admin-format-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.project-admin-btn-edit,
+.project-admin-btn-view {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: 2px solid var(--border-color);
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.project-admin-btn-edit:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.project-admin-btn-view:hover {
+  border-color: #17a2b8;
+  color: #17a2b8;
+}
+
+@media (max-width: 768px) {
+  .project-admin-format-card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .project-admin-format-meta {
+    justify-content: center;
+  }
+  
+  .project-admin-format-actions {
+    flex-direction: column;
+  }
+}

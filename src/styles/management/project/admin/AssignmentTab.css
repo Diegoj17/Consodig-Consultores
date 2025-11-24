@@ -1,0 +1,265 @@
+.project-admin-assignment-tab {
+  width: 100%;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.project-admin-assignment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  height: 600px;
+}
+
+.project-admin-assignment-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-admin-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.project-admin-column-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.project-admin-column-header h3 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.project-admin-assignment-list,
+.project-admin-evaluators-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-admin-assignment-card {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-admin-assignment-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-admin-assignment-card--selected {
+  border-color: var(--primary-color);
+  background: rgba(0, 123, 191, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 123, 191, 0.15);
+}
+
+.project-admin-assignment-card-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.project-admin-assignment-card-content p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-admin-card-icon {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+}
+
+.project-admin-select-indicator {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.project-admin-assignment-options {
+  background: var(--background-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.project-admin-option-group {
+  margin-bottom: 1rem;
+}
+
+.project-admin-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.project-admin-checkbox-label input {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.project-admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-admin-form-group label {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-admin-label-icon {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+}
+
+.project-admin-date-input {
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.project-admin-date-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.project-admin-evaluator-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.project-admin-evaluator-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-admin-evaluator-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.project-admin-evaluator-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.project-admin-btn-assign {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #28a745;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.project-admin-btn-assign:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.project-admin-empty-selection {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.project-admin-empty-selection .project-admin-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.project-admin-empty-selection h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+}
+
+.project-admin-empty-selection p {
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .project-admin-assignment-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  
+  .project-admin-assignment-list,
+  .project-admin-evaluators-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-admin-assignment-grid {
+    gap: 1rem;
+  }
+  
+  .project-admin-assignment-card,
+  .project-admin-evaluator-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .project-admin-btn-assign {
+    width: 100%;
+    justify-content: center;
+  }
+}

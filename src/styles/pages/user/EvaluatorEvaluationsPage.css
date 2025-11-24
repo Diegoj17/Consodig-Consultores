@@ -1,0 +1,323 @@
+/* src/styles/management/evaluation/evaluador/EvaluatorEvaluationsPage.css */
+.evaluator-evaluations-page {
+  padding: 1rem;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.evaluator-evaluations-header {
+  margin-bottom: 2rem;
+}
+
+.evaluator-evaluations-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-title-icon {
+  font-size: 2rem;
+  color: #007bbf;
+}
+
+.evaluator-evaluations-title h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.evaluator-evaluations-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.evaluator-evaluations-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e5e7eb;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.evaluator-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6b7280;
+  font-weight: 600;
+  position: relative;
+  flex: 1;
+  justify-content: center;
+}
+
+.evaluator-tab:hover {
+  color: #007bbf;
+  background: #f0f9ff;
+}
+
+.evaluator-tab.active {
+  color: #007bbf;
+  background: #e0f2fe;
+  box-shadow: 0 2px 8px rgba(0, 123, 191, 0.15);
+}
+
+.evaluator-tab-icon {
+  font-size: 1.1rem;
+}
+
+.evaluator-tab-label {
+  font-size: 0.95rem;
+}
+
+.evaluator-tab-count {
+  background: #007bbf;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
+.evaluator-tab.active .evaluator-tab-count {
+  background: #005a8f;
+}
+
+.evaluator-evaluations-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.evaluator-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.evaluator-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.evaluator-search-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+  color: #374151;
+}
+
+.evaluator-search-input:focus {
+  outline: none;
+  border-color: #007bbf;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.evaluator-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.evaluator-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 200px;
+}
+
+.evaluator-filter-icon {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.evaluator-filter-select {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.evaluator-filter-select:focus {
+  outline: none;
+  border-color: #007bbf;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+
+
+.evaluator-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.evaluator-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bbf;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+/* En tu archivo CSS */
+.debug-info {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #856404;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-debug {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.btn-debug:hover {
+  background: #5a6268;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.evaluator-loading p {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-evaluations-page {
+    padding: 1rem;
+  }
+
+  .evaluator-evaluations-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .evaluator-title-icon {
+    font-size: 1.5rem;
+  }
+
+  .evaluator-evaluations-title h1 {
+    font-size: 1.5rem;
+  }
+
+  .evaluator-evaluations-header p {
+    font-size: 1rem;
+  }
+
+  .evaluator-evaluations-tabs {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .evaluator-tab {
+    justify-content: flex-start;
+    padding: 1rem;
+  }
+
+  .evaluator-evaluations-filters {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .evaluator-search-box {
+    min-width: auto;
+  }
+
+  .evaluator-filter-group {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-evaluations-page {
+    padding: 0.5rem;
+  }
+
+  .evaluator-evaluations-title h1 {
+    font-size: 1.25rem;
+  }
+
+  .evaluator-evaluations-header p {
+    font-size: 0.9rem;
+  }
+
+  .evaluator-tab {
+    padding: 0.875rem;
+  }
+
+  .evaluator-tab-label {
+    font-size: 0.9rem;
+  }
+
+  .evaluator-search-input {
+    font-size: 0.95rem;
+    padding: 0.75rem 0.875rem 0.75rem 2.25rem;
+  }
+
+  .evaluator-filter-select {
+    font-size: 0.95rem;
+    padding: 0.75rem 0.875rem;
+  }
+}
