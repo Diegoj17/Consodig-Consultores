@@ -1,4 +1,3 @@
-// src/pages/user/EvaluatorHistoryPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaHistory, FaUser, FaFilter, FaCheckCircle } from 'react-icons/fa';
@@ -13,10 +12,10 @@ const EvaluatorHistoryPage = () => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currentEvaluator, setCurrentEvaluator] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('completed');
   const navigate = useNavigate();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log('🔄 Cargando historial de evaluaciones...');
     loadEvaluationHistory();
@@ -238,36 +237,12 @@ const EvaluatorHistoryPage = () => {
     loadEvaluationHistory();
   };
 
-  const getStatusStats = () => {
-    const completed = projects.filter(p => p.isCompleted).length;
-    const accepted = projects.filter(p => p.isAccepted && !p.isCompleted).length;
-    const total = projects.length;
 
-    return { completed, accepted, total };
-  };
-
-  const statusStats = getStatusStats();
 
   return (
     <div className="evaluator-history-page">
-      {/* Header ESPECÍFICO para historial */}
-      <div className="evaluator-history-header">
-        
-        <div className="evaluator-history-stats">
-          <div className="evaluator-history-stat-card">
-            <span className="evaluator-history-stat-number">{statusStats.completed}</span>
-            <span className="evaluator-history-stat-label">Completados</span>
-          </div>
-          <div className="evaluator-history-stat-card">
-            <span className="evaluator-history-stat-number">{statusStats.accepted}</span>
-            <span className="evaluator-history-stat-label">En Progreso</span>
-          </div>
-          <div className="evaluator-history-stat-card">
-            <span className="evaluator-history-stat-number">{statusStats.total}</span>
-            <span className="evaluator-history-stat-label">Total</span>
-          </div>
-        </div>
-      </div>
+
+      
 
       {/* Filtros y Búsqueda ESPECÍFICOS para historial */}
       <div className="evaluator-history-filters">
@@ -346,15 +321,6 @@ const EvaluatorHistoryPage = () => {
           </div>
         ) : (
           <>
-            {/* Resumen de resultados */}
-            <div className="evaluator-results-summary">
-              <p>
-                Mostrando {filteredProjects.length} de {projects.length} evaluaciones en historial
-                {searchTerm && ` para "${searchTerm}"`}
-                {statusFilter !== 'all' && 
-                  ` • ${statusFilter === 'completed' ? 'Completadas' : 'En proceso'}`}
-              </p>
-            </div>
 
             {/* Grid de proyectos del historial */}
             <div className="evaluator-projects-grid">

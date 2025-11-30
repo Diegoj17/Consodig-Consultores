@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import '../../../../styles/management/project/admin/EvaluationReviewModal.css';
+import researchService from '../../../../services/researchService';
 
 const EvaluationReviewModal = ({ 
   evaluation, 
@@ -27,6 +28,8 @@ const EvaluationReviewModal = ({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [modalType, setModalType] = useState('success');
+  // Mensaje inline (no bloquear con modal)
+  const [inlineMessage, setInlineMessage] = useState(null); // { text, type }
 
   // Inicializar estados cuando la evaluación cambia
   useEffect(() => {
@@ -42,15 +45,44 @@ const EvaluationReviewModal = ({
       })) || [];
       
       setItemsEditados(initialItems);
+      setModifiedCount(0);
     }
   }, [evaluation]);
 
   const [itemsEditados, setItemsEditados] = useState([]);
+  const [modifiedCount, setModifiedCount] = useState(0);
 
   const showModalMessage = (message, type = 'success') => {
     setSuccessMessage(message);
     setModalType(type);
     setShowSuccessModal(true);
+  };
+
+  const showInline = (message, type = 'info', duration = 2500) => {
+    setInlineMessage({ text: message, type });
+    if (duration > 0) {
+      setTimeout(() => setInlineMessage(null), duration);
+    }
+  };
+
+  // Confirmar descartar cambios si hay edición activa
+  const confirmDiscardChanges = () => {
+    if (!editingItems) return true;
+    if (!hasChanges()) return true;
+    return window.confirm('Hay cambios sin guardar en los items. ¿Desea descartar los cambios?');
+  };
+
+  // Manejo seguro de cierre del modal
+  const handleCloseRequest = () => {
+    if (!confirmDiscardChanges()) return;
+    if (typeof onClose === 'function') onClose();
+  };
+
+  // Wrapper para cambiar tabs con confirmación si hay cambios
+  const safeSetActiveTab = (tab) => {
+    if (tab === activeTab) return;
+    if (!confirmDiscardChanges()) return;
+    setActiveTab(tab);
   };
 
   // FUNCIÓN MEJORADA PARA OBTENER LA DESCRIPCIÓN DEL ITEM
@@ -78,7 +110,13 @@ const EvaluationReviewModal = ({
 
   // CALCULAR PUNTAJE TOTAL CORREGIDO - Considerando pesos
   const calculateTotalScore = () => {
-    if (itemsEditados.length === 0) return evaluation.calificacionTotal || 0;
+    // Si el backend ya nos provee una puntuación total explícita, usarla (prioridad)
+    const backendTotal = evaluation?.calificacion_total ?? evaluation?.calificacionTotal ?? evaluation?.calificacion ?? null;
+    if (backendTotal !== null && backendTotal !== undefined) {
+      return Math.round(Number(backendTotal));
+    }
+
+    if (itemsEditados.length === 0) return 0;
     
     // Si hay pesos diferentes, calcular con pesos
     const hasDifferentWeights = itemsEditados.some(item => item.peso !== 100);
@@ -108,7 +146,190 @@ const EvaluationReviewModal = ({
 
   // CALCULAR PROMEDIO (es el mismo que el total en este caso)
   const calculateAverageScore = () => {
+    // Mostrar el porcentaje tal cual viene del backend si existe
+    const backendTotal = evaluation?.calificacion_total ?? evaluation?.calificacionTotal ?? evaluation?.calificacion ?? null;
+    if (backendTotal !== null && backendTotal !== undefined) return Math.round(Number(backendTotal));
     return calculateTotalScore();
+  };
+
+  // Helper: Obtener texto de Nivel de Estudios (soporta múltiples keys/formats)
+  const getNivelEstudiosText = (project) => {
+    if (!project) return 'N/A';
+    const candidates = [
+      project.nivelEstudios,
+      project.nivel_estudios,
+      project.nivelEstudio,
+      project.nivel_estudio,
+      project.nivel,
+      project.nivelEstudiosName,
+      project.nivelEstudiosNombre,
+      project.nivel_estudios_nombre,
+      // a veces viene como objeto
+      project.nivelEstudiosObj,
+      project.nivelEstudioObj
+    ];
+
+    for (const v of candidates) {
+      if (!v && v !== 0) continue;
+      if (typeof v === 'string' && v.trim() !== '') return v;
+      if (typeof v === 'number') return String(v);
+      if (typeof v === 'object') {
+        if (v.nombre) return v.nombre;
+        if (v.name) return v.name;
+        if (v.label) return v.label;
+      }
+    }
+
+    return 'N/A';
+  };
+
+  // Helper: Obtener texto de Líneas de Investigación (soporta varios formatos)
+  const getLineasInvestigacionText = (project) => {
+    if (!project) return 'N/A';
+    const listCandidates = [
+      project.lineasInvestigacion,
+      project.lineas_investigacion,
+      project.lineas,
+      project.lineasInvestigacionNames,
+      project.lineasInvestigacionNombre,
+      project.lineasInvestigacionNamesArray,
+      project.lineasInvestigacionString,
+      project.lineas_investigacion_ids,
+      project.lineasInvestigacionIds,
+      project.linea_investigacion,
+      project.lineaInvestigacion
+    ];
+
+    let list = null;
+    for (const cand of listCandidates) {
+      if (cand === undefined || cand === null) continue;
+      // si es un objeto con { data: [...] } usar data
+      if (typeof cand === 'object' && !Array.isArray(cand) && cand.data && Array.isArray(cand.data) && cand.data.length > 0) {
+        list = cand.data;
+        break;
+      }
+      list = cand;
+      break;
+    }
+
+    if (!list) return 'N/A';
+
+    // Si viene como array
+    if (Array.isArray(list)) {
+      // Si es array de strings
+      const names = list.map(li => {
+        if (li === undefined || li === null) return null;
+        if (typeof li === 'string') return li;
+        if (typeof li === 'number') return String(li); // IDs
+        if (typeof li === 'object') return li.nombre || li.name || li.titulo || li.title || (li.id ? String(li.id) : null);
+        return String(li);
+      }).filter(Boolean);
+
+      // Si todos son numéricos -> probablemente son IDs
+      const allNumeric = names.length > 0 && names.every(n => /^\d+$/.test(n));
+      if (allNumeric) return `IDs: ${names.join(', ')}`;
+
+      return names.length ? names.join(', ') : 'N/A';
+    }
+
+    // Si viene como string
+    if (typeof list === 'string') return list;
+
+    // Si viene como objeto único
+    if (typeof list === 'object') {
+      // intentar extraer array interno
+      if (list.nombre) return list.nombre;
+      if (list.name) return list.name;
+      if (list.titulo) return list.titulo;
+      if (list.title) return list.title;
+      if (list.id) return String(list.id);
+      // si tiene campo items/lineas
+      if (Array.isArray(list.lineas) && list.lineas.length) {
+        return list.lineas.map(li => (li.nombre || li.name || li.titulo || li.title || (li.id ? String(li.id) : null))).filter(Boolean).join(', ');
+      }
+    }
+
+    return 'N/A';
+  };
+
+  // Extraer IDs de líneas si vienen como array de IDs o single ID
+  const getLineasIds = (project) => {
+    if (!project) return [];
+    const candidates = [
+      project.lineasInvestigacion,
+      project.lineas_investigacion,
+      project.lineas_investigacion_ids,
+      project.lineasInvestigacionIds,
+      project.lineas,
+      project.linea_investigacion,
+      project.lineaInvestigacion
+    ];
+
+    for (const cand of candidates) {
+      if (cand === undefined || cand === null) continue;
+      // objeto con data
+      if (typeof cand === 'object' && !Array.isArray(cand) && cand.data && Array.isArray(cand.data)) {
+        return cand.data.map(d => (typeof d === 'object' ? d.id || d.identificacion || d.identificador || d.identify : d)).filter(Boolean).map(Number);
+      }
+      if (Array.isArray(cand)) {
+        // si es array de objetos o números
+        const ids = cand.map(x => (typeof x === 'object' ? x.id || x.identificacion || x.identificador || x.identify : x)).filter(Boolean).map(Number);
+        if (ids.length) return ids;
+      }
+      // si es string con comas
+      if (typeof cand === 'string' && /^\d+(,\s*\d+)*$/.test(cand)) {
+        return cand.split(',').map(s => Number(s.trim())).filter(Boolean);
+      }
+      // si es número
+      if (typeof cand === 'number' || (typeof cand === 'string' && /^\d+$/.test(cand))) {
+        return [Number(cand)];
+      }
+    }
+
+    return [];
+  };
+
+  const [lineasNamesResolved, setLineasNamesResolved] = useState(null);
+
+  // Si las líneas vienen como IDs, resolver nombres usando el servicio
+  useEffect(() => {
+    const project = evaluation?.project;
+    if (!project) return;
+    const ids = getLineasIds(project);
+    if (!ids || ids.length === 0) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const all = await researchService.getAll();
+        if (!mounted) return;
+        const map = new Map(all.map(r => [Number(r.id), r.nombre]));
+        const names = ids.map(id => map.get(Number(id)) || `ID:${id}`).filter(Boolean);
+        setLineasNamesResolved(names.length ? names.join(', ') : null);
+      } catch (err) {
+        console.error('Error resolviendo líneas de investigación:', err);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [evaluation]);
+
+  // Helper para abrir archivos del proyecto en nueva pestaña
+  const openProjectFile = (archivo) => {
+    if (!archivo) return alert('Archivo inválido');
+    const possibleUrl = archivo.urlArchivo || archivo.url_archivo || archivo.url || archivo.urlArchivoRaw || archivo.url_raw;
+    if (!possibleUrl) return alert('No hay URL pública disponible para este archivo');
+
+    // Si no tiene extensión PDF y tipo mime indica pdf, intentar abrir con .pdf añadido (Cloudinary raw)
+    const hasPdfExt = /\.pdf($|\?)/i.test(possibleUrl);
+    const isPdfMime = archivo.tipoMime && archivo.tipoMime.toLowerCase().includes('pdf');
+    const urlToOpen = !hasPdfExt && isPdfMime ? `${possibleUrl}.pdf` : possibleUrl;
+
+    const newWin = window.open(urlToOpen, '_blank', 'noopener,noreferrer');
+    if (!newWin) {
+      // popup blocked -> intentar abrir la URL original
+      window.open(possibleUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleSubmitObservation = async () => {
@@ -134,6 +355,7 @@ const EvaluationReviewModal = ({
       await onEditEvaluation(evaluation.id, itemsEditados);
       setEditingItems(false);
       showModalMessage('✅ Cambios guardados correctamente');
+      setModifiedCount(0);
       
       setTimeout(() => {
         if (typeof onClose === 'function') {
@@ -160,19 +382,37 @@ const EvaluationReviewModal = ({
     
     setItemsEditados(revertedItems);
     setEditingItems(false);
-    showModalMessage('ℹ️ Cambios cancelados', 'info');
+    setModifiedCount(0);
+    // Mostrar mensaje inline en vez de abrir un modal adicional
+    showInline('Cambios cancelados', 'info', 2500);
   };
 
   const updateItemScore = (index, newScore) => {
     const updatedItems = [...itemsEditados];
     updatedItems[index].calificacion = Math.max(0, Math.min(parseInt(newScore) || 0, 100));
     setItemsEditados(updatedItems);
+    // actualizar contador de modificados
+    const count = updatedItems.reduce((acc, it, idx) => {
+      const orig = evaluation.items?.[idx];
+      if (!orig) return acc;
+      if (it.calificacion !== (orig.calificacion || 0) || it.observacion !== (orig.observacion || '')) return acc + 1;
+      return acc;
+    }, 0);
+    setModifiedCount(count);
   };
 
   const updateItemObservation = (index, newObservation) => {
     const updatedItems = [...itemsEditados];
     updatedItems[index].observacion = newObservation;
     setItemsEditados(updatedItems);
+    // actualizar contador de modificados
+    const count = updatedItems.reduce((acc, it, idx) => {
+      const orig = evaluation.items?.[idx];
+      if (!orig) return acc;
+      if (it.calificacion !== (orig.calificacion || 0) || it.observacion !== (orig.observacion || '')) return acc + 1;
+      return acc;
+    }, 0);
+    setModifiedCount(count);
   };
 
   const hasChanges = () => {
@@ -244,6 +484,13 @@ const EvaluationReviewModal = ({
   return (
     <>
       <div className="evaluation-review-modal-overlay">
+        {/* Mensaje inline no bloqueante */}
+        {inlineMessage && (
+          <div className={`inline-message inline-message-${inlineMessage.type}`} role="status">
+            <div className="inline-message-content">{inlineMessage.text}</div>
+            <button className="inline-message-close" onClick={() => setInlineMessage(null)} aria-label="Cerrar mensaje">×</button>
+          </div>
+        )}
         <div className="evaluation-review-modal">
           
           {/* Header */}
@@ -258,10 +505,6 @@ const EvaluationReviewModal = ({
                   <FaUser className="evaluation-inline-icon" />
                   {evaluation.evaluatorName || 'Evaluador no disponible'}
                 </span>
-                <span className="evaluation-review-id">
-                  <FaFileAlt className="evaluation-inline-icon" />
-                  ID: {evaluation.id}
-                </span>
                 <span className="evaluation-review-date">
                   <FaCalendar className="evaluation-inline-icon" />
                   {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'Fecha no disponible'}
@@ -270,7 +513,12 @@ const EvaluationReviewModal = ({
             </div>
             <div className="evaluation-review-modal-header-actions">
               {getStatusBadge()}
-              <button className="evaluation-review-modal-close" onClick={onClose}>
+              {editingItems && modifiedCount > 0 && (
+                <div className="editing-summary-badge" style={{ marginRight: '8px', color: '#fff', fontWeight: 600 }}>
+                  Edición: {modifiedCount} cambio{modifiedCount > 1 ? 's' : ''}
+                </div>
+              )}
+              <button className="evaluation-review-modal-close" onClick={handleCloseRequest}>
                 ×
               </button>
             </div>
@@ -280,21 +528,15 @@ const EvaluationReviewModal = ({
           <div className="evaluation-review-modal-tabs">
             <button 
               className={`evaluation-review-modal-tab ${activeTab === 'details' ? 'active' : ''}`}
-              onClick={() => setActiveTab('details')}
+              onClick={() => safeSetActiveTab('details')}
             >
               <FaEye /> Detalles
             </button>
             <button 
               className={`evaluation-review-modal-tab ${activeTab === 'items' ? 'active' : ''}`}
-              onClick={() => setActiveTab('items')}
+              onClick={() => safeSetActiveTab('items')}
             >
               <FaListAlt /> Items ({evaluation.items?.length || 0})
-            </button>
-            <button 
-              className={`evaluation-review-modal-tab ${activeTab === 'observations' ? 'active' : ''}`}
-              onClick={() => setActiveTab('observations')}
-            >
-              <FaComment /> Observaciones
             </button>
           </div>
 
@@ -311,35 +553,51 @@ const EvaluationReviewModal = ({
                       <strong>Título:</strong>
                       <span className="project-title">{evaluation.project?.titulo || 'Proyecto no disponible'}</span>
                     </div>
+
                     <div className="evaluation-review-detail-item">
-                      <strong>Proyecto:</strong>
-                      <span className="project-id">{evaluation.project?.id || 'N/A'}</span>
+                      <strong>Resumen:</strong>
+                      <span>{evaluation.project?.resumen || evaluation.project?.descripcion || 'No disponible'}</span>
                     </div>
+
                     <div className="evaluation-review-detail-item">
-                      <strong>Formato:</strong>
-                      <span>{evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}</span>
+                      <strong>Investigador Principal:</strong>
+                      <span>{evaluation.project?.investigadorPrincipal || evaluation.project?.investigador || 'No especificado'}</span>
                     </div>
-                    
-                    {/* PUNTUACIÓN TOTAL CORREGIDA */}
+
                     <div className="evaluation-review-detail-item">
-                      <strong>
-                        <FaCalculator className="evaluation-inline-icon" />
-                        Puntuación Total:
-                      </strong>
-                      <span className={`evaluation-review-score total-score ${getScoreColorClass(totalScore)}`}>
-                        {totalScore} / {maxScore}
-                      </span>
+                      <strong>Palabras clave:</strong>
+                      <span>{evaluation.project?.palabrasClave || evaluation.project?.keywords || 'N/A'}</span>
                     </div>
-                    
-                    {/* PROMEDIO CORREGIDO */}
+
                     <div className="evaluation-review-detail-item">
-                      <strong>
-                        <FaCalculator className="evaluation-inline-icon" />
-                        Promedio:
-                      </strong>
-                      <span className={`evaluation-review-score average-score ${getScoreColorClass(averageScore)}`}>
-                        {averageScore}%
-                      </span>
+                      <strong>Nivel de Estudios:</strong>
+                      <span>{getNivelEstudiosText(evaluation.project)}</span>
+                    </div>
+
+                    <div className="evaluation-review-detail-item">
+                      <strong>Líneas de Investigación:</strong>
+                      <span>{lineasNamesResolved || getLineasInvestigacionText(evaluation.project)}</span>
+                    </div>
+
+                    <div className="evaluation-review-detail-item evaluation-review-files" style={{ gridColumn: '1 / -1' }}>
+                      <strong>Archivos:</strong>
+                      <div className="project-files-list" style={{ marginTop: '6px' }}>
+                        {(evaluation.project?.archivos || evaluation.archivos || evaluation.project?.files || []).length > 0 ? (
+                          (evaluation.project?.archivos || evaluation.archivos || evaluation.project?.files || []).map((archivo) => (
+                            <div key={archivo.id || archivo.nombre} className="project-file-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                {archivo.tipoMime && archivo.tipoMime.toLowerCase().includes('pdf') ? <FaFileAlt style={{ color: '#d23f3f' }} /> : <FaFileAlt />}
+                                <button type="button" className="project-file-link" onClick={() => openProjectFile(archivo)} style={{ background: 'none', border: 'none', color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer' }}>
+                                  {archivo.nombreArchivo || archivo.nombre || archivo.fileName || 'Archivo sin nombre'}
+                                </button>
+                              </span>
+                              <small style={{ color: '#6b7280' }}>{archivo.tipo || archivo.tipoMime || ''}</small>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ color: '#6b7280' }}>No hay archivos adjuntos</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -347,19 +605,29 @@ const EvaluationReviewModal = ({
                 <div className="evaluation-review-summary">
                   <h4>Resumen de Evaluación</h4>
                   <div className="evaluation-review-stats">
+                    <div className="evaluation-review-detail-item">
+                      <strong>
+                        Puntuación Total:
+                      </strong>
+                      <span className={`evaluation-review-score total-score ${getScoreColorClass(totalScore)}`}>
+                        {totalScore} / {maxScore} Puntos
+                      </span>
+                    </div>
+
+                    {/* PROMEDIO CORREGIDO */}
+                    <div className="evaluation-review-detail-item">
+                      <strong>
+                        Promedio:
+                      </strong>
+                      <span className={`evaluation-review-score average-score ${getScoreColorClass(averageScore)}`}>
+                        {averageScore}%
+                      </span>
+                    </div>
                     <div className="evaluation-review-stat">
                       <span className="stat-label">Items Evaluados:</span>
                       <span className="stat-value">
                         {evaluation.items?.filter(item => item.calificacion > 0).length || 0} / {evaluation.items?.length || 0}
                       </span>
-                    </div>
-                    <div className="evaluation-review-stat">
-                      <span className="stat-label">Estado:</span>
-                      {getStatusBadge()}
-                    </div>
-                    <div className="evaluation-review-stat">
-                      <span className="stat-label">Evaluador ID:</span>
-                      <span className="stat-value">{evaluation.evaluadorId}</span>
                     </div>
                     <div className="evaluation-review-stat">
                       <span className="stat-label">Fecha Completada:</span>
@@ -368,35 +636,8 @@ const EvaluationReviewModal = ({
                       </span>
                     </div>
                     
-                    {/* Información adicional de cálculos */}
-                    <div className="evaluation-review-stat">
-                      <span className="stat-label">Sistema de Calificación:</span>
-                      <span className="stat-value">0-100 puntos</span>
-                    </div>
-                    
-                    {/* Barra de progreso visual */}
-                    <div className="evaluation-review-stat full-width">
-                      <span className="stat-label">Progreso de Calificación:</span>
-                      <div className="score-progress-bar">
-                        <div 
-                          className="score-progress-fill"
-                          style={{ width: `${totalScore}%` }}
-                        ></div>
-                        <span className="score-progress-text">{totalScore}%</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
-
-                {/* Observación General en Detalles */}
-                {observacionGeneral && (
-                  <div className="evaluation-review-general-observation">
-                    <h4>Observación General del Administrador</h4>
-                    <div className="observation-content">
-                      <p>{observacionGeneral}</p>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -405,7 +646,6 @@ const EvaluationReviewModal = ({
               <div className="evaluation-review-items">
                 <div className="evaluation-review-items-header">
                   <h4>
-                    <FaListAlt className="evaluation-inline-icon" />
                     Items de Evaluación
                   </h4>
                   <div className="evaluation-review-items-actions">
@@ -469,7 +709,6 @@ const EvaluationReviewModal = ({
                         
                         {/* DESCRIPCIÓN MEJORADA */}
                         <div className="evaluation-review-item-description-container">
-                          <FaAlignLeft className="evaluation-review-description-icon" />
                           <div className="evaluation-review-item-description-content">
                             <label className="evaluation-review-description-label">Descripción:</label>
                             <p className="evaluation-review-item-description">
@@ -491,11 +730,11 @@ const EvaluationReviewModal = ({
                                   onChange={(e) => updateItemScore(index, e.target.value)}
                                   className="evaluation-review-score-input"
                                 />
-                                <span className="score-range">/ 100</span>
+                                <span className="score-range">/ 100 puntos</span>
                               </div>
                             ) : (
                               <span className="evaluation-review-item-score-value">
-                                {originalItem.calificacion || 0} / 100
+                                {originalItem.calificacion || 0} / 100 puntos
                               </span>
                             )}
                           </div>
@@ -529,87 +768,39 @@ const EvaluationReviewModal = ({
                 )}
               </div>
             )}
-
-            {/* Tab: Observaciones */}
-            {activeTab === 'observations' && (
-              <div className="evaluation-review-observations">
-                <h4>
-                  <FaComment className="evaluation-inline-icon" />
-                  Observaciones del Administrador
-                </h4>
-                
-                <div className="evaluation-review-observation-input">
-                  <label>Nueva Observación General:</label>
-                  <textarea
-                    value={observation}
-                    onChange={(e) => setObservation(e.target.value)}
-                    placeholder="Escribe tus observaciones generales sobre esta evaluación..."
-                    rows="6"
-                    className="evaluation-review-general-observation-textarea"
-                  />
-                  <button 
-                    onClick={handleSubmitObservation} 
-                    className="evaluation-review-add-observation-btn"
-                    disabled={!observation.trim() || saving}
-                  >
-                    <FaSave /> 
-                    {saving ? 'Registrando...' : 'Registrar Observación'}
-                  </button>
-                </div>
-
-                {/* Observación General Existente */}
-                {observacionGeneral && (
-                  <div className="evaluation-review-existing-observations">
-                    <h5>Observación General Actual</h5>
-                    <div className="evaluation-review-observations-list">
-                      <div className="evaluation-review-observation-item general-observation">
-                        <div className="observation-content">
-                          <p>{observacionGeneral}</p>
-                          <small>
-                            Registrada por: Administrador • 
-                            Fecha: {new Date().toLocaleDateString()}
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Observaciones por Item */}
-                <div className="evaluation-review-item-observations">
-                  <h5>Observaciones por Item</h5>
-                  {evaluation.items?.filter(item => item.observacion).length > 0 ? (
-                    <div className="evaluation-review-item-observations-list">
-                      {evaluation.items
-                        .filter(item => item.observacion)
-                        .map((item, index) => (
-                          <div key={item.id} className="evaluation-review-item-observation">
-                            <strong>{getItemName(item)}:</strong>
-                            <p>{item.observacion}</p>
-                          </div>
-                        ))
-                      }
-                    </div>
-                  ) : (
-                    <p className="evaluation-review-no-observations">
-                      No hay observaciones específicas por item.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer */}
           <div className="evaluation-review-modal-footer">
             <div className="evaluation-review-modal-footer-actions">
-              <button 
-                onClick={onClose} 
-                className="evaluation-review-btn-close"
-                disabled={saving}
-              >
-                Cerrar
-              </button>
+              {editingItems ? (
+                <div style={{ display: 'flex', gap: '0.75rem', width: '100%', justifyContent: 'flex-end' }}>
+                  <button
+                    className="evaluation-review-cancel-btn"
+                    onClick={handleCancelEdits}
+                    disabled={saving}
+                  >
+                    <FaUndo /> Cancelar
+                  </button>
+                  <button
+                    className="evaluation-review-save-btn"
+                    onClick={handleSaveEdits}
+                    disabled={saving || !hasChanges()}
+                  >
+                    <FaSave /> {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button 
+                    onClick={handleCloseRequest} 
+                    className="evaluation-review-btn-close"
+                    disabled={saving}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

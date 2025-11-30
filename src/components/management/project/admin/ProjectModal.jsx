@@ -433,61 +433,41 @@ const ProjectModal = ({
 
   const handleDownloadFile = async (archivo) => {
     try {
-      let downloadUrl = archivo.urlArchivo;
-      let filename = archivo.nombreArchivo || archivo.nombre || 'archivo';
+      const possibleUrl = archivo.urlArchivo || archivo.url_archivo || archivo.url || archivo.urlArchivoRaw || archivo.url_raw;
+      if (possibleUrl && (possibleUrl.startsWith('http://') || possibleUrl.startsWith('https://'))) {
+        window.open(possibleUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
 
-      if (!downloadUrl) {
-        const response = await projectService.downloadFile(archivo.id);
-        const blob = response?.data || response;
-        
-        downloadUrl = window.URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => {
-          if (downloadUrl.startsWith('blob:')) {
-            window.URL.revokeObjectURL(downloadUrl);
-          }
-        }, 1000 * 10);
-      } else {
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
-        link.target = '_blank';
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      // Si no hay URL remota, mostrar mensaje al usuario
+      alert('No hay URL pública disponible para este archivo.');
     } catch (error) {
-      console.error('❌ [ProjectModal] Error descargando archivo:', error);
-      
-      if (archivo.urlArchivo) {
-        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
-      } else {
-        alert('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
-      }
+      console.error('❌ [ProjectModal] Error abriendo URL del archivo:', error);
+      alert('Error al abrir el archivo: ' + (error.message || 'Error desconocido'));
     }
   };
 
   const handleOpenFile = async (archivo) => {
     try {
-      if (archivo.urlArchivo) {
-        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
-      } else {
-        await handleDownloadFile(archivo);
+      const possibleUrl = archivo.urlArchivo || archivo.url_archivo || archivo.url || archivo.urlArchivoRaw || archivo.url_raw;
+      if (possibleUrl && (possibleUrl.startsWith('http://') || possibleUrl.startsWith('https://'))) {
+        // Si no tiene .pdf, intentar abrir con .pdf añadido primero
+        const hasPdfExt = /\.pdf($|\?)/i.test(possibleUrl);
+        if (!hasPdfExt && ((archivo.tipoMime && archivo.tipoMime.toLowerCase().includes('pdf')) || (archivo.nombreArchivo && archivo.nombreArchivo.toLowerCase().endsWith('.pdf')))) {
+          const tryUrl = `${possibleUrl}.pdf`;
+          const newWin = window.open(tryUrl, '_blank', 'noopener,noreferrer');
+          if (newWin) return;
+          // popup blocked o falló -> abrir la URL original
+        }
+
+        window.open(possibleUrl, '_blank', 'noopener,noreferrer');
+        return;
       }
+
+      alert('No hay URL pública disponible para abrir este archivo.');
     } catch (error) {
       console.error('❌ [ProjectModal] Error abriendo archivo:', error);
-      await handleDownloadFile(archivo);
+      alert('Error al abrir el archivo: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -709,20 +689,10 @@ const ProjectModal = ({
       <div className="project-modal" onClick={(e) => e.stopPropagation()}>
         <div className="project-modal-header">
           <div className="project-modal-title-section">
-            <FaFileAlt className="project-modal-title-icon" />
             <div>
               <h3>
                 {mode === 'create' ? 'Nuevo Proyecto' : formData.titulo}
               </h3>
-              {!isEditing && project && (
-                <div className="project-modal-subtitle">
-                  <span className="project-modal-investigator">
-                    <FaUser className="inline-icon" />
-                    Investigador: {formData.investigadorPrincipal || '—'}
-                  </span>
-                  <span className="project-id">ID: {project.id}</span>
-                </div>
-              )}
             </div>
           </div>
           
@@ -1059,9 +1029,14 @@ const ProjectModal = ({
                               {getFileIcon(archivo)}
                             </span>
                             <div className="project-modal-file-details">
-                              <span className="project-modal-file-name">
+                              <button
+                                type="button"
+                                className="project-modal-file-name project-modal-file-name-link"
+                                onClick={() => handleOpenFile(archivo)}
+                                title="Abrir archivo"
+                              >
                                 {archivo.nombreArchivo || archivo.nombre || 'Archivo sin nombre'}
-                              </span>
+                              </button>
                               <span className="project-modal-file-type">
                                 {getFileType(archivo)}
                                 {archivo.tipoMime && ` • ${archivo.tipoMime}`}
@@ -1157,52 +1132,6 @@ const ProjectModal = ({
                           </p>
                         </div>
 
-                        {/* Excel Upload */}
-                        <div className="project-modal-form-group">
-                          <label className="project-modal-form-label">
-                            <FaFileExcel className="inline-icon" />
-                            Excel con Investigador Principal
-                          </label>
-                          <div className="project-modal-file-upload">
-                            <input
-                              type="file"
-                              ref={el => fileInputRef.current.excel = el}
-                              onChange={(e) => handleFileSelect('excel', e)}
-                              accept=".xlsx,.xls"
-                              className="project-modal-file-input"
-                              id="excel-upload"
-                              disabled={isSubmitting || uploading}
-                            />
-                            <label htmlFor="excel-upload" className="project-modal-file-label">
-                              <FaUpload className="project-modal-file-icon" />
-                              {selectedFiles.excel ? selectedFiles.excel.name : 'Seleccionar archivo Excel'}
-                            </label>
-                            
-                            {selectedFiles.excel && (
-                              <div className="project-modal-file-actions">
-                                <button
-                                  type="button"
-                                  className="project-modal-btn-upload"
-                                  onClick={() => handleUploadFile('excel')}
-                                  disabled={uploading || isSubmitting}
-                                >
-                                  <FaUpload />
-                                  Subir Excel
-                                </button>
-                              </div>
-                            )}
-                            
-                            {uploadStatus.excel.message && (
-                              <div className={`project-modal-upload-status ${uploadStatus.excel.status}`}>
-                                {getUploadStatusIcon(uploadStatus.excel.status)}
-                                <span>{uploadStatus.excel.message}</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="project-modal-form-hint">
-                            Suba el Excel que identifica al investigador principal (máx. 10MB)
-                          </p>
-                        </div>
                       </div>
                     </div>
                   )}

@@ -1,0 +1,11 @@
+.messages-page {
+	display: flex;
+	align-items: flex-start;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.messages-main {
+	flex: 1;
+}
+

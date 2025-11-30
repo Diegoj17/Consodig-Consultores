@@ -16,6 +16,10 @@ const EvaluatorInProgressPage = () => {
     try {
       setLoading(true);
       const data = await evaluationService.getInProgressEvaluations();
+      console.log('DEBUG: getInProgressEvaluations response:', data);
+      if (Array.isArray(data)) {
+        data.forEach(ev => console.log('DEBUG: evaluation keys for id', ev?.id, Object.keys(ev || {})));
+      }
       setEvaluations(data || []);
     } catch (error) {
       console.error('Error cargando evaluaciones en progreso:', error);

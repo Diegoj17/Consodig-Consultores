@@ -86,16 +86,17 @@ class EvaluationFormatService {
   // Adaptar datos del frontend al formato del backend
   adaptToBackendFormat(frontendData) {
     console.log('🔄 Adaptando datos frontend->backend:', frontendData);
-    
     const backendData = {
       nombre: frontendData.nombre?.trim() || '',
       descripcion: frontendData.descripcion?.trim() || '',
       institucion: frontendData.institucion?.trim() || 'Sistema',
       activo: frontendData.estado === 'active',
+      // Mapear items y conservar referencia al criterio si existe (criterioId)
       items: frontendData.items?.map((item, index) => ({
-        nombre: item.nombre?.trim() || `Criterio ${index + 1}`,
-        descripcion: item.descripcion?.trim() || '',
-        peso: parseInt(item.peso) || 0
+        nombre: (item.nombre || '').trim() || `Ítem ${index + 1}`,
+        descripcion: (item.descripcion || '').trim() || '',
+        peso: parseInt(item.peso) || 0,
+        criterioId: item.criterioId || (item.criterio && item.criterio.id) || null
       })) || []
     };
 
@@ -124,7 +125,9 @@ class EvaluationFormatService {
         nombre: item.nombre,
         descripcion: item.descripcion,
         peso: item.peso,
-        tipo: 'calificacion'
+        tipo: 'calificacion',
+        criterioId: item.criterio?.id || item.criterioId || null,
+        criterioNombre: item.criterioNombre || (item.criterio && item.criterio.nombre) || null
       })) || []
     };
 

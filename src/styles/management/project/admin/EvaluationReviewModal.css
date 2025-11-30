@@ -47,6 +47,27 @@
 .evaluation-review-modal-header {
   display: flex;
   justify-content: space-between;
+  
+  /* Mensaje inline no bloqueante (pequeña banda dentro del modal) */
+  .inline-message {
+    position: absolute;
+    top: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(2,6,23,0.2);
+    min-width: 280px;
+  }
+  .inline-message-content { color: #07304a; font-weight: 600; }
+  .inline-message-close { background: transparent; border: none; color: #07304a; font-size: 1.1rem; cursor: pointer; }
+  .inline-message-info { background: #e6f6ff; border: 1px solid #cceefd; }
+  .inline-message-success { background: #ecfdf5; border: 1px solid #bbf7d0; }
+  .inline-message-error { background: #fff1f2; border: 1px solid #fecaca; }
   align-items: center;
   padding: 1.75rem 2rem;
   border-bottom: 1px solid #e5e7eb;
@@ -182,7 +203,7 @@
 .evaluation-review-project-info h4,
 .evaluation-review-summary h4 {
   margin: 0 0 1rem 0;
-  color: #1f2937;
+  color: #000000;
   font-size: 1.25rem;
   font-weight: 600;
   padding-bottom: 0.5rem;
@@ -207,13 +228,14 @@
 }
 
 .evaluation-review-detail-item strong {
-  color: #374151;
+  color: #000000;
+  font-weight: 700;
   font-size: 0.9rem;
 }
 
 .evaluation-review-detail-item span {
-  color: #1f2937;
-  font-weight: 500;
+  color: #000000;
+  font-weight: 400;
 }
 
 .project-title {
@@ -259,13 +281,13 @@
 }
 
 .stat-label {
-  color: #6b7280;
+  color: #000000;
   font-size: 0.9rem;
 }
 
 .stat-value {
-  color: #1f2937;
-  font-weight: 600;
+  color: #000000;
+  font-weight: 400;
   font-size: 1.1rem;
 }
 

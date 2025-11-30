@@ -188,15 +188,6 @@ const EvaluatorEvaluationsPage = () => {
     <div className="evaluator-evaluations-page">
       {/* Header */}
       <div className="evaluator-page-header">
-        <div className="page-title-section">
-          <div className="page-icon">
-            {tabInfo.icon}
-          </div>
-          <div className="page-title-content">
-            <h1>{tabInfo.title}</h1>
-            <p>{tabInfo.description}</p>
-          </div>
-        </div>
         
         <div className="header-actions">
           <div className="evaluations-count">

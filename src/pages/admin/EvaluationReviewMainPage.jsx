@@ -43,12 +43,15 @@ const EvaluationReviewMainPage = () => {
       const enrichedEvaluations = await Promise.all(
         completedEvaluations.map(async (evaluation) => {
           try {
-            // Obtener información del evaluador
+            // Obtener información del evaluador (soportar varias claves: evaluadorId, evaluador_id, evaluador)
             let evaluatorName = 'Evaluador no disponible';
-            if (evaluation.evaluadorId) {
+            const evaluatorId = evaluation.evaluadorId || evaluation.evaluador_id || evaluation.evaluador?.id || evaluation.evaluadorId;
+            if (evaluatorId) {
               try {
-                const evaluador = await userService.getEvaluadorById(evaluation.evaluadorId);
-                evaluatorName = `${evaluador.nombre} ${evaluador.apellido || ''}`.trim();
+                const evaluador = await userService.getEvaluadorById(evaluatorId);
+                if (evaluador) {
+                  evaluatorName = `${evaluador.nombre || evaluador.firstName || ''} ${evaluador.apellido || evaluador.lastName || ''}`.trim();
+                }
               } catch (error) {
                 console.warn('⚠️ No se pudo obtener información del evaluador:', error);
               }
@@ -278,7 +281,7 @@ const EvaluationReviewMainPage = () => {
 
   return (
     <div className="evaluation-review-page">
-
+    
       {/* Filtros y Controles */}
       <div className="filters-section">
         <div className="filter-group">
@@ -333,28 +336,25 @@ const EvaluationReviewMainPage = () => {
             <div key={evaluation.id} className="evaluation-card">
               <div className="evaluation-info">
                 <div className="evaluation-header">
-                  <h3>{evaluation.project?.titulo || 'Proyecto no disponible'}</h3>
+                  <h3>Proyecto: {evaluation.project?.titulo || evaluation.project?.nombre || evaluation.titulo || 'Proyecto no disponible'}</h3>
                   {getStatusBadge(evaluation.estado)}
                 </div>
-                
-                <div className="evaluation-meta">
-                  <span><strong>Evaluador:</strong> {evaluation.evaluatorName}</span>
-                  <span><strong>Fecha:</strong> {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'No disponible'}</span>
-                  <span><strong>ID Evaluación:</strong> {evaluation.id}</span>
+
+                <div className="evaluation-format" style={{ marginTop: '6px', marginBottom: '8px', color: '#374151' }}>
+                  <strong>Formato:</strong> {evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}
                 </div>
-                
+
+                <div className="evaluation-meta">
+                  <span><strong>Evaluador:</strong> {evaluation.evaluatorName || evaluation.evaluador?.nombre || evaluation.evaluador || 'Evaluador no disponible'}</span>
+                  <span><strong>Fecha:</strong> {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'No disponible'}</span>
+                </div>
+
                 <div className="evaluation-stats">
-                  <span className="stat-item">
-                    <strong>Puntuación Total:</strong> {getTotalScore(evaluation)}
-                  </span>
-                  <span className="stat-item">
-                    <strong>Proyecto ID:</strong> {evaluation.project?.id || 'N/A'}
-                  </span>
                   <span className="stat-item">
                     <strong>Items Evaluados:</strong> {evaluation.items?.length || 0}
                   </span>
                   <span className="stat-item">
-                    <strong>Formato:</strong> {evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}
+                    <strong>Puntuación Total:</strong> {getTotalScore(evaluation)}
                   </span>
                 </div>
 

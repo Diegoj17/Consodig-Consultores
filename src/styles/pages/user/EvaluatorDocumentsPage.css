@@ -1,0 +1,90 @@
+
+.evaluator-documents-main-page {
+  width: 100%;
+  background: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.evaluator-documents-layout {
+  box-sizing: border-box;
+  padding: 0.5rem;
+}
+
+.evaluator-documents-main-content {
+  width: 100%;
+  margin: 0; 
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.evaluator-documents-container,
+.evaluator-documents-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header y textos: mantener simple y fluidos */
+.evaluator-documents-page-header {
+  padding: 1rem 0 0.5rem 0;
+  border-bottom: 1px solid #eaeef2;
+  background: transparent;
+}
+
+.evaluator-documents-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.evaluator-documents-page-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Estados y bloques simples (mantengo clases básicas para reuso) */
+.evaluator-documents-loading,
+.evaluator-documents-error,
+.evaluator-documents-empty {
+  padding: 2rem 0;
+  color: #000000;
+}
+
+/* Resumen y cards: que ocupen el ancho disponible */
+.evaluator-documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.evaluator-documents-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e6eaef;
+  overflow: hidden;
+}
+
+/* Ajustes responsive: eliminar espacio del sidebar en pantallas pequeñas */
+@media (max-width: 1024px) {
+  .evaluator-documents-layout {
+    padding-left: 0;
+  }
+
+  .evaluator-documents-main-content {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-documents-main-content {
+    padding: 1rem;
+  }
+}
+
+/* impresión */
+@media print {
+  .evaluator-documents-layout { padding-left: 0; }
+}

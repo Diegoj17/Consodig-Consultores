@@ -6,7 +6,8 @@ import ResetConfirm from './pages/PasswordResetConfirmPage';
 import AdminLayout from './layouts/AdminLayout';
 import EvaluadorLayout from './layouts/EvaluadorLayout';
 import EvaluandoLayout from './layouts/EvaluandoLayout';
-import Editar from './pages/ProfileEditPage';
+import ProfileEditPage from './pages/ProfileEditPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   return (
@@ -27,7 +28,6 @@ function App() {
         {/* Rutas de Evaluando */}
         <Route path="/evaluando/*" element={<EvaluandoLayout />} />
 
-        <Route path="/edit-profile" element={<Editar />} />
       </Routes>
     </BrowserRouter>
   )

@@ -159,27 +159,8 @@ const EvaluatorCompletedList = ({
               </div>
               
               <div className="evaluator-evaluation-completed-details">
-                {/* ID de Evaluación */}
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    <FaIdCard />
-                    ID Evaluación:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    #{evaluation.id}
-                  </span>
-                </div>
 
                 {/* Código del Proyecto */}
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    <FaCode />
-                    Código Proyecto:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    {projectCode}
-                  </span>
-                </div>
                 
                 {/* Formato de Evaluación */}
                 <div className="evaluator-evaluation-completed-detail-item">

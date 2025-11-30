@@ -1,6 +1,4 @@
-"use client"
-
-import { FaUserCircle } from "react-icons/fa"
+import { FaUserCircle, FaSignOutAlt, FaLock, FaFilePdf } from "react-icons/fa"
 import "../../styles/common/ProfileMenu.css"
 
 const ProfileMenu = ({ isOpen, user = {}, menuItems = [], onAction, onClose }) => {
@@ -31,6 +29,36 @@ const ProfileMenu = ({ isOpen, user = {}, menuItems = [], onAction, onClose }) =
     return raw?.toString().toUpperCase() || "Usuario"
   }
 
+  // Menu items por defecto si no se proporcionan
+  const defaultMenuItems = [
+    {
+      action: 'profile',
+      label: 'Mi Perfil',
+      icon: FaUserCircle,
+      isDanger: false
+    },
+    {
+      action: 'change-password',
+      label: 'Cambiar Contraseña',
+      icon: FaLock,
+      isDanger: false
+    },
+    {
+      action: 'documents',
+      label: 'Mis Documentos',
+      icon: FaFilePdf,
+      isDanger: false
+    },
+    {
+      action: 'logout',
+      label: 'Cerrar Sesión',
+      icon: FaSignOutAlt,
+      isDanger: true
+    }
+  ]
+
+  const itemsToRender = menuItems.length > 0 ? menuItems : defaultMenuItems
+
   const fullName = getFullName()
   const userEmail = getUserEmail()
   const userRole = getUserRole()
@@ -55,7 +83,7 @@ const ProfileMenu = ({ isOpen, user = {}, menuItems = [], onAction, onClose }) =
       <div className="dropdown-divider"></div>
 
       <div className="menu-items">
-        {menuItems.map((item) => (
+        {itemsToRender.map((item) => (
           <button
             key={item.action}
             className={`menu-item ${item.isDanger ? "danger" : ""}`}

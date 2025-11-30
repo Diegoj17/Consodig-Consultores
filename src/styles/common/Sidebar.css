@@ -167,27 +167,26 @@
   opacity: 1;
 }
 
-/* Submenú - SOLO estilos visuales, NO control de visibilidad */
+/* Submenú - IMPORTANTE: Control total de visibilidad */
 .nav-submenu {
   background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid var(--primary-color);
+  border-left: 3px solid #007bbf;
   margin: 0.25rem 0 0.25rem 1.5rem;
   border-radius: 0 8px 8px 0;
   overflow: hidden;
-  animation: slideDown 0.3s ease-out;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  /* Asegurar que esté oculto por defecto */
+  visibility: hidden;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 200px;
-  }
+.nav-submenu.nav-submenu--open {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .nav-subitem {
@@ -249,13 +248,24 @@
   position: absolute;
   left: 80px;
   top: 0;
-  background: var(--primary-color);
+  background: #007bbf;
   min-width: 220px;
   border-radius: 8px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
   z-index: 1200;
   padding: 0.5rem 0;
   margin: 0;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  visibility: hidden;
+}
+
+.sidebar.closed .nav-submenu.nav-submenu--open {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .sidebar.closed .nav-subitem {

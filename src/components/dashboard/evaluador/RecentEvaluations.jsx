@@ -39,8 +39,17 @@ const RecentEvaluations = ({ evaluations, onStartEvaluation }) => {
               <h4>{evaluation.project}</h4>
               <p>Evaluando: {evaluation.evaluando}</p>
               <span className="due-date">Vence: {evaluation.dueDate}</span>
+              {evaluation.formato && <div className="evaluation-format">Formato: {evaluation.formato}</div>}
+              {typeof evaluation.progress === 'number' && (
+                <div className="evaluation-progress-small">
+                  <div className="progress-bar-small">
+                    <div className="progress-fill-small" style={{ width: `${evaluation.progress}%` }}></div>
+                  </div>
+                  <span className="progress-text-small">{evaluation.progress}%</span>
+                </div>
+              )}
             </div>
-            
+
             <div className="evaluation-actions">
               <div className="status-indicator">
                 {getStatusIcon(evaluation.status)}

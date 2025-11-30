@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaTimes, FaDownload, FaUser, FaCalendar, FaFileAlt, 
+  FaTimes, FaUser, FaCalendar, FaFileAlt, 
   FaInfoCircle, FaTag, FaUniversity, FaBullseye,
   FaFilePdf, FaFileExcel, FaExternalLinkAlt, FaPaperclip,
   FaCheckCircle, FaSync, FaHistory, FaFileWord
@@ -49,6 +49,31 @@ const EvaluatorProjectModal = ({
 
     loadProjectFiles();
   }, [project]);
+
+  // Bloquear scroll de la página mientras el modal está abierto
+  useEffect(() => {
+    // Guardar estado previo
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Aplicar bloqueo: fijar la página para que no pueda moverse
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      // Restaurar estilos previos y retornar a la posición original
+      document.body.style.overflow = previousOverflow || '';
+      document.body.style.position = previousPosition || '';
+      document.body.style.top = previousTop || '';
+      document.body.style.width = previousWidth || '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   // Función para mapear estados del backend a estados legibles
   const getEstadoProyecto = () => {
@@ -286,7 +311,7 @@ const EvaluatorProjectModal = ({
         <body>
           <div class="header">
             <h1>${project.titulo || 'Proyecto de Investigación'}</h1>
-            <p><strong>ID:</strong> ${project.id} | <strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion)}</p>
+            <p><strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion || project.fechaEnvio)}</p>
           </div>
 
           <div class="section">
@@ -304,10 +329,7 @@ const EvaluatorProjectModal = ({
                 <span class="metadata-label">Estado:</span><br>
                 ${getEstadoProyecto()}
               </div>
-              <div class="metadata-item">
-                <span class="metadata-label">ID Evaluación:</span><br>
-                ${project.evaluacionId || 'No aplica'}
-              </div>
+              <!-- ID de proyecto y evaluación removidos para privacidad -->
             </div>
             
             <div class="metadata-item">
@@ -397,13 +419,7 @@ const EvaluatorProjectModal = ({
             <div>
               <h3>{project.titulo}</h3>
               <div className="evaluator-project-modal-subtitle">
-                <span className="evaluator-project-id">ID: {project.id}</span>
-                {project.evaluacionId && (
-                  <span className="evaluator-evaluation-id">
-                    <FaHistory className="evaluator-inline-icon" />
-                    Evaluación ID: {project.evaluacionId}
-                  </span>
-                )}
+                {/* IDs removidos de la vista para mayor privacidad */}
               </div>
             </div>
           </div>
@@ -471,9 +487,9 @@ const EvaluatorProjectModal = ({
                       Fecha de Creación
                     </label>
                     <p className="evaluator-project-modal-readonly-text">
-                      <FaCalendar className="evaluator-inline-icon" />
-                      {formatDate(project.fechaCreacion)}
-                    </p>
+                        <FaCalendar className="evaluator-inline-icon" />
+                        {formatDate(project.fechaCreacion || project.fechaEnvio)}
+                      </p>
                   </div>
                 </div>
               </div>
@@ -593,13 +609,6 @@ const EvaluatorProjectModal = ({
                             title="Abrir archivo"
                           >
                             <FaExternalLinkAlt />
-                          </button>
-                          <button 
-                            className="evaluator-project-modal-btn-icon evaluator-project-modal-btn-download" 
-                            onClick={() => handleDownloadFile(archivo)} 
-                            title="Descargar archivo"
-                          >
-                            <FaDownload />
                           </button>
                         </div>
                       </div>

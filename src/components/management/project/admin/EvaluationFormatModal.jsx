@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fa';
 import '../../../../styles/management/project/admin/EvaluationFormatModal.css';
 import Modal from '../../../common/Modal';
+import criterioService from '../../../../services/criterioService';
 
 const EvaluationFormatModal = ({ 
   format, 
@@ -18,11 +19,13 @@ const EvaluationFormatModal = ({
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
-    areaConocimiento: '',
     institucion: '',
     estado: 'active'
   });
   const [criterios, setCriterios] = useState([]);
+  const [criteriosCatalog, setCriteriosCatalog] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [changesMade, setChangesMade] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [confirmState, setConfirmState] = useState({
@@ -41,27 +44,38 @@ const EvaluationFormatModal = ({
       setFormData({
         nombre: format.nombre || '',
         descripcion: format.descripcion || '',
-        areaConocimiento: format.areaConocimiento || '',
         institucion: format.institucion || '',
         estado: format.estado || 'active'
       });
       
       // Simular criterios (en una implementación real vendrían del backend)
-      if (format.criterios) {
-        const simulatedCriterios = Array.from({ length: format.criterios }, (_, index) => ({
-          id: index + 1,
-          nombre: `Criterio ${index + 1}`,
-          descripcion: `Descripción del criterio ${index + 1}`,
-          peso: Math.floor(100 / format.criterios),
-          tipo: 'calificacion'
-        }));
-        setCriterios(simulatedCriterios);
+      // Si vienen items agrupamos por criterio para mostrar criterios con sus items
+      if (format.items && Array.isArray(format.items)) {
+        const grouped = {};
+        format.items.forEach((item, idx) => {
+          const key = item.criterioId || item.criterioNombre || item.criterio?.id || item.criterio?.nombre || `tmp-${idx}`;
+          if (!grouped[key]) {
+            grouped[key] = {
+              id: item.criterio?.id || item.criterioId || null,
+              nombre: item.criterioNombre || (item.criterio && item.criterio.nombre) || `Criterio ${Object.keys(grouped).length + 1}`,
+              items: []
+            };
+          }
+          grouped[key].items.push({
+            id: item.id || `tmp-item-${idx}`,
+            nombre: item.nombre || '',
+            descripcion: item.descripcion || '',
+            peso: item.peso || 0,
+            criterioId: item.criterio?.id || item.criterioId || null,
+            criterioNombre: item.criterioNombre || (item.criterio && item.criterio.nombre) || null
+          });
+        });
+        setCriterios(Object.values(grouped));
       }
     } else if (mode === 'create') {
       setFormData({
         nombre: '',
         descripcion: '',
-        areaConocimiento: '',
         institucion: '',
         estado: 'active'
       });
@@ -72,6 +86,31 @@ const EvaluationFormatModal = ({
     setChangesMade(false);
     setFormErrors({});
   }, [format, mode]);
+
+  // Cargar catálogo de criterios para búsqueda
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const all = await criterioService.getAll();
+        if (!mounted) return;
+        setCriteriosCatalog(all || []);
+      } catch (e) {
+        console.error('No se pudieron obtener criterios para búsqueda', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setSearchResults([]);
+      return;
+    }
+    const q = searchQuery.trim().toLowerCase();
+    const results = criteriosCatalog.filter(c => (c.nombre || '').toLowerCase().includes(q));
+    setSearchResults(results);
+  }, [searchQuery, criteriosCatalog]);
 
   // Bloquear scroll del body mientras el modal esté abierto
   useEffect(() => {
@@ -99,24 +138,80 @@ const EvaluationFormatModal = ({
   };
 
   const handleCriterioChange = (index, field, value) => {
-    const updatedCriterios = [...criterios];
-    updatedCriterios[index] = {
-      ...updatedCriterios[index],
-      [field]: value
-    };
-    setCriterios(updatedCriterios);
+    const updated = [...criterios];
+    updated[index] = { ...updated[index], [field]: value };
+    setCriterios(updated);
     setChangesMade(true);
   };
 
   const addCriterio = () => {
     const newCriterio = {
-      id: criterios.length + 1,
+      id: `tmp-${Date.now()}`,
+      nombre: '',
+      items: []
+    };
+    setCriterios(prev => [...prev, newCriterio]);
+    setChangesMade(true);
+  };
+
+  const addItemToCriterio = (criterioIndex) => {
+    const newItem = {
+      id: `tmp-item-${Date.now()}`,
       nombre: '',
       descripcion: '',
-      peso: 0,
-      tipo: 'calificacion'
+      peso: ''
     };
-    setCriterios([...criterios, newCriterio]);
+    const updated = [...criterios];
+    updated[criterioIndex].items = [...(updated[criterioIndex].items || []), newItem];
+    setCriterios(updated);
+    setChangesMade(true);
+  };
+
+  const handleItemChange = (criterioIndex, itemIndex, field, value) => {
+    const updated = [...criterios];
+    const current = updated[criterioIndex].items[itemIndex] || {};
+    let newVal = value;
+    if (field === 'peso') {
+      // Allow empty string while typing, otherwise normalize to integer between 0-100
+      if (value === '' || value === null || typeof value === 'undefined') {
+        newVal = '';
+      } else {
+        const parsed = parseInt(String(value).replace(/^0+(?=\d)/, ''), 10);
+        if (Number.isNaN(parsed)) {
+          newVal = '';
+        } else {
+          newVal = Math.max(0, Math.min(100, parsed));
+        }
+      }
+    }
+
+    const item = { ...current, [field]: newVal };
+    updated[criterioIndex].items[itemIndex] = item;
+    setCriterios(updated);
+    setChangesMade(true);
+  };
+
+  const removeItemFromCriterio = (criterioIndex, itemIndex) => {
+    const updated = [...criterios];
+    updated[criterioIndex].items = updated[criterioIndex].items.filter((_, i) => i !== itemIndex);
+    setCriterios(updated);
+    setChangesMade(true);
+  };
+
+  const addExistingCriterio = async (criterioObj) => {
+    if (!criterioObj) return;
+    // Evitar agregar el mismo criterio (por id)
+    const exists = criterios.some(c => c.id && criterioObj.id && c.id === criterioObj.id);
+    if (exists) return;
+    // Añadir sólo el criterio (id + nombre). NO traer ni adjuntar sus ítems aquí.
+    const clone = {
+      id: criterioObj.id,
+      nombre: criterioObj.nombre || '',
+      items: []
+    };
+    setCriterios(prev => [...prev, clone]);
+    setSearchQuery('');
+    setSearchResults([]);
     setChangesMade(true);
   };
 
@@ -139,16 +234,21 @@ const EvaluationFormatModal = ({
       errors.descripcion = 'La descripción debe tener al menos 30 caracteres';
     }
     
-    if (!formData.areaConocimiento?.trim()) {
-      errors.areaConocimiento = 'El área de conocimiento es obligatoria';
-    }
+    // ya no se requiere 'areaConocimiento' según DTO del backend
 
     if (criterios.length === 0) {
-      errors.criterios = 'Debe agregar al menos un criterio';
+      errors.criterios = 'Debe agregar al menos un criterio con items';
     }
 
-    // Validar que la suma de valores sea 100
-    const totalPeso = criterios.reduce((sum, criterio) => sum + (parseInt(criterio.peso) || 0), 0);
+    // Validar que cada criterio tenga al menos un item
+    criterios.forEach((c, idx) => {
+      if (!c.items || c.items.length === 0) {
+        errors[`criterio_${idx}`] = `El criterio "${c.nombre || `#${idx+1}`}" debe tener al menos un ítem`;
+      }
+    });
+
+    // Validar que la suma de valores de TODOS los items sea 100
+    const totalPeso = criterios.reduce((sum, criterio) => sum + (criterio.items ? criterio.items.reduce((s, it) => s + (parseInt(it.peso) || 0), 0) : 0), 0);
     if (totalPeso !== 100) {
       errors.pesoTotal = `La suma de los valores debe ser 100% (actual: ${totalPeso}%)`;
     }
@@ -157,23 +257,73 @@ const EvaluationFormatModal = ({
     return Object.keys(errors).length === 0;
   };
 
-  const handleSave = () => {
-  if (!validateForm()) {
-    return;
-  }
+  const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
 
-  if (onSave) {
-    const payload = {
-      ...formData,
-      items: criterios, // ← Cambia 'criterios' por 'items'
-      criterios: criterios.length,
-      pesoTotal: criterios.reduce((sum, criterio) => sum + (parseInt(criterio.peso) || 0), 0)
-    };
-    
-    console.log('📤 Enviando payload:', payload);
-    onSave(payload, mode === 'create' ? 'create' : 'edit');
-  }
-};
+    // Antes de crear el formato: crear en el backend los criterios nuevos (con id temporal tmp-...)
+    const criteriosCopy = criterios.map(c => ({ ...c }));
+    try {
+      for (let i = 0; i < criteriosCopy.length; i++) {
+        const c = criteriosCopy[i];
+        if (!c.id || (typeof c.id === 'string' && String(c.id).startsWith('tmp-'))) {
+          // Asegurar nombre por defecto
+          const nombreC = (c.nombre && String(c.nombre).trim()) ? c.nombre : `Criterio ${i + 1}`;
+          const created = await criterioService.create({ nombre: nombreC });
+          if (created && created.id) {
+            c.id = created.id;
+            // actualizar items para referenciar el nuevo id
+            if (c.items && c.items.length > 0) {
+              c.items = c.items.map(it => ({ ...it, criterioId: created.id }));
+            }
+          } else {
+            throw new Error('No se pudo crear el criterio en el servidor');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error creando criterios necesarios antes de guardar formato', err);
+      setConfirmState({
+        open: true,
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudieron crear los criterios necesarios. Intente de nuevo.',
+        confirmText: 'Aceptar',
+        cancelText: 'Cancelar',
+        onConfirm: () => setConfirmState(prev => ({ ...prev, open: false }))
+      });
+      return;
+    }
+
+    if (onSave) {
+      // Aplanar items y adjuntar referencia al criterio (c.id ya estará creado o será un id numérico existente).
+      let flattened = criteriosCopy.flatMap((c) => (c.items || []).map((it) => ({
+        nombre: it.nombre,
+        descripcion: it.descripcion,
+        peso: Number.isFinite(Number(it.peso)) ? parseInt(it.peso, 10) : 0,
+        criterioId: (typeof c.id === 'number') ? c.id : (c.id && String(c.id).startsWith('tmp-') ? undefined : c.id)
+      })));
+
+      // Asignar nombres por defecto si están vacíos, numerando globalmente
+      flattened = flattened.map((it, idx) => ({
+        ...it,
+        nombre: (it.nombre && String(it.nombre).trim()) ? it.nombre : `Ítem ${idx + 1}`
+      }));
+
+      const payload = {
+        id: format?.id,
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        institucion: formData.institucion,
+        estado: formData.estado,
+        items: flattened
+      };
+
+      console.log('📤 Enviando payload:', payload);
+      onSave(payload, mode === 'create' ? 'create' : 'edit');
+    }
+  };
 
   const handleDelete = () => {
     setConfirmState({
@@ -232,6 +382,14 @@ const EvaluationFormatModal = ({
 
   // Mostrar inputs en modo 'view' como en 'create' (pero deshabilitados si no está en edición)
   const showFormInputs = isEditing || mode === 'view';
+
+  const getGlobalItemIndex = (cIdx, iIdx) => {
+    let count = 0;
+    for (let i = 0; i < cIdx; i++) {
+      count += (criterios[i].items || []).length;
+    }
+    return count + iIdx + 1;
+  };
 
   if (!format && mode !== 'create') return null;
 
@@ -356,29 +514,6 @@ const EvaluationFormatModal = ({
 
                 <div className="evaluation-format-modal-form-row">
                   <div className="evaluation-format-modal-form-group">
-                    <label className="evaluation-format-modal-form-label evaluation-format-modal-form-label-required">
-                      Área de Conocimiento
-                    </label>
-                    {showFormInputs ? (
-                      <>
-                        <input
-                          type="text"
-                          className={`evaluation-format-modal-form-input ${formErrors.areaConocimiento ? 'evaluation-format-modal-input-error' : ''}`}
-                          value={formData.areaConocimiento}
-                          onChange={(e) => handleInputChange('areaConocimiento', e.target.value)}
-                          placeholder="Área de conocimiento (ej: Ciencias Sociales, Ingeniería...)"
-                          disabled={!isEditing || isSubmitting}
-                        />
-                        {formErrors.areaConocimiento && (
-                          <span className="evaluation-format-modal-error-text">{formErrors.areaConocimiento}</span>
-                        )}
-                      </>
-                    ) : (
-                      <p className="evaluation-format-modal-readonly-text">{formData.areaConocimiento || 'No especificado'}</p>
-                    )}
-                  </div>
-
-                  <div className="evaluation-format-modal-form-group">
                     <label className="evaluation-format-modal-form-label">
                       Institución
                     </label>
@@ -428,18 +563,46 @@ const EvaluationFormatModal = ({
                 <FaList className="evaluation-format-modal-section-icon" />
                 <h3>Criterios de Evaluación</h3>
                 {isEditing && (
-                  <button 
-                    type="button"
-                    className="evaluation-format-modal-btn-add"
-                    onClick={addCriterio}
-                    disabled={isSubmitting}
-                  >
-                    <FaPlus />
-                    Agregar Criterio
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div className="evaluation-format-modal-search">
+                      <input
+                        type="text"
+                        className="evaluation-format-modal-form-input"
+                        placeholder="Buscar criterio existente..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        disabled={isSubmitting}
+                      />
+                      {searchQuery && searchResults.length > 0 && (
+                        <ul className="evaluation-format-modal-search-results">
+                          {searchResults.map(r => (
+                            <li key={r.id}>
+                              <button
+                                type="button"
+                                className="evaluation-format-modal-search-result-btn"
+                                onClick={() => addExistingCriterio(r)}
+                                disabled={isSubmitting}
+                              >
+                                {r.nombre}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="evaluation-format-modal-btn-add"
+                      onClick={addCriterio}
+                      disabled={isSubmitting}
+                    >
+                      <FaPlus />
+                      Agregar Criterio
+                    </button>
+                  </div>
                 )}
               </div>
-              
+
               <div className="evaluation-format-modal-section-content">
                 {formErrors.criterios && (
                   <div className="evaluation-format-modal-error-banner">
@@ -458,83 +621,119 @@ const EvaluationFormatModal = ({
                     <FaList className="evaluation-format-modal-empty-icon" />
                     <p>No hay criterios definidos</p>
                     {isEditing && (
-                      <p>Haz clic en "Agregar Criterio" para comenzar</p>
+                      <p>Usa la búsqueda para agregar un criterio existente o haz clic en "Agregar Criterio"</p>
                     )}
                   </div>
                 ) : (
                   <div className="evaluation-format-modal-criterios-list">
-                    {criterios.map((criterio, index) => (
-                      <div key={index} className="evaluation-format-modal-criterio-item">
+                    {criterios.map((criterio, cIdx) => (
+                      <div key={criterio.id || cIdx} className="evaluation-format-modal-criterio-item">
                         <div className="evaluation-format-modal-criterio-header">
-                          <span className="evaluation-format-modal-criterio-number">
-                            Criterio {index + 1}
-                          </span>
+                          <span className="evaluation-format-modal-criterio-number">Criterio {cIdx + 1}</span>
                           {isEditing && (
                             <button
                               type="button"
                               className="evaluation-format-modal-btn-remove"
-                              onClick={() => removeCriterio(index)}
+                              onClick={() => removeCriterio(cIdx)}
                               disabled={isSubmitting}
                             >
                               <FaTrash />
                             </button>
                           )}
                         </div>
-                        
-                        <div className="evaluation-format-modal-form-row">
-                          <div className="evaluation-format-modal-form-group">
-                            <label className="evaluation-format-modal-form-label">
-                              Nombre del Criterio
-                            </label>
-                            {showFormInputs ? (
-                              <input
-                                type="text"
-                                className="evaluation-format-modal-form-input"
-                                value={criterio.nombre}
-                                onChange={(e) => handleCriterioChange(index, 'nombre', e.target.value)}
-                                placeholder="Ej: Calidad Metodológica, Originalidad..."
-                                disabled={!isEditing || isSubmitting}
-                              />
-                            ) : (
-                              <p className="evaluation-format-modal-readonly-text">{criterio.nombre}</p>
-                            )}
-                          </div>
-
-                          <div className="evaluation-format-modal-form-group">
-                            <label className="evaluation-format-modal-form-label">
-                              Valor (%)
-                            </label>
-                            {showFormInputs ? (
-                              <input
-                                type="number"
-                                className="evaluation-format-modal-form-input"
-                                value={criterio.peso}
-                                onChange={(e) => handleCriterioChange(index, 'peso', parseInt(e.target.value) || 0)}
-                                min="0"
-                                max="100"
-                                disabled={!isEditing || isSubmitting}
-                              />
-                            ) : (
-                              <p className="evaluation-format-modal-readonly-text">{criterio.peso}%</p>
-                            )}
-                          </div>
-                        </div>
 
                         <div className="evaluation-format-modal-form-group">
-                          <label className="evaluation-format-modal-form-label">
-                            Descripción
-                          </label>
+                          <label className="evaluation-format-modal-form-label">Nombre del Criterio</label>
                           {showFormInputs ? (
-                            <textarea
-                              className="evaluation-format-modal-form-textarea"
-                              value={criterio.descripcion}
-                              onChange={(e) => handleCriterioChange(index, 'descripcion', e.target.value)}
-                              placeholder="Describa en qué consiste este criterio de evaluación..."
-                              rows="2"
+                            <input
+                              type="text"
+                              className="evaluation-format-modal-form-input"
+                              value={criterio.nombre}
+                              onChange={(e) => handleCriterioChange(cIdx, 'nombre', e.target.value)}
+                              placeholder="Nombre del criterio"
                               disabled={!isEditing || isSubmitting}
                             />
                           ) : (
-                            <p className="evaluation-format-modal-readonly-text">{criterio.descripcion}</p>
+                            <p className="evaluation-format-modal-readonly-text">{criterio.nombre}</p>
+                          )}
+                          {formErrors[`criterio_${cIdx}`] && (
+                            <div className="evaluation-format-modal-error-text">{formErrors[`criterio_${cIdx}`]}</div>
+                          )}
+                        </div>
+
+                        {/* Items dentro del criterio */}
+                        <div className="evaluation-format-modal-criterio-items">
+                          {(criterio.items || []).length === 0 ? (
+                            <div className="evaluation-format-modal-empty-items">No hay ítems en este criterio</div>
+                          ) : (
+                            (criterio.items || []).map((item, iIdx) => (
+                              <div key={item.id || iIdx} className="evaluation-format-modal-item-row">
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                  <div style={{ flex: 1 }} className="evaluation-format-modal-form-group">
+                                    <label className="evaluation-format-modal-form-label">Ítem {getGlobalItemIndex(cIdx, iIdx)}</label>
+                                    <input
+                                      type="text"
+                                      className="evaluation-format-modal-form-input"
+                                      value={item.nombre}
+                                      onChange={(e) => handleItemChange(cIdx, iIdx, 'nombre', e.target.value)}
+                                      placeholder="Texto de la pregunta / enunciado del ítem"
+                                      disabled={!isEditing || isSubmitting}
+                                    />
+                                  </div>
+
+                                  {isEditing && (
+                                    <div style={{ marginLeft: 8 }}>
+                                      <button
+                                        type="button"
+                                        className="evaluation-format-modal-btn-remove"
+                                        onClick={() => removeItemFromCriterio(cIdx, iIdx)}
+                                        disabled={isSubmitting}
+                                      >
+                                        <FaTrash />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="evaluation-format-modal-form-group" style={{ marginTop: 12 }}>
+                                  <label className="evaluation-format-modal-form-label">Valor (%)</label>
+                                  <input
+                                    type="number"
+                                    className="evaluation-format-modal-form-input"
+                                    value={item.peso === '' || item.peso === null || typeof item.peso === 'undefined' ? '' : item.peso}
+                                    onChange={(e) => handleItemChange(cIdx, iIdx, 'peso', e.target.value)}
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    disabled={!isEditing || isSubmitting}
+                                  />
+                                </div>
+
+                                <div className="evaluation-format-modal-form-group" style={{ flex: 1, marginTop: 12 }}>
+                                  <label className="evaluation-format-modal-form-label">Descripción</label>
+                                  <textarea
+                                    className="evaluation-format-modal-form-textarea"
+                                    value={item.descripcion}
+                                    onChange={(e) => handleItemChange(cIdx, iIdx, 'descripcion', e.target.value)}
+                                    rows="2"
+                                    disabled={!isEditing || isSubmitting}
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          )}
+
+                          {isEditing && (
+                            <div className="evaluation-format-modal-add-item-row" style={{ marginTop: 8 }}>
+                              <button
+                                type="button"
+                                className="evaluation-format-modal-btn-add"
+                                onClick={() => addItemToCriterio(cIdx)}
+                                disabled={isSubmitting}
+                              >
+                                <FaPlus /> Agregar Ítem
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -542,7 +741,7 @@ const EvaluationFormatModal = ({
                   </div>
                 )}
 
-                {/* Resumen de Valores */}
+                {/* Resumen de valores por ítems */}
                 {criterios.length > 0 && (
                   <div className="evaluation-format-modal-peso-summary">
                     <div className="evaluation-format-modal-peso-total">
@@ -550,7 +749,7 @@ const EvaluationFormatModal = ({
                     </div>
                     <div className="evaluation-format-modal-peso-total">
                       <strong>
-                        Suma de valores: {criterios.reduce((sum, criterio) => sum + (parseInt(criterio.peso) || 0), 0)}%
+                        Suma de valores: {criterios.reduce((sum, c) => sum + ((c.items || []).reduce((s, it) => s + (parseInt(it.peso) || 0), 0)), 0)}%
                       </strong>
                     </div>
                   </div>

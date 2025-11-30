@@ -1,20 +1,18 @@
-"use client"
-
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import {
   FaBars,
-  FaBell,
   FaUserCircle,
   FaCog,
   FaKey,
   FaSignOutAlt,
   FaChevronDown,
   FaUser,
-  FaEnvelope,
+  FaFilePdf // Añade este import
 } from "react-icons/fa"
 import "../../styles/common/Header.css"
 import ProfileMenu from "./ProfileMenu"
+import NotificationsMenu from "./NotificationsMenu"
 import { useAuth } from "../../contexts/AuthContext"
 
 const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
@@ -46,8 +44,6 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
     setIsUserMenuOpen(!isUserMenuOpen)
   }
 
-  // Toggle del sidebar: si el padre pasó `onToggleSidebar` lo usamos,
-  // si no, hacemos un toggle global por clase/body + dispatch de evento.
   const handleSidebarToggle = () => {
     if (typeof onToggleSidebar === 'function') {
       onToggleSidebar();
@@ -62,12 +58,10 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
       document.documentElement.style.setProperty('--sidebar-width', width);
       const mains = document.querySelectorAll('.dashboard-main');
       mains.forEach(el => { el.style.marginLeft = width; });
-      // notificar a listeners (ej. Sidebar)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: { open } }));
       }
     } catch (err) {
-      // no crítico
       console.warn('Toggle sidebar fallback failed', err);
     }
   }
@@ -76,9 +70,18 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
     console.log(`⚙ Acción seleccionada: ${action}`)
     setIsUserMenuOpen(false)
 
+    const userPrefix = getUserType();
+
     switch (action) {
+      case "profile":
       case "edit-profile":
-        navigate("/edit-profile", { state: { from: location.pathname } })
+        navigate(`/${userPrefix}/profile/edit`, { state: { from: location.pathname } })
+        break
+      case "change-password":
+        navigate(`/${userPrefix}/change-password`, { state: { from: location.pathname } })
+        break
+      case "documents":
+        navigate(`/${userPrefix}/documents`, { state: { from: location.pathname } })
         break
       case "logout":
         logout()
@@ -89,7 +92,6 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
     }
   }
 
-  // 🧾 Nombre completo
   const getFullName = () => {
     if (!user) return "Usuario"
     if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`
@@ -99,11 +101,18 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
     return "Usuario"
   }
 
+  const getUserType = () => {
+    if (!user) return 'admin'
+    const role = user.role || user.rol || ''
+    if (role.toLowerCase().includes('admin')) return 'admin'
+    if (role.toLowerCase().includes('evaluador')) return 'evaluador'
+    return 'evaluando'
+  }
+
   const menuItems = [
     { icon: FaUser, label: "Editar Perfil", action: "edit-profile" },
     { icon: FaKey, label: "Cambiar Contraseña", action: "change-password" },
-    { icon: FaCog, label: "Configuración", action: "settings" },
-    { icon: FaEnvelope, label: "Preferencias de Email", action: "email-preferences" },
+    { icon: FaFilePdf, label: "Mis Documentos", action: "documents" }, // AÑADE ESTE ITEM
     { icon: FaSignOutAlt, label: "Cerrar Sesión", action: "logout", isDanger: true },
   ]
 
@@ -119,10 +128,8 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
       </div>
 
       <div className="header-right">
-        <button className="notification-btn">
-          <FaBell />
-          <span className="notification-badge">3</span>
-        </button>
+        {/* 🔔 Menú de Notificaciones */}
+        <NotificationsMenu />
 
         <div className="user-menu-container" ref={userMenuRef}>
           <button className="user-menu-trigger" onClick={handleUserMenuToggle}>

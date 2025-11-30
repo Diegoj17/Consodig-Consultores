@@ -194,6 +194,34 @@ export const userService = {
     }
   },
 
+  async getAdminById(id) {
+    console.log(`🟡 [userService] getAdminById para ID: ${id}`);
+    try {
+      const { data: admin } = await api.get(`/admin/${id}`);
+      console.log(`🟢 [userService] Respuesta de /admin/${id}:`, admin);
+      return admin;
+    } catch (error) {
+      console.error(`❌ [userService] Error en getAdminById:`, error);
+      throw error;
+    }
+  },
+
+  async updateAdmin(id, userData) {
+    console.log("🟡 [userService] Actualizando admin ID:", id, "Datos:", userData);
+    try {
+      const payload = {
+        ...userData,
+        ...(userData.password ? { password: userData.password } : {})
+      };
+      console.log("🟢 [userService] Payload final para backend (admin):", payload);
+      const { data } = await api.put(`/admin/${id}`, payload);
+      return data;
+    } catch (error) {
+      console.error("❌ [userService] Error en updateAdmin:", error);
+      throw error;
+    }
+  },
+
   async getEvaluandoById(id) {
     console.log(`🟡 [userService] getEvaluandoById para ID: ${id}`);
     

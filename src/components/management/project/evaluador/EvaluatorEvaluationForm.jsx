@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, FaExternalLinkAlt } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import projectService from '../../../../services/projectService';
 import { evaluationService } from '../../../../services/evaluationService';
@@ -29,7 +29,15 @@ const EvaluatorEvaluationForm = () => {
   const [loadingItems, setLoadingItems] = useState(true);
   const [error, setError] = useState(null);
   const [projectDetails, setProjectDetails] = useState(null);
-  const [loadingProject, setLoadingProject] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+    confirmText: 'Aceptar',
+    showCancel: false,
+    onConfirm: null
+  });
 
   // Cargar items reales del formato desde el backend
   useEffect(() => {
@@ -54,7 +62,7 @@ const EvaluatorEvaluationForm = () => {
       }
 
       try {
-        setLoadingProject(true);
+        // setLoadingProject(true);
         const id = project.id || project.proyectoId || project.proyecto?.id || project.codigo;
         if (!id) {
           setProjectDetails(project);
@@ -66,7 +74,7 @@ const EvaluatorEvaluationForm = () => {
         console.error('❌ Error cargando detalles del proyecto:', err);
         if (mounted) setProjectDetails(project);
       } finally {
-        if (mounted) setLoadingProject(false);
+        // finished loading project details
       }
     };
 
@@ -126,34 +134,47 @@ const EvaluatorEvaluationForm = () => {
     }));
   };
 
-  const calculateFinalScore = () => {
+  useEffect(() => {
+    // Recalcular puntuación final cuando cambian los items
     const total = evaluationData.items.reduce((sum, item) => {
       const formatItem = formatItems.find(fi => fi.id === item.itemFormatoId);
       const peso = formatItem?.peso || 0;
       return sum + (item.calificacion * peso / 100);
     }, 0);
-    
+
     setEvaluationData(prev => ({
       ...prev,
       calificacionFinal: Math.round(total)
     }));
-  };
-
-  useEffect(() => {
-    calculateFinalScore();
-  }, [evaluationData.items]);
+  }, [evaluationData.items, formatItems]);
 
   const handleSubmit = async () => {
     // Validar que todos los items tengan calificación
     const itemsIncompletos = evaluationData.items.filter(item => item.calificacion === 0);
     
     if (itemsIncompletos.length > 0) {
-      alert('Por favor califica todos los criterios antes de enviar la evaluación.');
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Criterios incompletos',
+        message: 'Por favor califica todos los criterios antes de enviar la evaluación.',
+        confirmText: 'Entendido',
+        showCancel: false,
+        onConfirm: null
+      });
       return;
     }
 
     if (!evaluationData.comentarios.trim()) {
-      alert('Por favor ingresa comentarios justificativos.');
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Comentarios requeridos',
+        message: 'Por favor ingresa comentarios justificativos.',
+        confirmText: 'Entendido',
+        showCancel: false,
+        onConfirm: null
+      });
       return;
     }
 
@@ -177,12 +198,26 @@ const EvaluatorEvaluationForm = () => {
         comentarios: evaluationData.comentarios,
         calificacionFinal: evaluationData.calificacionFinal
       });
-
-        alert('✅ Evaluación completada exitosamente');
-        navigate('/evaluador/evaluations/completed');
+        setModalState({
+          isOpen: true,
+          type: 'success',
+          title: 'Evaluación completada',
+          message: '✅ Evaluación completada exitosamente',
+          confirmText: 'Ir a completadas',
+          showCancel: false,
+          onConfirm: () => navigate('/evaluador/evaluations/completed')
+        });
     } catch (error) {
       console.error('❌ Error enviando evaluación:', error);
-      alert(`Error al enviar la evaluación: ${error.message}`);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al enviar',
+        message: `Error al enviar la evaluación: ${error.message}`,
+        confirmText: 'Cerrar',
+        showCancel: false,
+        onConfirm: null
+      });
     } finally {
       setLoading(false);
     }
@@ -195,7 +230,15 @@ const EvaluatorEvaluationForm = () => {
       const itemsConCalificacion = evaluationData.items.filter(item => item.calificacion > 0);
       
       if (itemsConCalificacion.length === 0) {
-        alert('No hay criterios calificados para guardar.');
+        setModalState({
+          isOpen: true,
+          type: 'error',
+          title: 'Nada para guardar',
+          message: 'No hay criterios calificados para guardar.',
+          confirmText: 'Entendido',
+          showCancel: false,
+          onConfirm: null
+        });
         setLoading(false);
         return;
       }
@@ -210,11 +253,26 @@ const EvaluatorEvaluationForm = () => {
         });
       }
       
-      alert('✅ Progreso guardado exitosamente');
-        navigate('/evaluador/evaluations/in-progress');
+      setModalState({
+        isOpen: true,
+        type: 'success',
+        title: 'Progreso guardado',
+        message: '✅ Progreso guardado exitosamente',
+        confirmText: 'Ir a en progreso',
+        showCancel: false,
+        onConfirm: () => navigate('/evaluador/evaluations/in-progress')
+      });
     } catch (error) {
       console.error('❌ Error guardando progreso:', error);
-      alert(`Error al guardar progreso: ${error.message}`);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al guardar',
+        message: `Error al guardar progreso: ${error.message}`,
+        confirmText: 'Cerrar',
+        showCancel: false,
+        onConfirm: null
+      });
     } finally {
       setLoading(false);
     }
@@ -242,20 +300,77 @@ const EvaluatorEvaluationForm = () => {
   if (!evaluation || !project || !format) {
     const missingMsg = `Faltan datos necesarios: ${!evaluation ? 'Evaluation ' : ''}${!project ? 'Project ' : ''}${!format ? 'Format' : ''}`;
     return (
-      <Modal
-        isOpen={true}
-        onClose={() => navigate('/evaluador/evaluations/pending')}
-        type="error"
-        title="Información no disponible"
-        message={missingMsg}
-        confirmText="Volver a la lista"
-        showCancel={false}
-        onConfirm={() => navigate('/evaluador/evaluations/pending')}
-      />
+      <>
+        <Modal
+          isOpen={true}
+          onClose={() => navigate('/evaluador/evaluations/pending')}
+          type="error"
+          title="Información no disponible"
+          message={missingMsg}
+          confirmText="Volver a la lista"
+          showCancel={false}
+          onConfirm={() => navigate('/evaluador/evaluations/pending')}
+        />
+      </>
     );
   }
 
   const displayProject = projectDetails || project || {};
+
+  const getInstitution = () => {
+    // Prefer project-level institution, then evaluation, then format, then fallback
+    return (
+      displayProject.institucion ||
+      displayProject.institucionNombre ||
+      displayProject.institution ||
+      evaluation?.institucion ||
+      evaluation?.institucionNombre ||
+      evaluation?.institution ||
+      format?.institucion ||
+      format?.institucionNombre ||
+      format?.institution ||
+      'No especificada'
+    );
+  };
+
+  // --- Helpers para archivos (similar a EvaluatorProjectCard) ---
+  const getFileName = (archivo) => {
+    return archivo.nombreArchivo || archivo.nombre || 'Archivo sin nombre';
+  };
+
+  
+
+  const handleOpenFile = async (archivo) => {
+    try {
+      if (archivo.urlArchivo) {
+        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      setModalState({
+        isOpen: true,
+        type: 'info',
+        title: 'Archivo no disponible',
+        message: 'Este archivo no está disponible para abrir desde aquí. Ve a Mis Documentos si necesitas descargarlo.',
+        confirmText: 'Ir a Mis Documentos',
+        showCancel: true,
+        onConfirm: () => navigate('/evaluador/documents')
+      });
+    } catch (error) {
+      console.error('Error abriendo archivo:', error);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al abrir archivo',
+        message: 'No se pudo abrir el archivo. Intenta en Mis Documentos.',
+        confirmText: 'Aceptar',
+        showCancel: false,
+        onConfirm: null
+      });
+    }
+  };
+
+  // Nota: la opción de descarga fue eliminada por diseño — solo permitimos abrir archivos.
 
   const steps = [
     { title: 'Información del Proyecto', completed: currentStep > 0 },
@@ -273,7 +388,6 @@ const EvaluatorEvaluationForm = () => {
         </button>
         
         <div className="evaluator-form-title">
-          <FaFileAlt className="evaluator-title-icon" />
           <div>
             <h1>Evaluación del Proyecto</h1>
             <p>{project.titulo || 'Sin título'}</p>
@@ -288,6 +402,8 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-step-number">
               {step.completed ? '✓' : index + 1}
             </div>
+
+            {/* (removed duplicated project files block) */}
             <span className="evaluator-step-label">{step.title}</span>
           </div>
         ))}
@@ -305,10 +421,6 @@ const EvaluatorEvaluationForm = () => {
                 <div className="evaluator-detail-item">
                   <strong>Título:</strong>
                   <span>{displayProject.titulo || displayProject.nombre || 'Sin título'}</span>
-                </div>
-                <div className="evaluator-detail-item">
-                  <strong>Código / ID:</strong>
-                  <span>{displayProject.codigo || displayProject.id || displayProject.proyectoId || 'N/A'}</span>
                 </div>
                 <div className="evaluator-detail-item">
                   <strong>Resumen:</strong>
@@ -332,7 +444,7 @@ const EvaluatorEvaluationForm = () => {
                 </div>
                 <div className="evaluator-detail-item full-width">
                   <strong>Institución:</strong>
-                  <p>{evaluation?.institucion || evaluation?.institucionNombre || evaluation?.institution || 'No especificada'}</p>
+                  <p>{getInstitution()}</p>
                 </div>
               </div>
             </div>
@@ -348,6 +460,28 @@ const EvaluatorEvaluationForm = () => {
                 </div>
               </div>
             </div>
+
+            {/* Sección de Archivos del Proyecto (única aparición) */}
+            {Array.isArray(displayProject.archivos) && displayProject.archivos.length > 0 && (
+              <div className="evaluator-project-files">
+                <h3>Archivos del Proyecto</h3>
+                <div className="evaluator-files-list">
+                  {displayProject.archivos.map((archivo) => (
+                    <div key={archivo.id || archivo.nombreArchivo || archivo.urlArchivo} className="evaluator-file-item">
+                      <div className="evaluator-file-meta">
+                        <FaFileAlt className="evaluator-file-icon" />
+                        <span className="evaluator-file-name">{getFileName(archivo)}</span>
+                      </div>
+                      <div className="evaluator-file-actions">
+                        <button className="evaluator-file-open" title="Abrir" onClick={() => handleOpenFile(archivo)}>
+                          <FaExternalLinkAlt />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="evaluator-step-actions">
               <button
@@ -387,7 +521,7 @@ const EvaluatorEvaluationForm = () => {
                       <div className="evaluator-criterion-header">
                         <div className="evaluator-criterion-title">
                           <h4>{index + 1}. {formatItem.nombre}</h4>
-                          <span className="evaluator-criterion-weight">Peso: {formatItem.peso}%</span>
+                          <span className="evaluator-criterion-weight">Valor: {formatItem.peso}%</span>
                         </div>
                         <div className="evaluator-criterion-score">
                           <span className="evaluator-score-display">
@@ -430,6 +564,23 @@ const EvaluatorEvaluationForm = () => {
                             className="evaluator-comments-textarea"
                           />
                         </div>
+                      {/* Modal global para mensajes de éxito / error */}
+                      <Modal
+                        isOpen={modalState.isOpen}
+                        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+                        type={modalState.type}
+                        title={modalState.title}
+                        message={modalState.message}
+                        confirmText={modalState.confirmText}
+                        showCancel={modalState.showCancel}
+                        onConfirm={() => {
+                          try {
+                            if (modalState.onConfirm) modalState.onConfirm();
+                          } finally {
+                            setModalState(prev => ({ ...prev, isOpen: false }));
+                          }
+                        }}
+                      />
                       </div>
                     </div>
                   );
@@ -498,7 +649,7 @@ const EvaluatorEvaluationForm = () => {
                   return (
                     <div key={formatItem.id} className="evaluator-criterio-score">
                       <span>{formatItem.nombre}</span>
-                      <span>{evaluationItem.calificacion || 0} pts ({formatItem.peso}%)</span>
+                      <span>{evaluationItem.calificacion || 0} pts ({formatItem.peso}% valor)</span>
                     </div>
                   );
                 })}
@@ -525,8 +676,8 @@ const EvaluatorEvaluationForm = () => {
           </div>
         )}
       </div>
-    </div>
-  );
-};
+      </div>
+    );
+  };
 
-export default EvaluatorEvaluationForm;
+  export default EvaluatorEvaluationForm;

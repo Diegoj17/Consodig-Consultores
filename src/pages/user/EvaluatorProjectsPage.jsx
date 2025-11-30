@@ -288,17 +288,49 @@ const EvaluatorProjectsPage = () => {
       
       const archivo = project.archivos[0];
       
+      // Intentar descargar forzando blob desde la URL (evita abrir en nueva pestaña)
+      const filename = archivo.nombreArchivo || archivo.nombre || 'proyecto.pdf';
+
       if (archivo.urlArchivo) {
-        window.open(archivo.urlArchivo, '_blank');
-      } else if (archivo.id) {
+        try {
+          const resp = await fetch(archivo.urlArchivo, { method: 'GET', credentials: 'include' });
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => { if (blobUrl.startsWith('blob:')) window.URL.revokeObjectURL(blobUrl); }, 10000);
+            return;
+          }
+        } catch (err) {
+          console.warn('fetch directo fallo, intentando fallback por API:', err);
+        }
+      }
+
+      // Fallback: solicitar al backend (stream) por id
+      if (archivo.id) {
         const response = await projectService.downloadFile(archivo.id);
         const blob = response?.data || response;
-        const url = window.URL.createObjectURL(blob);
+        const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = url;
-        link.download = archivo.nombreArchivo || 'proyecto.pdf';
+        link.href = blobUrl;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
         link.click();
-        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        setTimeout(() => { if (blobUrl.startsWith('blob:')) window.URL.revokeObjectURL(blobUrl); }, 10000);
+        return;
+      }
+
+      // Último recurso: abrir en nueva pestaña (si no hay id ni blob posible)
+      if (archivo.urlArchivo) {
+        window.open(archivo.urlArchivo, '_blank');
       }
     } catch (error) {
       console.error('❌ Error descargando:', error);

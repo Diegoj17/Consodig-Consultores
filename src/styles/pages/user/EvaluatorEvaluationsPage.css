@@ -1,38 +1,6 @@
-/* src/styles/management/evaluation/evaluador/EvaluatorEvaluationsPage.css */
 .evaluator-evaluations-page {
   padding: 1rem;
-  margin: 0 auto;
-  min-height: 100vh;
-}
-
-.evaluator-evaluations-header {
-  margin-bottom: 2rem;
-}
-
-.evaluator-evaluations-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.evaluator-title-icon {
-  font-size: 2rem;
-  color: #007bbf;
-}
-
-.evaluator-evaluations-title h1 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 2rem;
-  font-weight: 700;
-}
-
-.evaluator-evaluations-header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 1.1rem;
-  line-height: 1.5;
+  margin-top: -2rem;
 }
 
 .evaluator-evaluations-tabs {
@@ -44,6 +12,7 @@
   padding: 0.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: -1rem;
 }
 
 .evaluator-tab {
@@ -56,11 +25,12 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #6b7280;
+  color: #000000;
   font-weight: 600;
   position: relative;
   flex: 1;
   justify-content: center;
+  margin-top: -1rem;
 }
 
 .evaluator-tab:hover {

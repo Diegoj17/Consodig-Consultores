@@ -1,0 +1,12 @@
+.inprogress-evaluations { margin: 1rem 0; }
+.inprogress-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.inprogress-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: 1px solid #eef2f6; border-radius: 6px; background: #fff; }
+.inprogress-main { max-width: 70%; }
+.inprogress-title { margin: 0 0 4px 0; font-size: 1rem; }
+.inprogress-format { display: inline-block; margin-left: 8px; font-size: 0.85rem; color: #527089; }
+.inprogress-evaluando, .inprogress-due { margin: 4px 0; color: #6c757d; font-size: 0.9rem; }
+.inprogress-controls { display:flex; align-items:center; gap:12px; }
+.progress-bar { width: 160px; height: 8px; background: #f1f5f9; border-radius: 8px; overflow: hidden; }
+.progress-fill { height: 100%; background: #40c057; }
+.progress-text { font-size: 0.85rem; color:#495057; }
+.btn-continue { background:#0d6efd; color:#fff; border:none; padding:6px 10px; border-radius:4px; display:flex; align-items:center; gap:6px; }

@@ -1,0 +1,83 @@
+/* styles/components/admin/reports/EvaluationReportsMetrics.css */
+.evaluation-reports-metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.evaluation-reports-metric-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.evaluation-reports-metric-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.evaluation-reports-metric-icon.overall {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
+.evaluation-reports-metric-icon.projects {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.evaluation-reports-metric-icon.evaluations {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.evaluation-reports-metric-icon.completion {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.evaluation-reports-metric-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-light);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluation-reports-metric-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.evaluation-reports-star {
+  font-size: 16px;
+}
+
+.evaluation-reports-star.filled {
+  color: #fbbf24;
+}
+
+.evaluation-reports-star.half-filled {
+  color: #fbbf24;
+  opacity: 0.7;
+}
+
+.evaluation-reports-star.empty {
+  color: #e5e7eb;
+}
+
+.evaluation-reports-rating-number {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
