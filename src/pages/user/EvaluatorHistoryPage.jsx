@@ -55,7 +55,6 @@ const EvaluatorHistoryPage = () => {
     
     const evaluadores = await userService.getEvaluadores();
     const currentUser = evaluadores[0];
-    setCurrentEvaluator(currentUser);
 
     const allProjects = await projectService.getAll();
     
@@ -85,7 +84,6 @@ const EvaluatorHistoryPage = () => {
       // 1. Obtener el evaluador actual
       const evaluadores = await userService.getEvaluadores();
       const currentUser = evaluadores[0];
-      setCurrentEvaluator(currentUser);
       
       console.log('👤 Evaluador actual para historial:', currentUser);
 
