@@ -14,6 +14,7 @@ import {
   FaComment
 } from 'react-icons/fa';
 import '../../../../styles/management/project/evaluador/EvaluatorCompletedList.css';
+import { generateEvaluationPdf } from '../../../../utils/generateEvaluationPdf';
 
 const EvaluatorCompletedList = ({ 
   evaluations, 
@@ -48,7 +49,7 @@ const EvaluatorCompletedList = ({
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
+    } catch {
       return 'Fecha inválida';
     }
   };
@@ -80,12 +81,7 @@ const EvaluatorCompletedList = ({
     return evaluation.comentariosFinales || evaluation.finalComments || '';
   };
 
-  // Obtener código del proyecto
-  const getProjectCode = (evaluation, project) => {
-    return project.codigo || project.code || evaluation.proyectoId || evaluation.projectId || 
-           (evaluation.proyecto && evaluation.proyecto.id) || 
-           (evaluation.project && evaluation.project.id) || 'N/A';
-  };
+  
 
   // Obtener título del proyecto
   const getProjectTitle = (project) => {
@@ -105,10 +101,19 @@ const EvaluatorCompletedList = ({
   };
 
   // Manejar exportación PDF
-  const handleExportPDF = (evaluationId, event) => {
+  const handleExportPDF = async (evaluation, event) => {
     event.stopPropagation();
-    if (onExportPDF) {
-      onExportPDF(evaluationId);
+    try {
+      if (onExportPDF) {
+        // Mantener compatibilidad con callbacks externos
+        onExportPDF(evaluation.id);
+        return;
+      }
+      // Generar PDF internamente
+      await generateEvaluationPdf(evaluation);
+    } catch (err) {
+      console.error('Error exportando PDF', err);
+      // Podríamos mostrar una notificación al usuario aquí
     }
   };
 
@@ -273,7 +278,7 @@ const EvaluatorCompletedList = ({
                   <div className="evaluator-evaluation-completed-export-buttons">
                     <button
                       className="evaluator-evaluation-completed-btn evaluator-evaluation-completed-btn-export evaluator-evaluation-completed-btn-pdf"
-                      onClick={(e) => handleExportPDF(evaluation.id, e)}
+                      onClick={(e) => handleExportPDF(evaluation, e)}
                       title="Descargar PDF"
                       aria-label={`Exportar evaluación ${evaluation.id} a PDF`}
                     >

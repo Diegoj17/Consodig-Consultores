@@ -291,6 +291,10 @@ const EvaluatorEvaluationForm = () => {
         showCancel: false,
         onConfirm: () => navigate('/evaluador/evaluations/completed')
       });
+      // Redirección automática por si el modal no se ve correctamente en la UI
+      setTimeout(() => {
+        try { navigate('/evaluador/evaluations/completed'); } catch { /* ignore */ }
+      }, 1200);
     } catch (error) {
       console.error('❌ Error enviando evaluación:', error);
       setModalState({

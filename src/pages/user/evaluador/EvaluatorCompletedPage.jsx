@@ -1,8 +1,8 @@
-// src/components/management/evaluation/evaluador/EvaluatorCompletedPage.js
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaCheck, FaEye, FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import EvaluatorCompletedList from '../../../components/management/project/evaluador/EvaluatorCompletedList';
 import EvaluationDetailsModal from '../../../components/management/project/evaluador/EvaluationDetailsModal'; 
+import { generateEvaluationPdf } from '../../../utils/generateEvaluationPdf';
 import { evaluationService } from '../../../services/evaluationService';
 import '../../../styles/pages/user/evaluador/EvaluatorEvaluationsPage.css';
 
@@ -47,6 +47,14 @@ const EvaluatorCompletedPage = () => {
   const handleExportPDF = async (evaluationId) => {
     try {
       console.log('Exportando a PDF:', evaluationId);
+      // Buscar la evaluación en el estado local
+      const evalObj = evaluations.find(e => String(e.id) === String(evaluationId));
+      if (!evalObj) {
+        console.warn('No se encontró la evaluación con id', evaluationId);
+        return;
+      }
+      // Llamar al generador de PDF (utilidad cliente)
+      await generateEvaluationPdf(evalObj);
     } catch (error) {
       console.error('Error exportando PDF:', error);
     }
@@ -78,20 +86,6 @@ const EvaluatorCompletedPage = () => {
     console.log('🔍 Evaluaciones después del filtro:', filteredEvaluations);
     console.log('🔍 Término de búsqueda:', searchTerm);
   }, [filteredEvaluations, searchTerm]);
-
-  // ❌ ELIMINAR ESTE BLOQUE COMPLETO - Está mostrando el formulario en lugar del modal
-  // if (selectedEvaluation) {
-  //   return (
-  //     <EvaluatorEvaluationForm
-  //       evaluation={selectedEvaluation}
-  //       selectedProject={selectedEvaluation.proyecto}
-  //       evaluationFormat={selectedEvaluation.formato}
-  //       isReadOnly={true}
-  //       onCancel={handleCloseView}
-  //       onSubmitEvaluation={null}
-  //     />
-  //   );
-  // }
 
   return (
     <div className="evaluator-evaluations-page">

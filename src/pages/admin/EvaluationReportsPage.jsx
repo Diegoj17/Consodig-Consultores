@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaDownload, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaDownload, FaFilter, FaFilePdf } from 'react-icons/fa';
 import EvaluationReportsHeader from '../../components/reports/EvaluationReportsHeader';
 import EvaluationReportsMetrics from '../../components/reports/EvaluationReportsMetrics';
 import EvaluationReportsProjectsTable from '../../components/reports/EvaluationReportsProjectsTable';
@@ -10,6 +10,7 @@ import evaluationService from '../../services/evaluationService';
 import userService from '../../services/userService';
 import Modal from '../../components/common/Modal';
 import evaluationFormatService from '../../services/evaluationFormatService';
+import { generateEvaluationPDF } from '../../utils/pdfGenerator';
 
 const EvaluationReportsPage = () => {
   const [timeFilter, setTimeFilter] = useState('all');
@@ -19,6 +20,7 @@ const EvaluationReportsPage = () => {
     projects: [],
     statistics: {}
   });
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const loadRealData = async () => {
@@ -158,16 +160,164 @@ const EvaluationReportsPage = () => {
     loadRealData();
   }, []);
 
-  const exportReport = () => {
+  const exportReport = async () => {
+    setIsGeneratingPDF(true);
     setModalState({
       isOpen: true,
       type: 'info',
       title: 'Exportar reporte',
-      message: 'Exportando reporte de evaluaciones...',
+      message: 'Generando reporte PDF...',
       confirmText: 'Cerrar',
       showCancel: false,
       onConfirm: null
     });
+
+    try {
+      // Obtener todas las evaluaciones completas para el reporte
+      const evaluations = await evaluationService.getCompletedEvaluations();
+      
+      // Preparar datos para el PDF
+      const pdfData = {
+        reportTitle: 'Reporte Completo de Evaluaciones',
+        generatedDate: new Date().toLocaleString('es-ES'),
+        summary: reportData.summary,
+        statistics: reportData.statistics,
+        evaluations: [],
+        projects: reportData.projects
+      };
+
+      // Enriquecer cada evaluación con datos completos
+      for (const evaluation of evaluations) {
+        try {
+          // Obtener datos del proyecto
+          const projectData = evaluation.project || evaluation.proyecto || {};
+          
+          // Obtener datos del evaluador
+          let evaluatorData = {};
+          const evaluatorId = evaluation.evaluador_id || evaluation.evaluadorId || evaluation.evaluador?.id;
+          
+          if (evaluatorId) {
+            try {
+              evaluatorData = await userService.getEvaluadorById(evaluatorId);
+            } catch (error) {
+              console.warn('No se pudo obtener datos del evaluador:', error);
+            }
+          }
+
+          // Obtener formato de evaluación si está disponible
+          let formatData = {};
+          const formatId = evaluation.formatoId || evaluation.formato_id;
+          
+          if (formatId) {
+            try {
+              formatData = await evaluationFormatService.getFormatById(formatId);
+            } catch (error) {
+              console.warn('No se pudo obtener formato de evaluación:', error);
+            }
+          }
+
+          // Construir evaluación completa para PDF
+          const completeEvaluation = {
+            id: evaluation.id,
+            project: {
+              id: projectData.id,
+              titulo: projectData.titulo || projectData.name,
+              resumen: projectData.resumen || projectData.description,
+              investigadorPrincipal: projectData.investigadorPrincipal || projectData.principalInvestigator,
+              palabrasClave: projectData.palabrasClave || projectData.keywords || [],
+              nivelEstudios: projectData.nivelEstudios,
+              lineasInvestigacion: projectData.lineasInvestigacionNames || projectData.researchLines || [],
+              archivos: projectData.archivos || []
+            },
+            evaluator: {
+              id: evaluatorId,
+              nombre: evaluatorData.nombre || evaluation.evaluatorName,
+              email: evaluatorData.email,
+              especialidad: evaluatorData.especialidad
+            },
+            evaluation: {
+              fechaAsignacion: evaluation.fecha_asignacion || evaluation.fechaAsignacion,
+              fechaFinalizacion: evaluation.fecha_finalizacion || evaluation.fechaFinalizacion,
+              calificacionTotal: evaluation.calificacion_total || evaluation.calificacionTotal,
+              estado: evaluation.estado || evaluation.status,
+              items: evaluation.items || [],
+              observaciones: evaluation.observaciones || evaluation.comments,
+              formato: formatData
+            },
+            metadata: {
+              tiempoEvaluacion: calculateEvaluationTime(evaluation),
+              calificacionPromedio: calculateAverageRating(evaluation),
+              itemsEvaluados: evaluation.items?.length || 0
+            }
+          };
+
+          pdfData.evaluations.push(completeEvaluation);
+        } catch (error) {
+          console.error('Error procesando evaluación para PDF:', error);
+        }
+      }
+
+      // Generar el PDF
+      await generateEvaluationPDF(pdfData);
+      
+      setModalState({
+        isOpen: true,
+        type: 'success',
+        title: 'Exportación exitosa',
+        message: 'El reporte PDF se ha generado y descargado correctamente.',
+        confirmText: 'Aceptar',
+        showCancel: false,
+        onConfirm: null
+      });
+
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error en exportación',
+        message: 'No se pudo generar el reporte PDF. Por favor, intente nuevamente.',
+        confirmText: 'Aceptar',
+        showCancel: false,
+        onConfirm: null
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Función auxiliar para calcular tiempo de evaluación
+  const calculateEvaluationTime = (evaluation) => {
+    const start = evaluation.fecha_asignacion || evaluation.fechaAsignacion;
+    const end = evaluation.fecha_finalizacion || evaluation.fechaFinalizacion;
+    
+    if (start && end) {
+      const startTime = new Date(start).getTime();
+      const endTime = new Date(end).getTime();
+      const diffMs = endTime - startTime;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      
+      if (diffHours < 24) {
+        return `${diffHours.toFixed(1)} horas`;
+      } else {
+        return `${(diffHours / 24).toFixed(1)} días`;
+      }
+    }
+    return 'No disponible';
+  };
+
+  // Función auxiliar para calcular calificación promedio
+  const calculateAverageRating = (evaluation) => {
+    if (evaluation.calificacion_total !== undefined) {
+      return (evaluation.calificacion_total / 20).toFixed(1);
+    }
+    
+    if (evaluation.items && Array.isArray(evaluation.items)) {
+      const total = evaluation.items.reduce((sum, item) => sum + (item.calificacion || 0), 0);
+      return (total / evaluation.items.length).toFixed(1);
+    }
+    
+    return 'No disponible';
   };
 
   const filteredProjects = reportData.projects.filter(project =>
@@ -319,8 +469,6 @@ const EvaluationReportsPage = () => {
     }
 
     setSelectedEvaluation(evaluation);
-    // DEBUG: mostrar evaluación construida para verificar campos del backend (temporal)
-    console.log('DEBUG selectedEvaluation (from reports page):', { raw, project, evaluation });
     setShowReviewModal(true);
   };
 
@@ -328,9 +476,6 @@ const EvaluationReportsPage = () => {
     setShowReviewModal(false);
     setSelectedEvaluation(null);
   };
-
-  // NOTE: This reports page uses the read-only review modal (`EvaluationReviewModal2`),
-  // so editor/approve callbacks are not needed here.
 
   return (
     <div className="evaluation-reports-page">
@@ -340,6 +485,7 @@ const EvaluationReportsPage = () => {
         timeFilter={timeFilter}
         setTimeFilter={setTimeFilter}
         onExport={exportReport}
+        isExporting={isGeneratingPDF}
       />
 
       <EvaluationReportsMetrics
@@ -351,12 +497,18 @@ const EvaluationReportsPage = () => {
         projects={filteredProjects}
         onFilter={() => setModalState({ isOpen: true, type: 'info', title: 'Filtros', message: 'Filtros avanzados (mock)', confirmText: 'Cerrar', showCancel: false, onConfirm: null })}
         onViewDetails={handleViewDetails}
+        onExportPDF={exportReport}
+        isExporting={isGeneratingPDF}
       />
 
       {showReviewModal && selectedEvaluation && (
         <EvaluationReviewModal2
           evaluation={selectedEvaluation}
           onClose={handleCloseReviewModal}
+          onExportPDF={() => {
+            handleCloseReviewModal();
+            exportReport();
+          }}
         />
       )}
 
@@ -364,6 +516,7 @@ const EvaluationReportsPage = () => {
         statistics={reportData.statistics}
         summary={reportData.summary}
       />
+      
       {/* Modal global para mensajes */}
       <Modal
         isOpen={modalState.isOpen}

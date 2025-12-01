@@ -30,25 +30,45 @@ const EvaluatorPendingPage = () => {
 
   // Navegar al formulario de evaluación
   const handleStartEvaluation = (evaluation) => {
-    console.log('🚀 Iniciando evaluación:', evaluation);
-    console.log('📋 Proyecto:', evaluation.proyecto);
-    console.log('📝 Formato:', evaluation.formato);
-    
-    // Verificar que tenemos los datos necesarios
-    if (!evaluation.proyecto || !evaluation.formato) {
-      console.error('❌ Faltan datos del proyecto o formato');
-      alert('Error: No se pudo cargar la información de la evaluación');
-      return;
-    }
+    (async () => {
+      try {
+        console.log('🚀 Iniciando evaluación (handler):', evaluation);
 
-    // Navegar al formulario de evaluación con los datos necesarios
-    navigate('/evaluador/evaluation', { 
-      state: { 
-        evaluation: evaluation,
-        project: evaluation.proyecto,
-        format: evaluation.formato
+        // Si la evaluación no trae proyecto o formato, intentar obtener la evaluación completa desde el backend
+        let full = evaluation;
+        if (!evaluation.proyecto || !evaluation.formato) {
+          try {
+            console.log('🔎 Datos incompletos: solicitando detalles al backend para evaluación id=', evaluation.id);
+            full = await evaluationService.getById(evaluation.id);
+            console.log('✅ Detalles obtenidos desde backend:', full);
+          } catch (err) {
+            console.warn('❌ No se pudieron obtener detalles desde backend:', err);
+            // si falla la petición, seguir con el objeto original para mostrar mensaje de error
+            full = evaluation;
+          }
+        }
+
+        // Verificar que ahora tengamos los datos necesarios
+        if (!full.proyecto || !full.formato) {
+          console.error('❌ Faltan datos del proyecto o formato incluso después de intentar cargar desde API', { full });
+          alert('Error: No se pudo cargar la información completa de la evaluación. Intenta recargar la página o contacta al administrador.');
+          return;
+        }
+
+        // Navegar al formulario de evaluación usando la ruta con parametro evaluationId
+        // Rutas en `EvaluadorLayout` exponen: /evaluador/evaluate/:evaluationId
+        navigate(`/evaluador/evaluate/${full.id}`, {
+          state: {
+            evaluation: full,
+            project: full.proyecto,
+            format: full.formato
+          }
+        });
+      } catch (err) {
+        console.error('Error en handleStartEvaluation:', err);
+        alert('Ocurrió un error al iniciar la evaluación. Revisa la consola para más detalles.');
       }
-    });
+    })();
   };
 
   const filteredEvaluations = evaluations.filter(evaluation => {

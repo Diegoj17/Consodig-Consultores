@@ -12,6 +12,7 @@ import '../../../../styles/management/project/admin/EvaluationReviewModal.css';
 import evaluationService from '../../../../services/evaluationService';
 import { evaluadorService } from '../../../../services/evaluadorService';
 import researchService from '../../../../services/researchService';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const EvaluationReviewModal = ({ 
   evaluation, 
@@ -19,6 +20,7 @@ const EvaluationReviewModal = ({
   onApprove, 
   onEditEvaluation 
 }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('details');
   const [editingItems, setEditingItems] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -625,7 +627,8 @@ const EvaluationReviewModal = ({
         await onApprove(evaluation.id);
       } else {
         // Si no se pasa onApprove, usar el servicio local para validar la evaluación
-        await evaluationService.validateEvaluation(evaluation.id);
+        const adminId = user?.id || user?.userId || user?.usuarioId || user?.user_id || null;
+        await evaluationService.validateEvaluation(evaluation.id, adminId);
         // Mostrar mensaje local cuando no hay padre
         showModalMessage('✅ Evaluación aprobada correctamente');
         setTimeout(() => {
@@ -1047,12 +1050,12 @@ const EvaluationReviewModal = ({
         message={confirmMessage || '¿Confirma esta acción?'}
         onConfirm={async () => {
           try {
+            // Cerrar inmediatamente el modal de confirmación para evitar solapamiento
+            setShowConfirmModal(false);
             if (typeof confirmAction === 'function') await confirmAction();
           } catch (err) {
             console.error('Error ejecutando acción de confirmación:', err);
             showModalMessage('❌ Error ejecutando la acción', 'error');
-          } finally {
-            setShowConfirmModal(false);
           }
         }}
         confirmText="Confirmar"

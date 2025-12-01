@@ -24,7 +24,6 @@ import '../../../../styles/management/project/evaluador/EvaluatorProjectCard.css
 import Modal from '../../../../components/common/Modal';
 import { useNavigate } from 'react-router-dom';
 import { projectService } from '../../../../services/projectService';
-import { profileService } from '../../../../services/profileService';
 import { researchService } from '../../../../services/researchService';
 
 const EvaluatorProjectCard = ({
@@ -50,77 +49,7 @@ const EvaluatorProjectCard = ({
   const isOverdue = project.deadline && new Date(project.deadline) < new Date();
   const navigate = useNavigate();
 
-  const [showDocsModal, setShowDocsModal] = useState(false);
-  const [checkingDocs, setCheckingDocs] = useState(false);
-
-  const checkRequiredDocuments = async () => {
-    try {
-      setCheckingDocs(true);
-      const profile = await profileService.getProfile();
-
-      // Buscar posibles ubicaciones de documentos en la respuesta
-      const candidates = [
-        profile,
-        profile?.documents,
-        profile?.documentos,
-        profile?.archivos,
-        profile?.files,
-        profile?.uploads,
-        profile?.user,
-        profile?.user?.documents,
-        profile?.user?.archivos
-      ];
-
-      // Tipos requeridos según EvaluatorDocumentsUpload
-      const requiredKeys = ['cedula', 'titulos', 'cuentaBancaria'];
-
-      // Función para comprobar presencia en un objeto o array
-      const hasAllIn = (obj) => {
-        if (!obj) return false;
-
-        // Si es array, buscar objetos que representen archivos por key/name/type
-        if (Array.isArray(obj)) {
-          const keysFound = new Set();
-          obj.forEach(item => {
-            if (!item) return;
-            const k = item.tipo || item.type || item.name || item.key || item.documentType || item.tipoDocumento;
-            if (k) keysFound.add(String(k).toLowerCase());
-          });
-          return requiredKeys.every(r => keysFound.has(r.toLowerCase()));
-        }
-
-        // Si es objeto, comprobar claves directas
-        const lowerKeys = Object.keys(obj).map(k => k.toLowerCase());
-        if (requiredKeys.every(r => lowerKeys.includes(r.toLowerCase()))) return requiredKeys.every(r => Boolean(obj[r]));
-
-        // A veces las claves están dentro de sub-objetos
-        return requiredKeys.every(r => {
-          const v = obj[r] ?? obj[camelCase(r)] ?? obj[toSnake(r)];
-          return Boolean(v);
-        });
-      };
-
-      // helpers
-      function camelCase(s){ return s.replace(/_([a-z])/g, g=>g[1].toUpperCase()); }
-      function toSnake(s){ return s.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`); }
-
-      for (const cand of candidates) {
-        if (!cand) continue;
-        if (hasAllIn(cand)) {
-          setCheckingDocs(false);
-          return true;
-        }
-      }
-
-      setCheckingDocs(false);
-      return false;
-    } catch (error) {
-      console.warn('Error comprobando documentos:', error);
-      setCheckingDocs(false);
-      // Si hay error, no permitir bypass; mostrar modal
-      return false;
-    }
-  };
+  // Nota: la comprobación de documentos y el modal se maneja en la página padre.
 
   // Cargar líneas de investigación
   useEffect(() => {
@@ -684,20 +613,9 @@ const EvaluatorProjectCard = ({
           <>
             <button
               className="evaluator-btn evaluator-btn-accept"
-              onClick={async () => {
-                try {
-                  const ok = await checkRequiredDocuments();
-                  if (ok) {
-                    if (typeof onAccept === 'function') onAccept(project.evaluacionId);
-                  } else {
-                    setShowDocsModal(true);
-                  }
-                } catch {
-                  // en caso de error, mostrar modal para que el usuario decida
-                  setShowDocsModal(true);
-                }
+              onClick={() => {
+                if (typeof onAccept === 'function') onAccept(project.evaluacionId);
               }}
-              disabled={checkingDocs}
             >
               <FaCheck className="btn-icon" />
               Aceptar Evaluación
@@ -732,34 +650,7 @@ const EvaluatorProjectCard = ({
           </>
         )}
       </div>
-      {/* Modal: solicitar subida de documentos antes de evaluar */}
-      <Modal
-        isOpen={showDocsModal}
-        onClose={() => setShowDocsModal(false)}
-        type="warning"
-        title="Antes de aceptar"
-        message={"Debe subir los documentos requeridos para iniciar la evaluación. ¿Desea ir a la sección 'Mis Documentos' ahora?"}
-        confirmText="Continuar sin subir"
-        cancelText="Cancelar"
-        onConfirm={() => {
-          setShowDocsModal(false);
-          // Llamar al handler original para aceptar la evaluación
-          if (typeof onAccept === 'function') onAccept(project.evaluacionId);
-        }}
-      >
-        <div style={{ marginTop: '0.5rem' }}>
-          <button
-            className="evaluator-btn evaluator-btn-primary"
-            onClick={() => {
-              setShowDocsModal(false);
-              navigate('/evaluador/documents');
-            }}
-            style={{ marginRight: '0.5rem' }}
-          >
-            Ir a Mis Documentos
-          </button>
-        </div>
-      </Modal>
+      {/* Nota: el modal para subir documentos se muestra en la página padre. */}
     </div>
   );
 };

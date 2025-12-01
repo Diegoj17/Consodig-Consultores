@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import evaluationService from '../../../services/evaluationService';
 import projectService from '../../../services/projectService';
+import { profileService } from '../../../services/profileService';
 import EvaluatorProjectCard from '../../../components/management/project/evaluador/EvaluatorProjectCard';
 import Modal from '../../../components/common/Modal';
 import '../../../styles/pages/user/evaluador/EvaluatorPages.css';
@@ -19,6 +20,7 @@ const EvaluatorProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, action: null, evaluacionId: null, project: null });
   const [alertModal, setAlertModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
+  const [docsModal, setDocsModal] = useState({ isOpen: false, evaluacionId: null, project: null });
 
   useEffect(() => {
     loadProjects();
@@ -246,7 +248,71 @@ const EvaluatorProjectsPage = () => {
 
   const handleAccept = (evaluacionId, projectParam) => {
     const projectFound = projectParam || projects.find(p => Number(p.evaluacionId) === Number(evaluacionId));
-    setConfirmModal({ isOpen: true, action: 'accept', evaluacionId, project: projectFound });
+    (async () => {
+      try {
+        const ok = await checkRequiredDocuments();
+        if (ok) {
+          setConfirmModal({ isOpen: true, action: 'accept', evaluacionId, project: projectFound });
+        } else {
+          setDocsModal({ isOpen: true, evaluacionId, project: projectFound });
+        }
+      } catch (err) {
+        console.warn('Error comprobando documentos antes de aceptar:', err);
+        setDocsModal({ isOpen: true, evaluacionId, project: projectFound });
+      }
+    })();
+  };
+
+  const checkRequiredDocuments = async () => {
+    try {
+      const profile = await profileService.getProfile();
+
+      const candidates = [
+        profile,
+        profile?.documents,
+        profile?.documentos,
+        profile?.archivos,
+        profile?.files,
+        profile?.uploads,
+        profile?.user,
+        profile?.user?.documents,
+        profile?.user?.archivos
+      ];
+
+      const requiredKeys = ['cedula', 'titulos', 'cuentaBancaria'];
+
+      const camelCase = (s) => s.replace(/_([a-z])/g, g=>g[1].toUpperCase());
+      const toSnake = (s) => s.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+
+      const hasAllIn = (obj) => {
+        if (!obj) return false;
+        if (Array.isArray(obj)) {
+          const keysFound = new Set();
+          obj.forEach(item => {
+            if (!item) return;
+            const k = item.tipo || item.type || item.name || item.key || item.documentType || item.tipoDocumento;
+            if (k) keysFound.add(String(k).toLowerCase());
+          });
+          return requiredKeys.every(r => keysFound.has(r.toLowerCase()));
+        }
+        const lowerKeys = Object.keys(obj).map(k => k.toLowerCase());
+        if (requiredKeys.every(r => lowerKeys.includes(r.toLowerCase()))) return requiredKeys.every(r => Boolean(obj[r]));
+        return requiredKeys.every(r => {
+          const v = obj[r] ?? obj[camelCase(r)] ?? obj[toSnake(r)];
+          return Boolean(v);
+        });
+      };
+
+      for (const cand of candidates) {
+        if (!cand) continue;
+        if (hasAllIn(cand)) return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.warn('Error comprobando perfil/documentos:', error);
+      return false;
+    }
   };
 
   const handleReject = (evaluacionId, projectParam) => {
@@ -420,6 +486,33 @@ const EvaluatorProjectsPage = () => {
         )}
       </div>
         {/* Modales para confirmar acciones y mostrar resultados */}
+        <Modal
+          isOpen={docsModal.isOpen}
+          onClose={() => setDocsModal({ isOpen: false, evaluacionId: null, project: null })}
+          type="warning"
+          title="Antes de aceptar"
+          message={"Debe subir los documentos requeridos para iniciar la evaluación. ¿Desea ir a la sección 'Mis Documentos' ahora?"}
+          confirmText="Continuar sin subir"
+          cancelText="Cancelar"
+          onConfirm={() => {
+            // Cerrar modal de documentos y abrir confirmación para aceptar
+            setDocsModal({ isOpen: false, evaluacionId: null, project: null });
+            setConfirmModal({ isOpen: true, action: 'accept', evaluacionId: docsModal.evaluacionId, project: docsModal.project });
+          }}
+        >
+          <div style={{ marginTop: '0.5rem' }}>
+            <button
+              className="evaluator-btn evaluator-btn-primary"
+              onClick={() => {
+                setDocsModal({ isOpen: false, evaluacionId: null, project: null });
+                navigate('/evaluador/documents');
+              }}
+              style={{ marginRight: '0.5rem' }}
+            >
+              Ir a Mis Documentos
+            </button>
+          </div>
+        </Modal>
         <Modal
           isOpen={confirmModal.isOpen}
           onClose={() => setConfirmModal({ isOpen: false, action: null, evaluacionId: null, project: null })}

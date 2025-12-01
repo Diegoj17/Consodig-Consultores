@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import { evaluationService } from '../../services/evaluationService';
+import { useAuth } from '../../contexts/AuthContext';
 import { evaluadorService } from '../../services/evaluadorService';
 import EvaluationReviewModal from '../../components/management/project/admin/EvaluationReviewModal';
 import '../../styles/pages/admin/EvaluationReviewPage.css';
@@ -9,6 +10,7 @@ import Modal from '../../components/common/Modal';
 import { isValidated } from '../../utils/evaluationUtils';
 
 const EvaluationReviewMainPage = () => {
+  const { user } = useAuth();
   const [evaluations, setEvaluations] = useState([]);
   const [filteredEvaluations, setFilteredEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -179,7 +181,8 @@ const EvaluationReviewMainPage = () => {
     try {
       console.log('✅ Aprobando evaluación:', evaluationId);
       // Llamar al endpoint de validación (backend: POST /evaluaciones/{id}/validar)
-      await evaluationService.validateEvaluation(evaluationId);
+      const adminId = user?.id || user?.userId || user?.usuarioId || user?.user_id || null;
+      await evaluationService.validateEvaluation(evaluationId, adminId);
       // Recargar inmediatamente y cerrar modal — así la evaluación no seguirá apareciendo en la lista
       await loadEvaluations();
       setShowModal(false);
