@@ -7,12 +7,29 @@ import {
 import '../../../../styles/management/project/admin/ProjectCard.css';
 import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
+import userService from '../../../../services/userService';
 
 const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation }) => {
   const [researchOptions, setResearchOptions] = useState([]);
   const [isLoadingLines, setIsLoadingLines] = useState(true);
 
   const archivos = project.archivos || [];
+  const [resolvedInvestigatorName, setResolvedInvestigatorName] = useState(null);
+
+  // DEBUG: Mostrar en consola los campos relacionados al investigador
+  useEffect(() => {
+    console.log('🔎 [ProjectCard] investigador fields for project:', {
+      id_candidates: {
+        investigadorId: project?.investigadorId,
+        investigador_id: project?.investigador_id,
+        investigadorIdAlt: project?.investigatorId
+      },
+      investigadorPrincipal: project?.investigadorPrincipal,
+      investigador: project?.investigador,
+      investigadorObj: project?.investigadorPrincipalObj || project?.investigadorObj || null,
+      rawProject: project
+    });
+  }, [project]);
 
   const getStatusClass = (estado) => {
     const statusMap = {
@@ -24,6 +41,37 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     return statusMap[estado] || 'project-admin-status-default';
   };
 
+  // Extraer estado real del backend y mapear a etiqueta legible
+  const extractBackendStatus = (p) => {
+    const possibleKeys = ['estado', 'estadoProyecto', 'estado_proyecto', 'status', 'estadoActual', 'estado_sistema', 'state', 'estadoSistema', 'estado_db'];
+    let code = null;
+    for (const k of possibleKeys) {
+      if (p && p[k] != null && p[k] !== '') {
+        code = p[k];
+        break;
+      }
+    }
+
+    const normalize = (s) => (s == null ? '' : String(s).trim().toUpperCase());
+    const labelMap = {
+      'PENDIENTE': 'Pendiente',
+      'PREASIGNADO': 'Preasignado',
+      'EN EVALUACIÓN': 'En evaluación',
+      'EN EVALUACION': 'En evaluación',
+      'EVALUADO': 'Evaluado',
+      'ENVIADO': 'Enviado',
+      'SUBMITTED': 'Enviado',
+      'REVISADO': 'Revisado',
+      'APROBADO': 'Aprobado',
+      'RECHAZADO': 'Rechazado'
+    };
+
+    const norm = normalize(code);
+    const label = labelMap[norm] || (code ? String(code) : null);
+    return { code, label };
+  };
+
+  const backendStatus = extractBackendStatus(project);
   const getInitials = (name) => {
     if (!name) return 'PR';
     return name
@@ -67,6 +115,78 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     load();
     return () => { mounted = false; };
   }, []);
+
+  // Resolver investigador principal si no viene el nombre completo
+  useEffect(() => {
+    let mounted = true;
+    const resolveInvestigator = async () => {
+      try {
+        const invName = project?.investigadorPrincipal || project?.investigadorNombre || project?.investigador_principal || null;
+        if (invName) {
+          if (mounted) setResolvedInvestigatorName(typeof invName === 'string' ? invName : (invName.nombre || `${invName.nombre || ''} ${invName.apellido || ''}`.trim()));
+          return;
+        }
+
+        // detectar posibles IDs en distintos campos (string/number/object)
+        const invIdCandidate = project?.investigadorId || project?.investigador_id || project?.investigador?.id || project?.investigador || null;
+        const normalizeId = (val) => {
+          if (val == null) return null;
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') {
+            const m = val.match(/(\d+)/);
+            if (m) return Number(m[1]);
+            const asNum = Number(val);
+            return isNaN(asNum) ? val : asNum;
+          }
+          if (typeof val === 'object' && val !== null) return val.id || val.identificacion || null;
+          return val;
+        };
+
+        const invId = normalizeId(invIdCandidate);
+        if (invId) {
+          console.log(`🔎 [ProjectCard] Intentando resolver investigador con ID: ${invId}`);
+          let u = null;
+          // Priorizar obtener como evaluando (el investigador puede ser un evaluando)
+          try {
+            u = await userService.getEvaluandoById(invId);
+            console.log('🔍 [ProjectCard] Resultado getEvaluandoById:', u);
+          } catch (e) {
+            console.log('🟠 [ProjectCard] getEvaluandoById falló:', e?.message || e);
+            u = null;
+          }
+
+          if (!u) {
+            try {
+              u = await userService.getEvaluadorById(invId);
+              console.log('🔍 [ProjectCard] Resultado getEvaluadorById:', u);
+            } catch (e) {
+              console.log('🟠 [ProjectCard] getEvaluadorById falló:', e?.message || e);
+              u = null;
+            }
+          }
+
+          if (!u) {
+            try {
+              u = await userService.getAdminById(invId);
+              console.log('🔍 [ProjectCard] Resultado getAdminById:', u);
+            } catch (e) {
+              console.log('🟠 [ProjectCard] getAdminById falló:', e?.message || e);
+              u = null;
+            }
+          }
+
+          if (!mounted) return;
+          console.log('🔎 [ProjectCard] Usuario resuelto final (u):', u);
+          const resolved = u ? `${u.nombre || u.name || ''}${u.apellido ? ' ' + u.apellido : ''}`.trim() : null;
+          if (mounted) setResolvedInvestigatorName(resolved || null);
+        }
+      } catch (err) {
+        console.error('Error resolviendo investigador en ProjectCard:', err);
+      }
+    };
+    resolveInvestigator();
+    return () => { mounted = false; };
+  }, [project]);
 
   // Función mejorada para obtener líneas de investigación
   const getResearchLines = () => {
@@ -327,28 +447,6 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     }
   };
 
-  const getFileType = (archivo) => {
-    if (archivo.tipo) return archivo.tipo;
-    
-    const ext = archivo.nombreArchivo?.split('.').pop()?.toLowerCase();
-    const typeMap = {
-      'pdf': 'PDF',
-      'xls': 'Excel',
-      'xlsx': 'Excel',
-      'doc': 'Word',
-      'docx': 'Word',
-      'jpg': 'Imagen',
-      'jpeg': 'Imagen',
-      'png': 'Imagen',
-      'gif': 'Imagen',
-      'zip': 'Zip',
-      'rar': 'RAR',
-      'txt': 'Texto'
-    };
-    
-    return typeMap[ext] || 'Archivo';
-  };
-
   const getFileActionText = (archivo) => {
     return canOpenInBrowser(archivo) ? 'Abrir archivo' : 'Descargar archivo';
   };
@@ -357,15 +455,24 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     <div className="project-admin-project-card"> 
       <div className="project-admin-card-header">
         <div className="project-admin-user-avatar">
-          <span>{getInitials(project.investigadorPrincipal)}</span>
+          <span>{getInitials(resolvedInvestigatorName || project.investigadorPrincipal)}</span>
         </div>
         <div className="project-admin-user-meta">
           <h3 className="project-admin-project-title">{project.titulo}</h3>
+          <div className="project-admin-project-investigator">
+            <small>Investigador: </small>
+            <strong>{resolvedInvestigatorName || project.investigadorPrincipal || project.investigador || '—'}</strong>
+          </div>
         </div>
         <div className="project-admin-status-indicator">
-          <span className={`project-admin-status-badge ${getStatusClass(project.estado)}`}>
-            {project.estado}
+          <span className={`project-admin-status-badge ${getStatusClass(backendStatus.label || 'Enviado')}`}>
+            {backendStatus.label || 'Enviado'}
           </span>
+          {backendStatus.code && backendStatus.code !== backendStatus.label && (
+            <small className="project-admin-status-code" style={{display: 'block', fontSize: '0.75rem', color: '#6b7280'}}>
+              ({String(backendStatus.code)})
+            </small>
+          )}
         </div>
       </div>
 
@@ -471,10 +578,6 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
                       <span className="project-admin-file-name">
                         {getFileName(archivo)}
                       </span>
-                      <span className="project-admin-file-type">
-                        {getFileType(archivo)}
-                        {archivo.tipoMime && ` • ${archivo.tipoMime}`}
-                      </span>
                     </div>
                   </div>
                   <div className="project-admin-file-actions">
@@ -485,13 +588,7 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
                     >
                       <FaExternalLinkAlt />
                     </button>
-                    <button 
-                      className="project-admin-btn-icon project-admin-btn-download" 
-                      onClick={() => handleDownloadFile(archivo)} 
-                      title="Descargar archivo"
-                    >
-                      <FaDownload />
-                    </button>
+                    
                   </div>
                 </div>
               ))}

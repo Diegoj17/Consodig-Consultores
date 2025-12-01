@@ -9,6 +9,7 @@ import evaluationFormatService from '../../services/evaluationFormatService';
 import { AsignarEvaluacionDTO } from '../../services/dtos';
 import '../../styles/pages/admin/AssignmentMainPage.css';
 import userService from '../../services/userService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProjectAssignmentMainPage = () => {
   const [selectedProject, setSelectedProject] = useState(null);
@@ -24,6 +25,8 @@ const ProjectAssignmentMainPage = () => {
   const [selectedFormatId, setSelectedFormatId] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, projectId: null, evaluatorId: null, title: '', message: '' });
   const [notifyModal, setNotifyModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
+
+  const { user } = useAuth();
 
   const loadData = useCallback(async () => {
     try {
@@ -146,8 +149,16 @@ const ProjectAssignmentMainPage = () => {
       const tiempoLimiteHoras = calculateTimeLimitInHours(evaluationDeadline);
       if (!projectId || !evaluatorId) throw new Error('Datos incompletos para la asignación');
       if (!selectedFormatId) throw new Error('Formato de evaluación no seleccionado');
-      const dto = AsignarEvaluacionDTO(projectId, Number(selectedFormatId), evaluatorId, tiempoLimiteHoras);
-      await evaluationService.assignEvaluation(dto);
+      const adminId = user?.id || user?.usuarioId || user?.userId || null;
+      if (!adminId) {
+        const msg = 'No se detectó usuario en sesión. Inicia sesión como administrador para completar la asignación.';
+        setNotifyModal({ isOpen: true, type: 'error', title: 'Error', message: msg });
+        throw new Error(msg);
+      }
+
+      const dto = AsignarEvaluacionDTO(projectId, Number(selectedFormatId), evaluatorId, tiempoLimiteHoras, adminId);
+
+      await evaluationService.assignEvaluationWithNotification(dto, adminId);
       setProjects(prev => prev.map(p => p.id === projectId ? { ...p, evaluadorAsignado: evaluators.find(ev => ev.id === evaluatorId)?.nombre, estado: 'Preasignado' } : p));
       setEvaluators(prev => prev.map(ev => ev.id === evaluatorId ? { ...ev, proyectosAsignados: (ev.proyectosAsignados || 0) + 1, disponible: ((ev.proyectosAsignados || 0) + 1) < 3 } : ev));
       setNotifyModal({ isOpen: true, type: 'success', title: 'Asignación exitosa', message: 'Evaluador asignado exitosamente en modalidad doble ciego' });

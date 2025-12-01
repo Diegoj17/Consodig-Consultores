@@ -14,12 +14,12 @@ import {
   FaComment
 } from 'react-icons/fa';
 import '../../../../styles/management/project/evaluador/EvaluatorCompletedList.css';
+import { generateEvaluationPdf } from '../../../../utils/generateEvaluationPdf';
 
 const EvaluatorCompletedList = ({ 
   evaluations, 
   onViewEvaluation, 
-  onExportPDF, 
-  onExportExcel 
+  onExportPDF,
 }) => {
 
   const getScoreColor = (score) => {
@@ -49,7 +49,7 @@ const EvaluatorCompletedList = ({
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
+    } catch {
       return 'Fecha inválida';
     }
   };
@@ -81,12 +81,7 @@ const EvaluatorCompletedList = ({
     return evaluation.comentariosFinales || evaluation.finalComments || '';
   };
 
-  // Obtener código del proyecto
-  const getProjectCode = (evaluation, project) => {
-    return project.codigo || project.code || evaluation.proyectoId || evaluation.projectId || 
-           (evaluation.proyecto && evaluation.proyecto.id) || 
-           (evaluation.project && evaluation.project.id) || 'N/A';
-  };
+  
 
   // Obtener título del proyecto
   const getProjectTitle = (project) => {
@@ -106,18 +101,19 @@ const EvaluatorCompletedList = ({
   };
 
   // Manejar exportación PDF
-  const handleExportPDF = (evaluationId, event) => {
+  const handleExportPDF = async (evaluation, event) => {
     event.stopPropagation();
-    if (onExportPDF) {
-      onExportPDF(evaluationId);
-    }
-  };
-
-  // Manejar exportación Excel
-  const handleExportExcel = (evaluationId, event) => {
-    event.stopPropagation();
-    if (onExportExcel) {
-      onExportExcel(evaluationId);
+    try {
+      if (onExportPDF) {
+        // Mantener compatibilidad con callbacks externos
+        onExportPDF(evaluation.id);
+        return;
+      }
+      // Generar PDF internamente
+      await generateEvaluationPdf(evaluation);
+    } catch (err) {
+      console.error('Error exportando PDF', err);
+      // Podríamos mostrar una notificación al usuario aquí
     }
   };
 
@@ -140,7 +136,6 @@ const EvaluatorCompletedList = ({
           const finalScore = getFinalScore(evaluation);
           const completedDate = getCompletedDate(evaluation);
           const finalComments = getFinalComments(evaluation);
-          const projectCode = getProjectCode(evaluation, project);
           const projectTitle = getProjectTitle(project);
           const formatName = getFormatName(evaluation);
 
@@ -159,27 +154,8 @@ const EvaluatorCompletedList = ({
               </div>
               
               <div className="evaluator-evaluation-completed-details">
-                {/* ID de Evaluación */}
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    <FaIdCard />
-                    ID Evaluación:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    #{evaluation.id}
-                  </span>
-                </div>
 
                 {/* Código del Proyecto */}
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    <FaCode />
-                    Código Proyecto:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    {projectCode}
-                  </span>
-                </div>
                 
                 {/* Formato de Evaluación */}
                 <div className="evaluator-evaluation-completed-detail-item">
@@ -302,22 +278,14 @@ const EvaluatorCompletedList = ({
                   <div className="evaluator-evaluation-completed-export-buttons">
                     <button
                       className="evaluator-evaluation-completed-btn evaluator-evaluation-completed-btn-export evaluator-evaluation-completed-btn-pdf"
-                      onClick={(e) => handleExportPDF(evaluation.id, e)}
+                      onClick={(e) => handleExportPDF(evaluation, e)}
                       title="Descargar PDF"
                       aria-label={`Exportar evaluación ${evaluation.id} a PDF`}
                     >
                       <FaFilePdf />
                       <span>PDF</span>
                     </button>
-                    <button
-                      className="evaluator-evaluation-completed-btn evaluator-evaluation-completed-btn-export evaluator-evaluation-completed-btn-excel"
-                      onClick={(e) => handleExportExcel(evaluation.id, e)}
-                      title="Descargar Excel"
-                      aria-label={`Exportar evaluación ${evaluation.id} a Excel`}
-                    >
-                      <FaFileExcel />
-                      <span>Excel</span>
-                    </button>
+                  
                   </div>
                 </div>
               </div>

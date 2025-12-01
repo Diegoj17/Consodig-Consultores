@@ -1,29 +1,23 @@
 import React from 'react';
-import { FaPlay, FaList, FaChartBar } from 'react-icons/fa';
+import { FaList, FaFolderOpen } from 'react-icons/fa';
 import '../../../styles/dashboard/evaluador/EvaluadorActions.css';
 
-const EvaluadorActions = ({ onStartEvaluation, onViewProjects, onViewReports }) => {
+// Ahora solo exponemos dos acciones: Evaluaciones y Ver Proyectos
+const EvaluadorActions = ({ onViewEvaluations, onViewProjects }) => {
   const actions = [
     {
-      label: 'Comenzar Evaluación',
-      icon: <FaPlay />,
+      label: 'Evaluaciones',
+      icon: <FaList />,
       color: '#40c057',
-      onClick: onStartEvaluation,
-      description: 'Iniciar nueva evaluación'
+      onClick: onViewEvaluations,
+      description: 'Ir a evaluaciones pendientes y en progreso'
     },
     {
       label: 'Ver Proyectos',
-      icon: <FaList />,
+      icon: <FaFolderOpen />,
       color: '#228be6',
       onClick: onViewProjects,
       description: 'Mis proyectos asignados'
-    },
-    {
-      label: 'Generar Reporte',
-      icon: <FaChartBar />,
-      color: '#fab005',
-      onClick: onViewReports,
-      description: 'Crear reportes'
     }
   ];
 

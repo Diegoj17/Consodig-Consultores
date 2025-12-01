@@ -194,6 +194,138 @@ export const userService = {
     }
   },
 
+  // Obtener archivos/metadatos subidos por el evaluador
+  async getEvaluadorArchivos(evaluadorId) {
+    console.log(`🟡 [userService] getEvaluadorArchivos para ID: ${evaluadorId}`);
+    try {
+      const { data } = await api.get(`/evaluadores/${evaluadorId}/archivos`);
+      console.log('🟢 [userService] Archivos recibidos (raw):', data);
+
+      if (!data) return null;
+
+      // Normalizar nombres de campos que pueden venir en snake_case desde el backend
+      const normalize = (d) => ({
+        id: d.id || d.ID || d.Id,
+        fotocopiaUrl: d.fotocopiaUrl || d.fotocopia_url || d.fotocopia || null,
+        fotocopiaPublicId: d.fotocopiaPublicId || d.fotocopia_public_id || d.fotocopiaPublicId || null,
+        certificadosUrl: d.certificadosUrl || d.certificados_url || d.certificados || null,
+        certificadosPublicId: d.certificadosPublicId || d.certificados_public_id || null,
+        cuentaBancariaUrl: d.cuentaBancariaUrl || d.cuenta_bancaria_url || d.cuentaBancaria || null,
+        cuentaBancariaPublicId: d.cuentaBancariaPublicId || d.cuenta_bancaria_public_id || null,
+        created_at: d.created_at || d.createdAt || d.created || null,
+        updated_at: d.updated_at || d.updatedAt || d.updated || null,
+        evaluadorId: d.evaluadorId || d.evaluador_id || d.evaluadorId || null,
+        // Mantener la estructura original en `remote` por si se necesita
+        remote: d
+      });
+
+      const normalized = normalize(data);
+      console.log('🟢 [userService] Archivos normalizados:', normalized);
+      return normalized;
+    } catch (error) {
+      console.error('❌ [userService] Error en getEvaluadorArchivos:', error);
+      throw error;
+    }
+  },
+
+  // Subir/actualizar archivos de un evaluador (multipart)
+  async uploadEvaluadorArchivos(evaluadorId, files = {}) {
+    console.log(`🟡 [userService] uploadEvaluadorArchivos evaluador=${evaluadorId}`, files);
+    try {
+      const form = new FormData();
+      // Adjuntar archivos reales si están presentes
+      if (files.fotocopiaDocumento) form.append('fotocopiaDocumento', files.fotocopiaDocumento);
+      if (files.certificadosEstudios) form.append('certificadosEstudios', files.certificadosEstudios);
+      if (files.certificadoCuentaBancaria) form.append('certificadoCuentaBancaria', files.certificadoCuentaBancaria);
+
+      const ensurePart = (key) => {
+        // Si la clave ya está en el form, no hacemos nada
+        if ([...form.keys()].includes(key)) return;
+        // Añadir un Blob vacío con un nombre de archivo para que Spring lo vea como MultipartFile
+        form.append(key, new Blob([], { type: 'application/octet-stream' }), 'empty');
+        console.log(`🟡 [userService] Añadida parte vacía para '${key}' (placeholder)`);
+      };
+
+      ensurePart('fotocopiaDocumento');
+      ensurePart('certificadosEstudios');
+      ensurePart('certificadoCuentaBancaria');
+      // Intento: usar POST por defecto (crear). No forzar 'Content-Type' — axios/Browser añadirá el boundary.
+      // Si POST falla (p.ej. 400), intentar PUT como fallback (algunos backends esperan PUT para actualizar/crear).
+      try {
+        const { data } = await api.post(`/evaluadores/${evaluadorId}/archivos`, form);
+        console.log('🟢 [userService] POST /evaluadores/{id}/archivos OK', data);
+        return data;
+      } catch (postErr) {
+        console.warn('🟠 [userService] POST falló, intentando PUT. Error:', postErr?.response?.status, postErr?.response?.data || postErr.message);
+        try {
+          const { data } = await api.put(`/evaluadores/${evaluadorId}/archivos`, form);
+          console.log('🟢 [userService] PUT /evaluadores/{id}/archivos OK', data);
+          return data;
+        } catch (putErr) {
+          console.error('❌ [userService] PUT también falló:', putErr?.response?.status, putErr?.response?.data || putErr.message);
+          // Re-lanzar el error original del POST para que el UI lo maneje (más probable causa de 400)
+          throw postErr;
+        }
+      }
+    } catch (error) {
+      console.error('❌ [userService] Error en uploadEvaluadorArchivos:', error);
+      throw error;
+    }
+  },
+
+  // Aceptar un archivo de un evaluador (endpoint admin esperado)
+  async acceptArchivo(evaluadorId, tipo) {
+    console.log(`🟡 [userService] acceptArchivo evaluador=${evaluadorId} tipo=${tipo}`);
+    try {
+      // Intentar endpoint estandar en /evaluadores
+      const { data } = await api.post(`/evaluadores/${evaluadorId}/archivos/${tipo}/aceptar`);
+      return data;
+    } catch (error) {
+      console.error('❌ [userService] Error en acceptArchivo:', error);
+      throw error;
+    }
+  },
+
+  // Rechazar un archivo de un evaluador (endpoint admin esperado)
+  async rejectArchivo(evaluadorId, tipo) {
+    console.log(`🟡 [userService] rejectArchivo evaluador=${evaluadorId} tipo=${tipo}`);
+    try {
+      const { data } = await api.post(`/evaluadores/${evaluadorId}/archivos/${tipo}/rechazar`);
+      return data;
+    } catch (error) {
+      console.error('❌ [userService] Error en rejectArchivo:', error);
+      throw error;
+    }
+  },
+
+  async getAdminById(id) {
+    console.log(`🟡 [userService] getAdminById para ID: ${id}`);
+    try {
+      const { data: admin } = await api.get(`/admin/${id}`);
+      console.log(`🟢 [userService] Respuesta de /admin/${id}:`, admin);
+      return admin;
+    } catch (error) {
+      console.error(`❌ [userService] Error en getAdminById:`, error);
+      throw error;
+    }
+  },
+
+  async updateAdmin(id, userData) {
+    console.log("🟡 [userService] Actualizando admin ID:", id, "Datos:", userData);
+    try {
+      const payload = {
+        ...userData,
+        ...(userData.password ? { password: userData.password } : {})
+      };
+      console.log("🟢 [userService] Payload final para backend (admin):", payload);
+      const { data } = await api.put(`/admin/${id}`, payload);
+      return data;
+    } catch (error) {
+      console.error("❌ [userService] Error en updateAdmin:", error);
+      throw error;
+    }
+  },
+
   async getEvaluandoById(id) {
     console.log(`🟡 [userService] getEvaluandoById para ID: ${id}`);
     
@@ -205,7 +337,9 @@ export const userService = {
       try {
         const { data } = await api.get(`/auth/email/${id}`);
         evaluando.email = extractEmail(data, evaluando.email);
-      } catch { }
+      } catch (emailError) {
+        console.log(`🟠 [userService] Error obteniendo email para evaluando ${id}:`, emailError);
+      }
       
       // USAR EL CAMPO CORRECTO
       evaluando.lineasInvestigacion = evaluando.lineasInvestigacionEvaluador || evaluando.lineasInvestigacion || [];

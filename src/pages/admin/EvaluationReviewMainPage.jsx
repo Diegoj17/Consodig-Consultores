@@ -1,12 +1,17 @@
 // pages/admin/EvaluationReviewMainPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle, FaTimes  } from 'react-icons/fa';
 import { evaluationService } from '../../services/evaluationService';
-import { userService } from '../../services/userService';
+import { useAuth } from '../../contexts/AuthContext';
+import { evaluadorService } from '../../services/evaluadorService';
 import EvaluationReviewModal from '../../components/management/project/admin/EvaluationReviewModal';
 import '../../styles/pages/admin/EvaluationReviewPage.css';
+import Modal from '../../components/common/Modal';
+import userService from '../../services/userService';
+import { isValidated } from '../../utils/evaluationUtils';
 
 const EvaluationReviewMainPage = () => {
+  const { user } = useAuth();
   const [evaluations, setEvaluations] = useState([]);
   const [filteredEvaluations, setFilteredEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,18 +23,10 @@ const EvaluationReviewMainPage = () => {
   const [selectedEvaluation, setSelectedEvaluation] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [evaluatorNames, setEvaluatorNames] = useState({});
+  const [alertModal, setAlertModal] = useState({ open: false, type: 'info', title: '', message: '', onConfirm: null, showCancel: false });
 
-  // Cargar evaluaciones completadas
-  useEffect(() => {
-    loadEvaluations();
-  }, []);
-
-  // Aplicar filtros
-  useEffect(() => {
-    applyFilters();
-  }, [evaluations, filters]);
-
-  const loadEvaluations = async () => {
+  const loadEvaluations = useCallback(async () => {
     try {
       setLoading(true);
       setRefreshing(true);
@@ -37,64 +34,31 @@ const EvaluationReviewMainPage = () => {
       
       console.log('🔄 Cargando evaluaciones completadas...');
       const completedEvaluations = await evaluationService.getCompletedEvaluations();
-      console.log('✅ Evaluaciones completadas obtenidas:', completedEvaluations);
-      
-      // Enriquecer datos con información del evaluador
-      const enrichedEvaluations = await Promise.all(
-        completedEvaluations.map(async (evaluation) => {
-          try {
-            // Obtener información del evaluador
-            let evaluatorName = 'Evaluador no disponible';
-            if (evaluation.evaluadorId) {
-              try {
-                const evaluador = await userService.getEvaluadorById(evaluation.evaluadorId);
-                evaluatorName = `${evaluador.nombre} ${evaluador.apellido || ''}`.trim();
-              } catch (error) {
-                console.warn('⚠️ No se pudo obtener información del evaluador:', error);
-              }
+      console.log('✅ Evaluaciones completadas obtenidas (raw):', completedEvaluations);
+      // Usar directamente la respuesta CRUDA del backend sin normalizar, pero filtrando las validadas.
+      const rawList = completedEvaluations || [];
+      const filtered = rawList.filter(ev => !isValidated(ev));
+      setEvaluations(filtered);
+      // Resolver nombres de evaluadores por ID (si vienen solo como evaluadorId)
+      try {
+        const ids = Array.from(new Set((completedEvaluations || []).map(ev => ev.evaluadorId || ev.evaluatorId || ev.evaluador?.id).filter(Boolean)));
+        const missing = ids.filter(id => !evaluatorNames[String(id)]);
+        if (missing.length > 0) {
+          const map = { ...evaluatorNames };
+          await Promise.all(missing.map(async (id) => {
+            try {
+              const data = await evaluadorService.getEvaluadorById(id);
+              const nombre = (data?.nombre || data?.firstName || '') + (data?.apellido ? ` ${data.apellido}` : '');
+              map[String(id)] = nombre.trim() || (data?.nombre || data?.fullName || 'Evaluador no disponible');
+            } catch (err) {
+              console.warn('No se pudo obtener evaluador', id, err);
             }
-
-            // Asegurar que los items tengan estructura consistente
-            const items = evaluation.items?.map(item => ({
-              id: item.id || item.itemEvaluadoId,
-              calificacion: item.calificacion || item.puntuacion || 0,
-              observacion: item.observacion || item.comentario || '',
-              criterio: item.criterio || { 
-                nombre: item.nombreCriterio || `Criterio ${item.id}`,
-                descripcion: item.descripcionCriterio || '',
-                peso: item.peso || 0
-              }
-            })) || [];
-
-            return {
-              ...evaluation,
-              id: evaluation.id || evaluation.evaluacionId,
-              project: evaluation.proyecto || evaluation.project,
-              evaluatorName,
-              fechaCompletado: evaluation.fechaFinalizacion || evaluation.fechaCompletado || evaluation.fechaCreacion,
-              calificacionTotal: evaluation.calificacionTotal || evaluation.calificacion_total || evaluation.puntuacionTotal || 0,
-              estado: evaluation.estado || 'COMPLETADA',
-              items: items,
-              observacionGeneral: evaluation.observacionGeneral || evaluation.observacionAdmin || ''
-            };
-          } catch (error) {
-            console.error('❌ Error procesando evaluación:', error);
-            return {
-              ...evaluation,
-              project: evaluation.proyecto || evaluation.project,
-              evaluatorName: 'Evaluador no disponible',
-              fechaCompletado: evaluation.fechaFinalizacion || evaluation.fechaCompletado,
-              calificacionTotal: evaluation.calificacionTotal || 0,
-              estado: evaluation.estado || 'COMPLETADA',
-              items: evaluation.items || [],
-              observacionGeneral: evaluation.observacionGeneral || ''
-            };
-          }
-        })
-      );
-
-      console.log('✅ Evaluaciones enriquecidas:', enrichedEvaluations);
-      setEvaluations(enrichedEvaluations);
+          }));
+          setEvaluatorNames(map);
+        }
+      } catch (err) {
+        console.warn('Error resolviendo nombres de evaluadores:', err);
+      }
       
     } catch (err) {
       console.error('❌ Error cargando evaluaciones:', err);
@@ -103,31 +67,50 @@ const EvaluationReviewMainPage = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [evaluatorNames]);
 
-  const applyFilters = () => {
+  // Cargar evaluaciones completadas: ejecutar después de declarar `loadEvaluations`
+  useEffect(() => {
+    loadEvaluations();
+  }, [loadEvaluations]);
+
+  const applyFilters = useCallback(() => {
     let filtered = [...evaluations];
 
     // Filtro de búsqueda
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
-      filtered = filtered.filter(evaluation => 
-        evaluation.project?.titulo?.toLowerCase().includes(searchTerm) ||
-        evaluation.evaluatorName?.toLowerCase().includes(searchTerm) ||
-        evaluation.id?.toString().includes(searchTerm) ||
-        evaluation.project?.id?.toString().includes(searchTerm)
-      );
+      filtered = filtered.filter(evaluation => {
+        const project = evaluation.project || evaluation.proyecto || {};
+        const projectTitle = (project?.titulo || project?.nombre || '').toString().toLowerCase();
+        const evaluatorId = evaluation.evaluadorId || evaluation.evaluatorId || evaluation.evaluador?.id || null;
+        const evaluatorName = (evaluatorNames[String(evaluatorId)] || evaluation.evaluatorName || evaluation.evaluador?.nombre || evaluation.evaluador || '').toString().toLowerCase();
+        const evaluationId = (evaluation.id || '').toString();
+        const projectId = (project?.id || '').toString();
+
+        return (
+          projectTitle.includes(searchTerm) ||
+          evaluatorName.includes(searchTerm) ||
+          evaluationId.includes(searchTerm) ||
+          projectId.includes(searchTerm)
+        );
+      });
     }
 
     // Filtro por estado
     if (filters.status !== 'all') {
       filtered = filtered.filter(evaluation => 
-        evaluation.estado?.toLowerCase() === filters.status.toLowerCase()
+        (evaluation.estado || '').toString().toLowerCase() === filters.status.toLowerCase()
       );
     }
 
     setFilteredEvaluations(filtered);
-  };
+  }, [evaluations, filters, evaluatorNames]);
+
+  // Ejecutar filtro cuando cambian evaluaciones o filtros.
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const handleViewEvaluation = async (evaluation) => {
   try {
@@ -194,13 +177,12 @@ const EvaluationReviewMainPage = () => {
       await evaluationService.editEvaluation(evaluationId, payload);
       
       console.log('✅ Observación general agregada correctamente');
-      
-      // Recargar las evaluaciones
-      await loadEvaluations();
-      
+      // Mostrar modal de éxito y recargar al confirmar
+      setAlertModal({ open: true, type: 'success', title: 'Observación registrada', message: 'Observación general agregada correctamente', onConfirm: async () => { await loadEvaluations(); }, showCancel: false });
       return true;
     } catch (error) {
       console.error('❌ Error registrando observación general:', error);
+      setAlertModal({ open: true, type: 'error', title: 'Error', message: 'No se pudo registrar la observación. Por favor, intente nuevamente.', onConfirm: null, showCancel: false });
       throw new Error('No se pudo registrar la observación. Por favor, intente nuevamente.');
     }
   };
@@ -226,14 +208,11 @@ const EvaluationReviewMainPage = () => {
       
       await evaluationService.editEvaluation(evaluationId, payload);
       console.log('✅ Evaluación editada exitosamente');
-      
-      // Recargar la lista
-      await loadEvaluations();
-      
-      alert('✅ Cambios guardados correctamente');
+      // Mostrar modal de éxito y recargar al confirmar
+      setAlertModal({ open: true, type: 'success', title: 'Cambios guardados', message: 'Cambios guardados correctamente', onConfirm: async () => { await loadEvaluations(); }, showCancel: false });
     } catch (error) {
       console.error('❌ Error editando evaluación:', error);
-      alert('❌ Error al guardar los cambios. Por favor, intente nuevamente.');
+      setAlertModal({ open: true, type: 'error', title: 'Error', message: 'Error al guardar los cambios. Por favor, intente nuevamente.', onConfirm: null, showCancel: false });
       throw error;
     }
   };
@@ -241,14 +220,17 @@ const EvaluationReviewMainPage = () => {
   const handleApproveEvaluation = async (evaluationId) => {
     try {
       console.log('✅ Aprobando evaluación:', evaluationId);
-      await evaluationService.approveEvaluation(evaluationId);
-      
-      alert('✅ Evaluación aprobada correctamente');
+      // Llamar al endpoint de validación (backend: POST /evaluaciones/{id}/validar)
+      const adminId = user?.id || user?.userId || user?.usuarioId || user?.user_id || null;
+      await evaluationService.validateEvaluation(evaluationId, adminId);
+      // Recargar inmediatamente y cerrar modal — así la evaluación no seguirá apareciendo en la lista
       await loadEvaluations();
       setShowModal(false);
+      // Mostrar modal de éxito (sin necesidad de recargar al confirmar)
+      setAlertModal({ open: true, type: 'success', title: 'Evaluación aprobada', message: 'La evaluación fue validada correctamente.', onConfirm: null, showCancel: false });
     } catch (error) {
       console.error('❌ Error aprobando evaluación:', error);
-      alert('❌ Error al aprobar la evaluación. Por favor, intente nuevamente.');
+      setAlertModal({ open: true, type: 'error', title: 'Error', message: 'Error al aprobar la evaluación. Por favor, intente nuevamente.', onConfirm: null, showCancel: false });
       throw error;
     }
   };
@@ -257,13 +239,10 @@ const EvaluationReviewMainPage = () => {
     try {
       console.log('🔄 Solicitando cambios:', evaluationId, reason);
       await evaluationService.requestChanges(evaluationId, reason);
-      
-      alert('✅ Cambios solicitados correctamente');
-      await loadEvaluations();
-      setShowModal(false);
+      setAlertModal({ open: true, type: 'success', title: 'Cambios solicitados', message: 'Se solicitaron cambios correctamente.', onConfirm: async () => { await loadEvaluations(); setShowModal(false); }, showCancel: false });
     } catch (error) {
       console.error('❌ Error solicitando cambios:', error);
-      alert('❌ Error al solicitar cambios. Por favor, intente nuevamente.');
+      setAlertModal({ open: true, type: 'error', title: 'Error', message: 'Error al solicitar cambios. Por favor, intente nuevamente.', onConfirm: null, showCancel: false });
       throw error;
     }
   };
@@ -317,7 +296,7 @@ const EvaluationReviewMainPage = () => {
 
   return (
     <div className="evaluation-review-page">
-
+    
       {/* Filtros y Controles */}
       <div className="filters-section">
         <div className="filter-group">
@@ -368,63 +347,69 @@ const EvaluationReviewMainPage = () => {
             </button>
           </div>
         ) : (
-          filteredEvaluations.map(evaluation => (
-            <div key={evaluation.id} className="evaluation-card">
-              <div className="evaluation-info">
-                <div className="evaluation-header">
-                  <h3>{evaluation.project?.titulo || 'Proyecto no disponible'}</h3>
-                  {getStatusBadge(evaluation.estado)}
-                </div>
-                
-                <div className="evaluation-meta">
-                  <span><strong>Evaluador:</strong> {evaluation.evaluatorName}</span>
-                  <span><strong>Fecha:</strong> {evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'No disponible'}</span>
-                  <span><strong>ID Evaluación:</strong> {evaluation.id}</span>
-                </div>
-                
-                <div className="evaluation-stats">
-                  <span className="stat-item">
-                    <strong>Puntuación Total:</strong> {getTotalScore(evaluation)}
-                  </span>
-                  <span className="stat-item">
-                    <strong>Proyecto ID:</strong> {evaluation.project?.id || 'N/A'}
-                  </span>
-                  <span className="stat-item">
-                    <strong>Items Evaluados:</strong> {evaluation.items?.length || 0}
-                  </span>
-                  <span className="stat-item">
-                    <strong>Formato:</strong> {evaluation.formato?.nombre || evaluation.project?.formato || 'N/A'}
-                  </span>
-                </div>
-
-                {/* Observación General Preview */}
-                {evaluation.observacionGeneral && (
-                  <div className="evaluation-observation-preview">
-                    <strong>Observación:</strong> 
-                    <p>{evaluation.observacionGeneral.length > 100 
-                      ? `${evaluation.observacionGeneral.substring(0, 100)}...` 
-                      : evaluation.observacionGeneral}
-                    </p>
+          filteredEvaluations.map(evaluation => {
+            const project = evaluation.project || evaluation.proyecto || {};
+            const evaluatorId = evaluation.evaluadorId || evaluation.evaluatorId || evaluation.evaluador?.id || evaluation.evaluador?.userId || null;
+            const evaluatorName = evaluatorNames[String(evaluatorId)]
+              || evaluation.evaluatorName
+              || evaluation.evaluador?.nombre
+              || evaluation.evaluador?.fullName
+              || evaluation.evaluador
+              || 'Evaluador no disponible';
+            const displayDate = evaluation.fechaCompletado 
+              || evaluation.fechaFinalizacion 
+              || evaluation.fechaAsignacion 
+              || evaluation.fechaAceptacion 
+              || null;
+            return (
+              <div key={evaluation.id} className="evaluation-card">
+                <div className="evaluation-info">
+                  <div className="evaluation-header">
+                    <h3>Proyecto: {project?.titulo || project?.nombre || evaluation.titulo || 'Proyecto no disponible'}</h3>
+                    {getStatusBadge(evaluation.estado)}
                   </div>
-                )}
+
+                  <div className="evaluation-format" style={{ marginTop: '6px', marginBottom: '8px', color: '#374151' }}>
+                    <strong>Formato:</strong> {evaluation.formato?.nombre || project?.formato || 'N/A'}
+                  </div>
+
+                  <div className="evaluation-meta">
+                    <span><strong>Evaluador:</strong> {evaluatorName}</span>
+                    <span><strong>Fecha:</strong> {displayDate ? new Date(displayDate).toLocaleDateString() : 'No disponible'}</span>
+                  </div>
+
+                  <div className="evaluation-stats">
+                    <span className="stat-item">
+                      <strong>Items Evaluados:</strong> {evaluation.items?.length || 0}
+                    </span>
+                    <span className="stat-item">
+                      <strong>Puntuación Total:</strong> {getTotalScore(evaluation)}
+                    </span>
+                  </div>
+
+                  {/* Observación General Preview */}
+                  {evaluation.observacionGeneral && (
+                    <div className="evaluation-observation-preview">
+                      <strong>Observación:</strong> 
+                      <p>{evaluation.observacionGeneral.length > 100 
+                        ? `${evaluation.observacionGeneral.substring(0, 100)}...` 
+                        : evaluation.observacionGeneral}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="evaluation-actions">
+                  <button 
+                    className="btn-view"
+                    onClick={() => handleViewEvaluation(evaluation)}
+                  >
+                    <FaEye /> Revisar
+                  </button>
+                </div>
               </div>
-              
-              <div className="evaluation-actions">
-                <button 
-                  className="btn-view"
-                  onClick={() => handleViewEvaluation(evaluation)}
-                >
-                  <FaEye /> Revisar
-                </button>
-                <button 
-                  className="btn-edit"
-                  onClick={() => handleViewEvaluation(evaluation)}
-                >
-                  <FaEdit /> Editar
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -439,6 +424,17 @@ const EvaluationReviewMainPage = () => {
           onEditEvaluation={handleEditEvaluation}
         />
       )}
+      <Modal
+        isOpen={alertModal.open}
+        onClose={() => setAlertModal(a => ({ ...a, open: false }))}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        onConfirm={async () => { if (alertModal.onConfirm) await alertModal.onConfirm(); setAlertModal(a => ({ ...a, open: false })); }}
+        showCancel={alertModal.showCancel}
+        confirmText="Aceptar"
+        cancelText="Cerrar"
+      />
     </div>
   );
 };

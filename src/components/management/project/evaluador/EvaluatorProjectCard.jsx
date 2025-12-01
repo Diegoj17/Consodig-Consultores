@@ -3,7 +3,6 @@ import {
   FaUser, 
   FaCalendarAlt, 
   FaClock, 
-  FaDownload, 
   FaEdit, 
   FaEye,
   FaCheck, 
@@ -22,13 +21,14 @@ import {
   FaListOl
 } from 'react-icons/fa';
 import '../../../../styles/management/project/evaluador/EvaluatorProjectCard.css';
+import Modal from '../../../../components/common/Modal';
+import { useNavigate } from 'react-router-dom';
 import { projectService } from '../../../../services/projectService';
 import { researchService } from '../../../../services/researchService';
 
 const EvaluatorProjectCard = ({
   project,
   onEvaluate,
-  onDownload,
   onAccept,
   onReject,
 }) => {
@@ -47,6 +47,9 @@ const EvaluatorProjectCard = ({
 
   const isUrgent = project.deadline && new Date(project.deadline) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const isOverdue = project.deadline && new Date(project.deadline) < new Date();
+  const navigate = useNavigate();
+
+  // Nota: la comprobación de documentos y el modal se maneja en la página padre.
 
   // Cargar líneas de investigación
   useEffect(() => {
@@ -298,34 +301,54 @@ const EvaluatorProjectCard = ({
     try {
       let downloadUrl = archivo.urlArchivo;
       let filename = getFileName(archivo);
+      // Prefer to fetch the file and force download via a blob, this avoids browsers opening it in a new tab.
+      if (downloadUrl) {
+        try {
+          const resp = await fetch(downloadUrl, { method: 'GET', credentials: 'include' });
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => {
+              if (blobUrl.startsWith('blob:')) window.URL.revokeObjectURL(blobUrl);
+            }, 10000);
+            return;
+          }
+          // if fetch failed (e.g., CORS) fallthrough to server-side download
+        } catch (err) {
+          console.warn('fetch directo fallo, intentando fallback por API:', err);
+        }
+      }
 
-      if (!downloadUrl || !canOpenInBrowser(archivo)) {
+      // Fallback: request the file via backend service (streams the file) when we have archivo.id
+      if (archivo.id) {
         const response = await projectService.downloadFile(archivo.id);
         const blob = response?.data || response;
-        
-        downloadUrl = window.URL.createObjectURL(blob);
-        
+        const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = downloadUrl;
+        link.href = blobUrl;
         link.download = filename;
         link.style.display = 'none';
-        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
         setTimeout(() => {
-          if (downloadUrl.startsWith('blob:')) {
-            window.URL.revokeObjectURL(downloadUrl);
+          if (blobUrl.startsWith('blob:')) {
+            window.URL.revokeObjectURL(blobUrl);
           }
         }, 10000);
-      } else {
+      } else if (downloadUrl) {
+        // Last resort: create link to url and let browser decide (may open in new tab if cross-origin)
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = filename;
-        link.target = '_blank';
         link.style.display = 'none';
-        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -363,13 +386,7 @@ const EvaluatorProjectCard = ({
     return typeMap[ext] || 'Archivo';
   };
 
-  const formatKeywords = (keywords) => {
-    if (!keywords) return 'No especificadas';
-    if (typeof keywords === 'string') {
-      return keywords.split(',').map(kw => kw.trim()).join(', ');
-    }
-    return keywords;
-  };
+  
 
   const getInitials = (name) => {
     if (!name) return 'PR';
@@ -554,13 +571,6 @@ const EvaluatorProjectCard = ({
                     >
                       <FaExternalLinkAlt />
                     </button>
-                    <button 
-                      className="evaluator-btn-icon evaluator-btn-download-file" 
-                      onClick={() => handleDownloadFile(archivo)} 
-                      title="Descargar archivo"
-                    >
-                      <FaDownload />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -603,7 +613,9 @@ const EvaluatorProjectCard = ({
           <>
             <button
               className="evaluator-btn evaluator-btn-accept"
-              onClick={() => onAccept(project.evaluacionId)}
+              onClick={() => {
+                if (typeof onAccept === 'function') onAccept(project.evaluacionId);
+              }}
             >
               <FaCheck className="btn-icon" />
               Aceptar Evaluación
@@ -625,13 +637,6 @@ const EvaluatorProjectCard = ({
               <FaEdit className="btn-icon" />
               Evaluar Proyecto
             </button>
-            <button
-              className="evaluator-btn evaluator-btn-download"
-              onClick={() => onDownload(project)}
-            >
-              <FaDownload className="btn-icon" />
-              Descargar Todo
-            </button>
           </>
         ) : (
           <>
@@ -642,16 +647,10 @@ const EvaluatorProjectCard = ({
               <FaEye className="btn-icon" />
               Ver Evaluación
             </button>
-            <button
-              className="evaluator-btn evaluator-btn-download"
-              onClick={() => onDownload(project)}
-            >
-              <FaDownload className="btn-icon" />
-              Descargar
-            </button>
           </>
         )}
       </div>
+      {/* Nota: el modal para subir documentos se muestra en la página padre. */}
     </div>
   );
 };

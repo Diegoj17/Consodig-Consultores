@@ -335,7 +335,8 @@ export const projectService = {
     objetivoEspecifico: projectData.objetivoEspecifico,
     justificacion: projectData.justificacion,
     nivelEstudio: projectData.nivelEstudios, // ✅ CORREGIDO: nivelEstudios → nivelEstudio
-    lineasInvestigacionIds: projectData.lineasInvestigacionIds || []
+    lineasInvestigacionIds: projectData.lineasInvestigacionIds || [],
+    investigadorId: projectData.investigadorId ?? null
   };
 
   console.log("🟢 [projectService] Payload corregido:", payload);
@@ -364,7 +365,8 @@ async update(id, projectData) {
     objetivoEspecifico: projectData.objetivoEspecifico,
     justificacion: projectData.justificacion,
     nivelEstudio: projectData.nivelEstudios, // ✅ CORREGIDO: nivelEstudios → nivelEstudio
-    lineasInvestigacionIds: projectData.lineasInvestigacionIds || []
+    lineasInvestigacionIds: projectData.lineasInvestigacionIds || [],
+    investigadorId: projectData.investigadorId ?? null
   };
 
   console.log("🟢 [projectService] Payload corregido para actualizar:", payload);

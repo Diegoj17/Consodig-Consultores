@@ -13,22 +13,52 @@ import {
 import { MdSchool } from 'react-icons/md';
 import { RiLockPasswordFill } from 'react-icons/ri';
 import { researchService } from '../../services/researchService';
+import { authService } from '../../services/authService';
 import '../../styles/pages/ProfileEditPage.css';
 
 const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
-  // Determinar tipo de usuario basado en el rol
-  const userType = user?.role === 'EVALUADOR' ? 'evaluador' : 'evaluando';
+  // Determinar tipo de usuario basado en el rol.
+  // Priorizar el usuario autenticado (authService) porque el objeto `user` que
+  // trae la API puede no incluir el campo `role` y eso hacía que el formulario
+  // asumiera por defecto `evaluando` y mostrara el teléfono.
+  const getRawRoleFrom = (u) => (u?.role || u?.rol || u?.userType || u?.tipo || '').toString().toUpperCase();
+  const authUser = authService.getCurrentUser?.() || null;
+  const rawRole = getRawRoleFrom(authUser) || getRawRoleFrom(user) || '';
+  let userType = 'evaluando';
+  if (rawRole.includes('EVALUADOR')) {
+    userType = 'evaluador';
+  } else if (rawRole.includes('ADMIN')) {
+    userType = 'admin';
+  } else {
+    userType = 'evaluando';
+  }
   
   // Estado del formulario
   const [formData, setFormData] = useState({
-    name: user?.name || user?.nombre || '',
+    // Mostrar nombre completo (nombre + apellido) en el campo
+    name: (() => {
+      const n = user?.nombre || user?.name || '';
+      const a = user?.apellido || '';
+      return `${String(n).trim()} ${String(a).trim()}`.trim();
+    })(),
     email: user?.email || '',
     affiliation: user?.affiliation || user?.afiliacionInstitucional || '',
     cvlac: user?.cvlac || '',
     googleScholar: user?.googleScholar || '',
     orcid: user?.orcid || '',
     educationLevel: user?.educationLevel || user?.nivelEducativo || '',
-    researchLines: user?.researchLines || user?.lineasInvestigacion || '',
+    // Normalizar researchLines: puede venir como arreglo (desde backend) o como string
+    // Normalizar researchLines: puede venir como arreglo de strings u objetos (desde backend) o como string
+    researchLines: (() => {
+      const raw = user?.researchLines ?? user?.lineasInvestigacion ?? '';
+      if (Array.isArray(raw)) {
+        const names = raw
+          .map((item) => (typeof item === 'string' ? item : (item?.nombre || item?.name || '')))
+          .filter(Boolean);
+        return names.join(', ');
+      }
+      return raw || '';
+    })(),
     telefono: user?.telefono || '',
     password: '',
     confirmPassword: ''
@@ -67,6 +97,7 @@ const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
 
   // Campos requeridos según tipo de usuario
   const requiredFields = {
+    admin: ['name', 'email', 'affiliation', 'educationLevel'],
     evaluador: ['name', 'email', 'affiliation', 'educationLevel'],
     evaluando: ['name', 'email', 'affiliation', 'educationLevel', 'telefono']
   };
@@ -187,6 +218,19 @@ const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
       role: user?.role,
       userType: userType
     };
+
+    // Dividir nombre completo en nombre + apellido para los endpoints que lo esperan
+    try {
+      const parts = (submitData.name || '').trim().split(/\s+/);
+      const nombre = parts.shift() || '';
+      const apellido = parts.length > 0 ? parts.join(' ') : '';
+      submitData.nombre = nombre;
+      submitData.apellido = apellido;
+      // Eliminar el campo `name` para evitar confusiones en el backend
+      delete submitData.name;
+    } catch (e) {
+      // ignore
+    }
     
     // Si no se proporcionó nueva contraseña, eliminar campos de contraseña
     if (!submitData.password) {
@@ -197,8 +241,8 @@ const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
     // Incluir líneas de investigación seleccionadas
     submitData.researchLinesIds = selectedLineIds;
     
-    // Para evaluadores, no incluir teléfono si no es necesario
-    if (userType === 'evaluador') {
+    // Para admin y evaluadores, no incluir teléfono si no es necesario
+    if (userType === 'evaluador' || userType === 'admin') {
       delete submitData.telefono;
     }
     
@@ -228,10 +272,27 @@ const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
     return () => { mounted = false; };
   }, []);
 
+  // Si el usuario viene con `lineasInvestigacion` (array con ids), inicializar selectedLineIds
+  useEffect(() => {
+    try {
+      const raw = user?.researchLines ?? user?.lineasInvestigacion ?? null;
+      if (Array.isArray(raw)) {
+        const ids = raw
+          .map(item => (typeof item === 'object' && item?.id ? Number(item.id) : null))
+          .filter(Boolean);
+        if (ids.length > 0) setSelectedLineIds(ids);
+      }
+    } catch {
+      // ignore
+    }
+  }, [user]);
+
   // Sincronizar líneas de investigación seleccionadas
   useEffect(() => {
     if (researchOptions.length > 0 && formData.researchLines) {
-      const names = (formData.researchLines || "").split(',').map(s => s.trim()).filter(Boolean);
+      const names = Array.isArray(formData.researchLines)
+        ? formData.researchLines.map(s => String(s).trim()).filter(Boolean)
+        : (formData.researchLines || "").split(',').map(s => s.trim()).filter(Boolean);
       const ids = researchOptions
         .filter(opt => names.some(n => n.toLowerCase() === (opt.nombre || '').toLowerCase()))
         .map(opt => opt.id);
@@ -485,13 +546,30 @@ const ProfileEdit = ({ user, onSave, onCancel, loading = false }) => {
                     disabled={loading}
                     aria-haspopup="listbox"
                   >
-                    {(!formData.researchLines || formData.researchLines.trim() === '') ? (
+                    {(
+                      !formData.researchLines ||
+                      (typeof formData.researchLines === 'string' && formData.researchLines.trim() === '') ||
+                      (Array.isArray(formData.researchLines) && formData.researchLines.length === 0)
+                    ) ? (
                       <span className="multi-select__placeholder">Seleccionar líneas</span>
                     ) : (
                       <div className="multi-select__chips">
-                        {formData.researchLines.split(',').map((n) => (
-                          <span key={n.trim()} className="multi-select__chip">{n.trim()}</span>
-                        ))}
+                          {selectedLineIds && selectedLineIds.length > 0 ? (
+                            researchOptions
+                              .filter(o => selectedLineIds.includes(o.id))
+                              .map(o => (
+                                <span key={o.id} className="multi-select__chip">{o.nombre}</span>
+                              ))
+                          ) : (
+                            (() => {
+                              const names = Array.isArray(formData.researchLines)
+                                ? formData.researchLines.map(i => (typeof i === 'string' ? i : (i?.nombre || i?.name || '')))
+                                : (formData.researchLines || '').split(',');
+                              return names.map((n) => (
+                                <span key={String(n).trim()} className="multi-select__chip">{String(n).trim()}</span>
+                              ));
+                            })()
+                          )}
                       </div>
                     )}
                   </button>

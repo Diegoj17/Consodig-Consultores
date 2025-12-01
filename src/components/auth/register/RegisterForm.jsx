@@ -124,7 +124,9 @@ const RegisterForm = ({
   // Sincronizar selectedLineIds cuando cambia researchOptions o formData.researchLines (por si viene prellenado)
   useEffect(() => {
     if (researchOptions.length > 0 && formData.researchLines) {
-      const names = (formData.researchLines || "").split(',').map(s => s.trim()).filter(Boolean)
+      const names = Array.isArray(formData.researchLines)
+        ? formData.researchLines.map(s => String(s).trim()).filter(Boolean)
+        : (formData.researchLines || "").split(',').map(s => s.trim()).filter(Boolean);
       const ids = researchOptions
         .filter(opt => names.some(n => n.toLowerCase() === (opt.nombre || '').toLowerCase()))
         .map(opt => opt.id)
@@ -327,13 +329,30 @@ const RegisterForm = ({
                       disabled={isAnySubmitting}
                     aria-haspopup="listbox"
                   >
-                    {(!formData.researchLines || formData.researchLines.trim() === '') ? (
+                    {(
+                      !formData.researchLines ||
+                      (typeof formData.researchLines === 'string' && formData.researchLines.trim() === '') ||
+                      (Array.isArray(formData.researchLines) && formData.researchLines.length === 0)
+                    ) ? (
                       <span className="multi-select__placeholder">Seleccionar líneas</span>
                     ) : (
                       <div className="multi-select__chips">
-                        {formData.researchLines.split(',').map((n) => (
-                          <span key={n.trim()} className="multi-select__chip">{n.trim()}</span>
-                        ))}
+                          {selectedLineIds && selectedLineIds.length > 0 ? (
+                            researchOptions
+                              .filter(o => selectedLineIds.includes(o.id))
+                              .map(o => (
+                                <span key={o.id} className="multi-select__chip">{o.nombre}</span>
+                              ))
+                          ) : (
+                            (() => {
+                              const names = Array.isArray(formData.researchLines)
+                                ? formData.researchLines.map(i => (typeof i === 'string' ? i : (i?.nombre || i?.name || '')))
+                                : (formData.researchLines || '').split(',');
+                              return names.map((n) => (
+                                <span key={String(n).trim()} className="multi-select__chip">{String(n).trim()}</span>
+                              ));
+                            })()
+                          )}
                       </div>
                     )}
                   </button>

@@ -1,6 +1,6 @@
 /* src/styles/management/project/evaluador/EvaluatorEvaluationList.css */
 .evaluator-evaluation-list {
-  padding: 1rem 0;
+  margin: 0 auto;
 }
 
 .evaluator-evaluation-list-grid {
@@ -9,11 +9,12 @@
 }
 
 .evaluator-evaluation-list-card {
-  background: white;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid rgba(34, 51, 84, 0.06);
+  border-radius: 12px;
+  padding: 1.4rem;
+  box-shadow: 0 6px 18px rgba(27, 43, 69, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .evaluator-evaluation-list-header {
@@ -21,13 +22,36 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .evaluator-evaluation-list-project-title {
   margin: 0;
-  color: #2d3748;
+  color: #000000;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.evaluator-evaluation-list-project-info {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.evaluator-evaluation-list-project-label {
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 600;
+  text-transform: none;
+  margin: 0;
+}
+
+.evaluator-evaluation-list-project-file {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: #000000;
+  
 }
 
 .evaluator-evaluation-list-status-badge {
@@ -75,7 +99,7 @@
   justify-content: space-between;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
-  color: #4a5568;
+  color: #000000;
 }
 
 .evaluator-evaluation-list-progress-bar {
@@ -111,14 +135,71 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #718096;
+  color: #000000;
   font-weight: 500;
   min-width: 100px;
 }
 
 .evaluator-evaluation-list-detail-value {
-  color: #2d3748;
+  color: #000000;
   font-weight: 400;
+}
+
+.evaluator-evaluation-list-file-row .evaluator-evaluation-list-detail-value {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.evaluator-evaluation-list-file-link {
+  color: #2b6cb0;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(43,108,176,0.12);
+}
+
+.evaluator-evaluation-list-file-link:hover {
+  text-decoration: underline;
+}
+
+.evaluator-evaluation-list-file-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: #eef6ff;
+  color: #2b6cb0;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 4px;
+}
+
+.evaluator-evaluation-list-file-download:hover {
+  background: #d6e9ff;
+}
+
+/* Forzar visibilidad si otros estilos la ocultan */
+.evaluator-evaluation-list-file-download {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  z-index: 5 !important;
+  position: relative !important;
+  min-width: 110px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+.evaluator-evaluation-list-file-download span {
+  display: inline-block;
+  color: inherit;
+}
+
+.evaluator-evaluation-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(27, 43, 69, 0.09);
 }
 
 .evaluator-evaluation-list-actions {
@@ -283,6 +364,12 @@
   .evaluator-evaluation-list-header {
     flex-direction: column;
     gap: 1rem;
+    align-items: flex-start;
+  }
+
+  /* En móviles, mostrar label y título en columna */
+  .evaluator-evaluation-list-project-info {
+    flex-direction: column;
     align-items: flex-start;
   }
 

@@ -1,0 +1,95 @@
+/* styles/pages/admin/EvaluatorReportsPage.css */
+.evaluator-reports-page {
+  padding: 20px;
+  background-color: var(--background-light);
+  min-height: 100vh;
+}
+
+.evaluator-reports-page * {
+  box-sizing: border-box;
+}
+
+.evaluator-reports-page h1,
+.evaluator-reports-page h2,
+.evaluator-reports-page h3,
+.evaluator-reports-page h4 {
+  color: #000000;
+  margin: 0;
+}
+
+.evaluator-reports-page p {
+  color: #000000;
+  margin: 0;
+}
+
+.evaluator-reports-page .evaluator-reports-summary-metrics,
+.evaluator-reports-page .evaluator-reports-selection,
+.evaluator-reports-page .evaluator-reports-details {
+  margin-bottom: 25px;
+}
+
+/* Estados de carga y vacío */
+.evaluator-reports-page .loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+
+.evaluator-reports-page .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #000000;
+}
+
+.evaluator-reports-page .empty-state p {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #000000;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .evaluator-reports-page .evaluator-reports-performance-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-evaluators-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .evaluator-reports-page {
+    padding: 15px;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-summary-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-selection-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-evaluator-select {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .evaluator-reports-page {
+    padding: 10px;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-evaluators-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .evaluator-reports-page .evaluator-reports-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

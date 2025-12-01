@@ -11,6 +11,7 @@ const EvaluationsMainPage = () => {
   const [modalMode, setModalMode] = useState('view');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, format: null });
+  const [notifyModal, setNotifyModal] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const {
     formats: evaluationFormats,
@@ -47,8 +48,10 @@ const EvaluationsMainPage = () => {
       
       if (mode === 'create') {
         await createFormat(formData);
+        setNotifyModal({ isOpen: true, type: 'success', title: 'Formato creado', message: 'El formato se creó correctamente.' });
       } else {
         await updateFormat(selectedFormat.id, formData);
+        setNotifyModal({ isOpen: true, type: 'success', title: 'Formato actualizado', message: 'Los cambios se guardaron correctamente.' });
       }
       
       // Cerrar modal después de guardar
@@ -56,7 +59,7 @@ const EvaluationsMainPage = () => {
       setModalMode('view');
     } catch (error) {
       console.error('Error guardando formato:', error);
-      alert(`Error al guardar el formato: ${error.message}`);
+      setNotifyModal({ isOpen: true, type: 'error', title: 'Error', message: `Error al guardar el formato: ${error.message}` });
     } finally {
       setIsSubmitting(false);
     }
@@ -73,9 +76,10 @@ const EvaluationsMainPage = () => {
       await deleteFormat(deleteModal.format.id);
       setSelectedFormat(null);
       setModalMode('view');
+      setNotifyModal({ isOpen: true, type: 'success', title: 'Formato eliminado', message: 'El formato fue eliminado correctamente.' });
     } catch (error) {
       console.error('Error eliminando formato:', error);
-      alert(`Error al eliminar el formato: ${error.message}`);
+      setNotifyModal({ isOpen: true, type: 'error', title: 'Error', message: `Error al eliminar el formato: ${error.message}` });
     } finally {
       setDeleteModal({ isOpen: false, format: null });
     }
@@ -91,7 +95,7 @@ const EvaluationsMainPage = () => {
       await toggleFormatStatus(formatId, newStatus);
     } catch (error) {
       console.error('Error cambiando estado del formato:', error);
-      alert(`Error al cambiar el estado: ${error.message}`);
+      setNotifyModal({ isOpen: true, type: 'error', title: 'Error', message: `Error al cambiar el estado: ${error.message}` });
     }
   };
 
@@ -271,6 +275,17 @@ const EvaluationsMainPage = () => {
         confirmText="Eliminar"
         cancelText="Cancelar"
         showCancel={true}
+      />
+
+      {/* Modal de notificaciones (éxito / error) */}
+      <Modal
+        isOpen={notifyModal.isOpen}
+        onClose={() => setNotifyModal({ isOpen: false, type: 'info', title: '', message: '' })}
+        type={notifyModal.type}
+        title={notifyModal.title}
+        message={notifyModal.message}
+        confirmText="Aceptar"
+        showCancel={false}
       />
     </div>
   );

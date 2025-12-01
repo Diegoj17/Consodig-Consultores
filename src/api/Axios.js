@@ -3,11 +3,10 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://consodigconsultores-be-production.up.railway.app/api';
 
 // Crear instancia de axios
+// No fijamos 'Content-Type' por defecto aquí: para requests con FormData
+// el browser/axios añadirá el header correcto (incluyendo boundary).
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Interceptor para agregar el token a las peticiones

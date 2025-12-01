@@ -1,0 +1,193 @@
+/* styles/components/admin/reports/EvaluatorReportsDetails.css */
+.evaluator-reports-details {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.evaluator-reports-details-header {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.evaluator-reports-details-header h2 {
+  margin: 0 0 12px 0;
+  color: var(--text-dark);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.evaluator-reports-evaluator-meta {
+  display: flex;
+  gap: 20px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.evaluator-reports-performance-metrics {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.evaluator-reports-performance-card {
+  background: var(--background-light);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.evaluator-reports-performance-card h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-dark);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.evaluator-reports-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.evaluator-reports-metric {
+  text-align: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.evaluator-reports-metric-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.evaluator-reports-metric-label {
+  font-size: 12px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evaluator-reports-distribution-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.evaluator-reports-distribution-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.evaluator-reports-rating-label {
+  width: 40px;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.evaluator-reports-bar-container {
+  flex: 1;
+  height: 10px;
+  background: var(--border-color);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.evaluator-reports-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.evaluator-reports-count {
+  width: 30px;
+  text-align: right;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.evaluator-reports-recent-projects h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-dark);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.evaluator-reports-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evaluator-reports-project-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--background-light);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.evaluator-reports-project-info h4 {
+  margin: 0 0 4px 0;
+  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.evaluator-reports-project-date {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.evaluator-reports-project-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.evaluator-reports-rating-badge {
+  padding: 4px 8px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.evaluator-reports-project-status {
+  font-size: 12px;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.evaluator-reports-star {
+  font-size: 16px;
+}
+
+.evaluator-reports-star.filled {
+  color: #fbbf24;
+}
+
+.evaluator-reports-star.half-filled {
+  color: #fbbf24;
+  opacity: 0.7;
+}
+
+.evaluator-reports-star.empty {
+  color: #e5e7eb;
+}

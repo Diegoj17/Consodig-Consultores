@@ -1,0 +1,145 @@
+/* styles/components/admin/reports/RatingsReports.css */
+.ratings-reports {
+  padding: 25px;
+}
+
+.reports-subheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.subheader-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subheader-title h2 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.subheader-icon {
+  font-size: 24px;
+  color: var(--primary-color);
+}
+
+.subheader-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.search-box input {
+  padding: 10px 12px 10px 35px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  width: 280px;
+  transition: var(--transition);
+  background: var(--background-light);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.time-filter {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.time-filter:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.export-btn {
+  padding: 10px 20px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Sub Tabs */
+.sub-tabs-navigation {
+  display: flex;
+  background: var(--background-light);
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 25px;
+  gap: 8px;
+}
+
+.sub-tab-button {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sub-tab-button:hover {
+  background: white;
+  color: var(--primary-color);
+}
+
+.sub-tab-button.active {
+  background: white;
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.sub-tab-content {
+  min-height: 400px;
+}

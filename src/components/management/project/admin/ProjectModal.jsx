@@ -9,10 +9,12 @@ import {
 import { MdSchool } from 'react-icons/md';
 import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
+import userService from '../../../../services/userService';
 import '../../../../styles/management/project/admin/ProjectModal.css';
 import Modal from '../../../common/Modal';
 
 const ProjectModal = ({ 
+  isOpen = false,
   project, 
   onClose, 
   onSave, 
@@ -30,6 +32,7 @@ const ProjectModal = ({
     justificacion: '',
     nivelEstudios: '',
     investigadorPrincipal: '',
+    investigadorId: null,
     lineasInvestigacionIds: []
   });
   
@@ -83,10 +86,27 @@ const ProjectModal = ({
   const [formErrors, setFormErrors] = useState({});
   const [researchOptions, setResearchOptions] = useState([]);
   const [nivelEstudiosOptions, setNivelEstudiosOptions] = useState([]);
+  const [investigadoresOptions, setInvestigadoresOptions] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({
     pdf: null,
     excel: null
   });
+
+  // DEBUG: Mostrar en consola cómo viene el investigador cuando cambia el proyecto
+  useEffect(() => {
+    console.log('🔎 [ProjectModal] investigador fields for project:', {
+      id_candidates: {
+        investigadorId: project?.investigadorId,
+        investigador_id: project?.investigador_id,
+        investigadorIdAlt: project?.investigatorId,
+      },
+      investigadorPrincipal: project?.investigadorPrincipal,
+      investigador: project?.investigador,
+      investigadorObj: project?.investigadorPrincipalObj || project?.investigadorObj || null,
+      investigadoresOptionsLength: investigadoresOptions?.length,
+      rawProject: project
+    });
+  }, [project, investigadoresOptions]);
   const [uploadStatus, setUploadStatus] = useState({
     pdf: { status: 'idle', message: '' },
     excel: { status: 'idle', message: '' }
@@ -147,6 +167,20 @@ const ProjectModal = ({
   loadOptions();
 }, []);
 
+// Cargar lista de investigadors (evaluandos) para seleccionar por nombre pero enviar id
+useEffect(() => {
+  const loadInvestigadores = async () => {
+    try {
+      const items = await userService.getEvaluandos();
+      setInvestigadoresOptions(items || []);
+    } catch (e) {
+      console.error('Error cargando investigadors:', e);
+    }
+  };
+
+  loadInvestigadores();
+}, []);
+
   // Inicializar formData cuando cambia el proyecto o el modo
   useEffect(() => {
     if (project) {
@@ -167,6 +201,10 @@ const ProjectModal = ({
 
       console.log('🟢 [ProjectModal] IDs de líneas extraídos:', lineasIds);
 
+      // Determinar investigador: nombre o id desde múltiples claves
+      const invNameRaw = project.investigadorPrincipal || project.investigador || project.investigadorNombre || project.investigador_principal || (project.investigador && (project.investigador.nombre || project.investigador.nombreCompleto)) || null;
+      const invIdRaw = project.investigadorId || project.investigador_id || (project.investigador && (project.investigador.id || project.investigadorId)) || null;
+
       setFormData({
         titulo: project.titulo || '',
         resumen: project.resumen || '',
@@ -175,9 +213,57 @@ const ProjectModal = ({
         objetivosEspecificos: project.objetivoEspecifico || project.objetivosEspecificos || '',
         justificacion: project.justificacion || '',
         nivelEstudios: project.nivelEstudios || '',
-        investigadorPrincipal: project.investigadorPrincipal || '',
+        investigadorPrincipal: invNameRaw || '',
+        investigadorId: invIdRaw || null,
         lineasInvestigacionIds: lineasIds
       });
+
+      // Si no tenemos nombre pero sí ID, resolver el nombre mediante userService
+      if ((!invNameRaw || invNameRaw === '') && invIdRaw) {
+        let mounted = true;
+        (async () => {
+          try {
+            let u = null;
+            // Normalizar posibles valores extraños (p.ej. cadenas serializadas): extraer primer número si existe
+            const normalizeId = (val) => {
+              if (val == null) return null;
+              if (typeof val === 'number') return val;
+              if (typeof val === 'string') {
+                const m = val.match(/(\d+)/);
+                if (m) return Number(m[1]);
+                const asNum = Number(val);
+                return isNaN(asNum) ? val : asNum;
+              }
+              if (typeof val === 'object' && val !== null) return val.id || val.identificacion || null;
+              return val;
+            };
+            const invId = normalizeId(invIdRaw);
+            // Priorizar buscar como evaluando (tal como indicas)
+            try { u = await userService.getEvaluandoById(invId); } catch { u = null; }
+            if (!u) { try { u = await userService.getEvaluadorById(invId); } catch { u = null; } }
+            if (!u) { try { u = await userService.getAdminById(invId); } catch { u = null; } }
+            if (!mounted) return;
+            const resolved = u ? `${u.nombre || u.name || ''}${u.apellido ? ' ' + u.apellido : ''}`.trim() : '';
+            if (resolved) {
+              setFormData(prev => ({ ...prev, investigadorPrincipal: resolved || prev.investigadorPrincipal, investigadorId: u?.id || invId || prev.investigadorId }));
+
+              // Asegurar que el select de investigadores incluya a este usuario
+              const normalized = {
+                id: u.id || invIdRaw,
+                nombre: u.nombre || u.name || '',
+                apellido: u.apellido || u.lastName || '' ,
+                email: u.email || u.correo || ''
+              };
+              setInvestigadoresOptions(prev => {
+                const exists = prev.some(p => String(p.id) === String(normalized.id));
+                return exists ? prev : [normalized, ...prev];
+              });
+            }
+          } catch (err) {
+            console.error('Error resolviendo investigador en ProjectModal:', err);
+          }
+        })();
+      }
 
       // Inicializar también selectedLineIds
       setSelectedLineIds(lineasIds);
@@ -191,6 +277,7 @@ const ProjectModal = ({
         justificacion: '',
         nivelEstudios: '',
         investigadorPrincipal: '',
+        investigadorId: null,
         lineasInvestigacionIds: []
       });
       setSelectedLineIds([]);
@@ -216,6 +303,27 @@ const ProjectModal = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Bloquear desplazamiento del body mientras el modal esté abierto
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight || '';
+
+    if (isOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = previousOverflow;
+        document.body.style.paddingRight = previousPaddingRight;
+      };
+    }
+
+    return undefined;
+  }, [isOpen]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -431,63 +539,27 @@ const ProjectModal = ({
     });
   };
 
-  const handleDownloadFile = async (archivo) => {
-    try {
-      let downloadUrl = archivo.urlArchivo;
-      let filename = archivo.nombreArchivo || archivo.nombre || 'archivo';
-
-      if (!downloadUrl) {
-        const response = await projectService.downloadFile(archivo.id);
-        const blob = response?.data || response;
-        
-        downloadUrl = window.URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => {
-          if (downloadUrl.startsWith('blob:')) {
-            window.URL.revokeObjectURL(downloadUrl);
-          }
-        }, 1000 * 10);
-      } else {
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
-        link.target = '_blank';
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error('❌ [ProjectModal] Error descargando archivo:', error);
-      
-      if (archivo.urlArchivo) {
-        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
-      } else {
-        alert('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
-      }
-    }
-  };
-
   const handleOpenFile = async (archivo) => {
     try {
-      if (archivo.urlArchivo) {
-        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
-      } else {
-        await handleDownloadFile(archivo);
+      const possibleUrl = archivo.urlArchivo || archivo.url_archivo || archivo.url || archivo.urlArchivoRaw || archivo.url_raw;
+      if (possibleUrl && (possibleUrl.startsWith('http://') || possibleUrl.startsWith('https://'))) {
+        // Si no tiene .pdf, intentar abrir con .pdf añadido primero
+        const hasPdfExt = /\.pdf($|\?)/i.test(possibleUrl);
+        if (!hasPdfExt && ((archivo.tipoMime && archivo.tipoMime.toLowerCase().includes('pdf')) || (archivo.nombreArchivo && archivo.nombreArchivo.toLowerCase().endsWith('.pdf')))) {
+          const tryUrl = `${possibleUrl}.pdf`;
+          const newWin = window.open(tryUrl, '_blank', 'noopener,noreferrer');
+          if (newWin) return;
+          // popup blocked o falló -> abrir la URL original
+        }
+
+        window.open(possibleUrl, '_blank', 'noopener,noreferrer');
+        return;
       }
+
+      alert('No hay URL pública disponible para abrir este archivo.');
     } catch (error) {
       console.error('❌ [ProjectModal] Error abriendo archivo:', error);
-      await handleDownloadFile(archivo);
+      alert('Error al abrir el archivo: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -574,7 +646,9 @@ const ProjectModal = ({
       objetivoEspecifico: formData.objetivosEspecificos,
       justificacion: formData.justificacion,
       nivelEstudios: nivelEstudiosValue, // Enviar como string (ej: "PREGRADO")
-      lineasInvestigacionIds: lineasInvestigacionIdsValue // Enviar como array de números
+      lineasInvestigacionIds: lineasInvestigacionIdsValue, // Enviar como array de números
+      investigadorId: formData.investigadorId || null,
+      investigadorPrincipal: formData.investigadorPrincipal || null
     };
 
     console.log('🟡 [ProjectModal] Enviando payload al backend:', payload);
@@ -709,21 +783,7 @@ const ProjectModal = ({
       <div className="project-modal" onClick={(e) => e.stopPropagation()}>
         <div className="project-modal-header">
           <div className="project-modal-title-section">
-            <FaFileAlt className="project-modal-title-icon" />
-            <div>
-              <h3>
-                {mode === 'create' ? 'Nuevo Proyecto' : formData.titulo}
-              </h3>
-              {!isEditing && project && (
-                <div className="project-modal-subtitle">
-                  <span className="project-modal-investigator">
-                    <FaUser className="inline-icon" />
-                    Investigador: {formData.investigadorPrincipal || '—'}
-                  </span>
-                  <span className="project-id">ID: {project.id}</span>
-                </div>
-              )}
-            </div>
+            <h3 title={formData.titulo}>{mode === 'create' ? 'Nuevo Proyecto' : formData.titulo}</h3>
           </div>
           
           <div className="project-modal-header-actions">
@@ -772,7 +832,7 @@ const ProjectModal = ({
               
               <div className="project-modal-section-content">
                 <div className="project-modal-form-row">
-                  <div className="project-modal-form-group">
+                  <div className="project-modal-form-group project-modal-title-column">
                     <label className="project-modal-form-label project-modal-form-label-required">
                       Título del Proyecto
                     </label>
@@ -792,6 +852,41 @@ const ProjectModal = ({
                       </>
                     ) : (
                       <p className="project-modal-readonly-text">{formData.titulo}</p>
+                    )}
+                  </div>
+
+                  <div className="project-modal-form-group project-modal-investigator-column">
+                    <label className="project-modal-form-label">Investigador Principal</label>
+                    {isEditing ? (
+                      <div className="investigator-input-wrapper">
+                        <div className="investigator-input-left">
+                          <select
+                            className="project-modal-form-input"
+                            value={formData.investigadorId ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const id = val === '' ? null : Number(val);
+                              handleInputChange('investigadorId', id);
+                              // Actualizar también el nombre mostrado
+                              const sel = investigadoresOptions.find(i => String(i.id) === String(val));
+                              if (sel) {
+                                const name = `${sel.nombre || ''} ${sel.apellido || ''}`.trim();
+                                handleInputChange('investigadorPrincipal', name);
+                              } else if (!val) {
+                                handleInputChange('investigadorPrincipal', '');
+                              }
+                            }}
+                            disabled={isSubmitting || uploading}
+                          >
+                            <option value="">Seleccionar investigador</option>
+                            {investigadoresOptions.map(inv => (
+                              <option key={inv.id} value={inv.id}>{inv.nombre}{inv.apellido ? ` ${inv.apellido}` : ''}{inv.email ? ` (${inv.email})` : ''}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="project-modal-readonly-text">{formData.investigadorPrincipal || '—'}</p>
                     )}
                   </div>
                 </div>
@@ -1059,14 +1154,14 @@ const ProjectModal = ({
                               {getFileIcon(archivo)}
                             </span>
                             <div className="project-modal-file-details">
-                              <span className="project-modal-file-name">
+                              <button
+                                type="button"
+                                className="project-modal-file-name project-modal-file-name-link"
+                                onClick={() => handleOpenFile(archivo)}
+                                title="Abrir archivo"
+                              >
                                 {archivo.nombreArchivo || archivo.nombre || 'Archivo sin nombre'}
-                              </span>
-                              <span className="project-modal-file-type">
-                                {getFileType(archivo)}
-                                {archivo.tipoMime && ` • ${archivo.tipoMime}`}
-                                {archivo.tipo && ` • ${archivo.tipo}`}
-                              </span>
+                              </button>
                             </div>
                           </div>
                           <div className="project-modal-file-actions">
@@ -1077,13 +1172,7 @@ const ProjectModal = ({
                             >
                               <FaExternalLinkAlt />
                             </button>
-                            <button 
-                              className="project-modal-btn-icon project-modal-btn-download" 
-                              onClick={() => handleDownloadFile(archivo)} 
-                              title="Descargar archivo"
-                            >
-                              <FaDownload />
-                            </button>
+                            
                             {isEditing && (
                               <button 
                                 className="project-modal-btn-icon project-modal-btn-delete" 
@@ -1113,7 +1202,6 @@ const ProjectModal = ({
                         {/* PDF Upload */}
                         <div className="project-modal-form-group">
                           <label className="project-modal-form-label">
-                            <FaFilePdf className="inline-icon" />
                             Documento PDF
                           </label>
                           <div className="project-modal-file-upload">
@@ -1157,52 +1245,6 @@ const ProjectModal = ({
                           </p>
                         </div>
 
-                        {/* Excel Upload */}
-                        <div className="project-modal-form-group">
-                          <label className="project-modal-form-label">
-                            <FaFileExcel className="inline-icon" />
-                            Excel con Investigador Principal
-                          </label>
-                          <div className="project-modal-file-upload">
-                            <input
-                              type="file"
-                              ref={el => fileInputRef.current.excel = el}
-                              onChange={(e) => handleFileSelect('excel', e)}
-                              accept=".xlsx,.xls"
-                              className="project-modal-file-input"
-                              id="excel-upload"
-                              disabled={isSubmitting || uploading}
-                            />
-                            <label htmlFor="excel-upload" className="project-modal-file-label">
-                              <FaUpload className="project-modal-file-icon" />
-                              {selectedFiles.excel ? selectedFiles.excel.name : 'Seleccionar archivo Excel'}
-                            </label>
-                            
-                            {selectedFiles.excel && (
-                              <div className="project-modal-file-actions">
-                                <button
-                                  type="button"
-                                  className="project-modal-btn-upload"
-                                  onClick={() => handleUploadFile('excel')}
-                                  disabled={uploading || isSubmitting}
-                                >
-                                  <FaUpload />
-                                  Subir Excel
-                                </button>
-                              </div>
-                            )}
-                            
-                            {uploadStatus.excel.message && (
-                              <div className={`project-modal-upload-status ${uploadStatus.excel.status}`}>
-                                {getUploadStatusIcon(uploadStatus.excel.status)}
-                                <span>{uploadStatus.excel.message}</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="project-modal-form-hint">
-                            Suba el Excel que identifica al investigador principal (máx. 10MB)
-                          </p>
-                        </div>
                       </div>
                     </div>
                   )}

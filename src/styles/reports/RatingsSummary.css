@@ -1,0 +1,97 @@
+/* styles/components/admin/reports/RatingsSummary.css */
+.ratings-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.summary-icon.overall {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
+.summary-icon.projects {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.summary-icon.evaluators {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.summary-icon.evaluations {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.summary-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.star {
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.star.filled {
+  color: #fbbf24;
+}
+
+.star.half-filled {
+  color: #fbbf24;
+  opacity: 0.7;
+}
+
+.star.empty {
+  color: #e5e7eb;
+}
+
+.rating-number {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.summary-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1;
+}

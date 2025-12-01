@@ -26,6 +26,12 @@ const AssignedProjects = ({ projects, onViewProject }) => {
                 <FaUsers /> {project.evaluandos}
               </span>
             </div>
+
+            {project.resumen && (
+              <div className="project-summary">
+                {project.resumen.length > 200 ? `${project.resumen.slice(0, 200)}...` : project.resumen}
+              </div>
+            )}
             
             <div className="project-progress">
               <div className="progress-bar">
@@ -44,6 +50,9 @@ const AssignedProjects = ({ projects, onViewProject }) => {
               <span className="deadline">
                 <FaCalendarAlt /> {project.deadline}
               </span>
+              {project.creationDate && (
+                <span className="creation-date">Creado: {project.creationDate}</span>
+              )}
               <button 
                 className="view-project-btn"
                 onClick={() => onViewProject(project.id)}

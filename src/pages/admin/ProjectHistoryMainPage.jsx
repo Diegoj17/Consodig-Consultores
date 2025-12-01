@@ -1,77 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaUser, FaCheck, FaTimes, FaClock, FaEye, FaChartBar, FaSync } from 'react-icons/fa';
-import HistoryStats from '../../components/management/project/admin/HistoryStats';
 import '../../styles/pages/admin/HistoryMainPage.css';
 import ProjectModal from '../../components/management/project/admin/ProjectModal';
 import { historyService } from '../../services/historyService';
+import { projectService } from '../../services/projectService';
 
 const HistoryMainPage = () => {
   const [timeFilter, setTimeFilter] = useState('all');
-  const [evaluatorsHistory, setEvaluatorsHistory] = useState([]);
+  const [projectsHistory, setProjectsHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProjectLoading, setSelectedProjectLoading] = useState(false);
 
   // Cargar datos reales del backend
-  useEffect(() => {
-    loadEvaluatorsHistory();
-  }, [timeFilter]);
-
-  const loadEvaluatorsHistory = async () => {
+  const loadProjectsHistory = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Cargando historial real de evaluadores...');
-      
-      const historial = await historyService.getEvaluatorsHistory(timeFilter);
-      setEvaluatorsHistory(historial);
-      
-      console.log('✅ Historial cargado exitosamente:', historial);
+      console.log('🔄 Cargando proyectos evaluados...');
+
+      const proyectos = await historyService.getEvaluatedProjects(timeFilter);
+      setProjectsHistory(proyectos);
+
+      console.log('✅ Proyectos cargados:', proyectos.length);
     } catch (err) {
-      console.error('❌ Error cargando historial:', err);
-      setError('Error al cargar el historial de evaluadores desde el servidor');
+      console.error('❌ Error cargando proyectos evaluados:', err);
+      setError('Error al cargar los proyectos evaluados desde el servidor');
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeFilter]);
 
-  const handleViewDetails = (evaluator) => {
-    console.log('Ver detalle del evaluador:', evaluator);
-  };
-
-  const handleOpenProjectFromEvaluator = (evaluator) => {
-    const project = {
-      id: evaluator.id,
-      titulo: `Historial - ${evaluator.nombre}`,
-      resumen: `Resumen de actividad del evaluador ${evaluator.nombre}. ${evaluator.completados} de ${evaluator.asignados} evaluaciones completadas. Tiempo promedio: ${evaluator.tiempoPromedio}.`,
-      palabrasClave: evaluator.especialidades ? evaluator.especialidades.join(', ') : '',
-      objetivoGeneral: `Seguimiento del desempeño del evaluador ${evaluator.nombre}`,
-      objetivosEspecificos: evaluator.especialidades ? evaluator.especialidades.join('\n') : '',
-      justificacion: `Información de cumplimiento y métricas de desempeño`,
-      nivelEstudios: evaluator.nivelEducativo || 'No especificado',
-      investigadorPrincipal: evaluator.nombre,
-      lineasInvestigacionIds: []
-    };
-    setSelectedProject(project);
-  };
-
-  const getPerformanceColor = (completados, asignados) => {
-    if (asignados === 0) return '#6b7280';
-    const ratio = completados / asignados;
-    if (ratio >= 0.9) return '#10b981';
-    if (ratio >= 0.7) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const getEfficiencyBadge = (tiempoPromedio) => {
-    const days = parseFloat(tiempoPromedio);
-    if (days <= 5) return { text: 'Muy Eficiente', color: '#10b981' };
-    if (days <= 10) return { text: 'Eficiente', color: '#f59e0b' };
-    return { text: 'En mejora', color: '#ef4444' };
-  };
+  useEffect(() => {
+    loadProjectsHistory();
+  }, [loadProjectsHistory]);
 
   const handleRefresh = () => {
-    loadEvaluatorsHistory();
+    loadProjectsHistory();
   };
 
   if (loading) {
@@ -100,10 +66,6 @@ const HistoryMainPage = () => {
 
   return (
     <div className="project-admin-history-page">
-      <HistoryStats 
-        evaluatorsHistory={evaluatorsHistory}
-        timeFilter={timeFilter}
-      />
 
       <div className="project-admin-history-header">
         <div className="project-admin-history-filters">
@@ -123,90 +85,60 @@ const HistoryMainPage = () => {
         </div>
       </div>
 
-      {evaluatorsHistory.length === 0 ? (
+      {projectsHistory.length === 0 ? (
         <div className="project-admin-empty">
           <FaUser className="empty-icon" />
-          <p>No hay datos de historial disponibles</p>
-          <p>Los evaluadores aparecerán aquí cuando completen evaluaciones</p>
+          <p>No hay proyectos evaluados disponibles</p>
+          <p>Cuando haya proyectos con evaluaciones completadas aparecerán aquí</p>
         </div>
       ) : (
         <div className="project-admin-history-table">
-          {evaluatorsHistory.map(evaluator => {
-            const performanceColor = getPerformanceColor(evaluator.completados, evaluator.asignados);
-            const efficiencyBadge = getEfficiencyBadge(evaluator.tiempoPromedio);
-
+          {projectsHistory.map(project => {
             return (
-              <div key={evaluator.id} className="project-admin-history-row">
+              <div key={project.id} className="project-admin-history-row">
                 <div className="project-admin-history-evaluator">
                   <div className="project-admin-evaluator-avatar">
-                    {evaluator.avatar}
+                    { (project.titulo || 'P').slice(0,2).toUpperCase() }
                   </div>
                   <div className="project-admin-evaluator-info">
-                    <h4>{evaluator.nombre}</h4>
+                    <h4>{project.titulo}</h4>
                     <span className="project-admin-evaluator-profile">
-                      {evaluator.perfil}
+                      {project.resumen?.slice(0,140) || 'Sin descripción'}
                     </span>
                     <div className="project-admin-evaluator-specialties">
-                      {evaluator.especialidades.map((esp, index) => (
-                        <span key={index} className="project-admin-specialty-tag">
-                          {esp}
-                        </span>
-                      ))}
+                      <span className="project-admin-specialty-tag">Evaluaciones: {project.evaluacionesCount}</span>
+                      {project.averageScore !== null && (
+                        <span className="project-admin-specialty-tag">Promedio: {project.averageScore}%</span>
+                      )}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="project-admin-history-stats">
                   <div className="project-admin-history-stat">
                     <FaClock className="project-admin-stat-icon project-admin-stat-icon--assigned" />
                     <div className="project-admin-stat-content">
-                      <span className="project-admin-stat-label">Asignados</span>
-                      <span className="project-admin-stat-value">{evaluator.asignados}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="project-admin-history-stat">
-                    <FaCheck className="project-admin-stat-icon project-admin-stat-icon--completed" />
-                    <div className="project-admin-stat-content">
-                      <span className="project-admin-stat-label">Completados</span>
-                      <span 
-                        className="project-admin-stat-value"
-                        style={{color: performanceColor}}
-                      >
-                        {evaluator.completados}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="project-admin-history-stat">
-                    <FaTimes className="project-admin-stat-icon project-admin-stat-icon--overdue" />
-                    <div className="project-admin-stat-content">
-                      <span className="project-admin-stat-label">Incumplimientos</span>
-                      <span className="project-admin-stat-value project-admin-stat-value--warning">
-                        {evaluator.incumplimientos}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="project-admin-history-stat">
-                    <FaChartBar className="project-admin-stat-icon" />
-                    <div className="project-admin-stat-content">
-                      <span className="project-admin-stat-label">Tiempo Promedio</span>
-                      <span className="project-admin-stat-value">{evaluator.tiempoPromedio}</span>
-                      <span 
-                        className="project-admin-efficiency-badge"
-                        style={{backgroundColor: efficiencyBadge.color}}
-                      >
-                        {efficiencyBadge.text}
-                      </span>
+                      <span className="project-admin-stat-label">Última Evaluación</span>
+                      <span className="project-admin-stat-value">{project.lastEvaluationFormatted}</span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="project-admin-history-actions">
                   <button 
                     className="project-admin-btn-detail"
-                    onClick={() => { handleViewDetails(evaluator); handleOpenProjectFromEvaluator(evaluator); }}
+                    onClick={async () => {
+                      try {
+                        setSelectedProjectLoading(true);
+                        const full = await projectService.getById(project.id);
+                        setSelectedProject(full);
+                      } catch (err) {
+                        console.error('Error cargando proyecto completo:', err);
+                        setSelectedProject(project); // fallback al resumen
+                      } finally {
+                        setSelectedProjectLoading(false);
+                      }
+                    }}
                   >
                     <FaEye />
                     Ver Detalle
@@ -224,6 +156,7 @@ const HistoryMainPage = () => {
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
           mode="view"
+          loading={selectedProjectLoading}
         />
       )}
     </div>

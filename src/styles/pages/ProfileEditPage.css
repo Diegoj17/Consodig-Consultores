@@ -238,7 +238,8 @@
   gap: 0.5rem;
   min-height: 48px;
   cursor: pointer;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  /* aumentar padding-left para dejar espacio al ícono y evitar solapamiento con chips */
+  padding: 0.75rem 1rem 0.75rem 3.25rem;
   border: 2px solid #e1e5e9;
   border-radius: 10px;
   background: #f8f9fa;
@@ -267,10 +268,12 @@
 .multi-select__chip {
   background: white;
   border: 1px solid #e1e5e9;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 999px;
   font-size: 0.85rem;
   color: #222b45;
+  display: inline-flex;
+  align-items: center;
 }
 
 .multi-select__dropdown {
@@ -345,7 +348,7 @@
 }
 
 .profile-edit-save-btn {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: var(--primary-color);
   color: white;
   border: none;
   box-shadow: 0 4px 12px rgba(79, 140, 255, 0.25);

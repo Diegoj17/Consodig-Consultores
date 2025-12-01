@@ -1,8 +1,9 @@
-export const AsignarEvaluacionDTO = (proyectoId, formatoId, evaluadorId, tiempoLimiteHoras) => ({
+export const AsignarEvaluacionDTO = (proyectoId, formatoId, evaluadorId, tiempoLimiteHoras, adminId) => ({
   proyectoId,
   formatoId,
   evaluadorId,
-  tiempoLimiteHoras
+  tiempoLimiteHoras,
+  adminId
 });
 
 export const CalificarItemDTO = (itemId, puntuacion, comentarios) => ({

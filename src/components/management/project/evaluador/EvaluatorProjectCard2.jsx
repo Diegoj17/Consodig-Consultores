@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FaUser, FaCalendar, FaUserCheck, FaEye, FaFileAlt,
-  FaPaperclip, FaDownload, FaFilePdf, FaFileExcel, FaExternalLinkAlt,
+  FaPaperclip, FaFilePdf, FaFileExcel, FaExternalLinkAlt,
   FaFileWord, FaFileImage, FaFileArchive, FaStar, FaCheckCircle
 } from 'react-icons/fa';
 import '../../../../styles/management/project/evaluador/EvaluatorProjectCard2.css';
 import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
 import EvaluatorProjectModal from './EvaluatorProjectModal';
+import Modal from '../../../common/Modal';
 
-const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation }) => {
+const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }) => {
   const [researchOptions, setResearchOptions] = useState([]);
   const [isLoadingLines, setIsLoadingLines] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   const archivos = project.archivos || [];
 
@@ -301,7 +305,8 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
       if (archivo.urlArchivo) {
         window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
       } else {
-        alert('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
+        setErrorModalMessage('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
+        setShowErrorModal(true);
       }
     }
   };
@@ -421,7 +426,7 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
         <body>
           <div class="header">
             <h1>${project.titulo || 'Proyecto de Investigación'}</h1>
-            <p><strong>ID:</strong> ${project.id} | <strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion || project.fechaEnvio)}</p>
+            <p><strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion || project.fechaEnvio || project.createdAt || project.fecha_creacion)}</p>
           </div>
 
           <div class="section">
@@ -445,8 +450,8 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
               </div>
             </div>
             
-            <div class="metadata-item">
-              <span class="metadata-label">Líneas de Investigación:</span><br>
+              <div class="metadata-item">
+                <span class="metadata-label">Líneas de Investigación:</span><br>
               ${getResearchLines()}
             </div>
           </div>
@@ -519,9 +524,12 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
 
     } catch (error) {
       console.error('❌ [EvaluatorProjectCard2] Error generando PDF:', error);
-      alert('Error al generar el PDF: ' + (error.message || 'Error desconocido'));
+      setErrorModalMessage('Error al generar el PDF: ' + (error.message || 'Error desconocido'));
+      setShowErrorModal(true);
     }
   };
+
+  const navigate = useNavigate();
 
   const handleViewDetails = () => {
     setShowModal(true);
@@ -563,9 +571,9 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
             <label>Resumen:</label>
             <p className="evaluator-project-card-2-project-summary">
               {project.resumen ? (
-                project.resumen.length > 100 
-                  ? `${project.resumen.substring(0, 100)}...` 
-                  : project.resumen
+                showFull ? project.resumen : (
+                  project.resumen.length > 100 ? `${project.resumen.substring(0, 100)}...` : project.resumen
+                )
               ) : 'No hay resumen disponible'}
             </p>
           </div>
@@ -616,9 +624,9 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
             <label>Justificación:</label>
             <p className="evaluator-project-card-2-justification">
               {project.justificacion ? (
-                project.justificacion.length > 150
-                  ? `${project.justificacion.substring(0, 150)}...`
-                  : project.justificacion
+                showFull ? project.justificacion : (
+                  project.justificacion.length > 150 ? `${project.justificacion.substring(0, 150)}...` : project.justificacion
+                )
               ) : 'No hay justificación disponible'}
             </p>
           </div>
@@ -640,7 +648,7 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
             </label>
             {archivos.length > 0 ? (
               <div className="evaluator-project-card-2-files-list">
-                {archivos.slice(0, 3).map((archivo, index) => (
+                {archivos.slice(0, showFull ? archivos.length : 3).map((archivo, index) => (
                   <div key={archivo.id || index} className="evaluator-project-card-2-file-item">
                     <div className="evaluator-project-card-2-file-info">
                       <span className="evaluator-project-card-2-file-icon">
@@ -649,10 +657,6 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
                       <div className="evaluator-project-card-2-file-details">
                         <span className="evaluator-project-card-2-file-name">
                           {getFileName(archivo)}
-                        </span>
-                        <span className="evaluator-project-card-2-file-type">
-                          {getFileType(archivo)}
-                          {archivo.tipoMime && ` • ${archivo.tipoMime}`}
                         </span>
                       </div>
                     </div>
@@ -664,17 +668,10 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
                       >
                         <FaExternalLinkAlt />
                       </button>
-                      <button 
-                        className="evaluator-project-card-2-btn-icon evaluator-project-card-2-btn-download" 
-                        onClick={() => handleDownloadFile(archivo)} 
-                        title="Descargar archivo"
-                      >
-                        <FaDownload />
-                      </button>
                     </div>
                   </div>
                 ))}
-                {archivos.length > 3 && (
+                {!showFull && archivos.length > 3 && (
                   <div className="evaluator-project-card-2-file-more">
                     +{archivos.length - 3} archivos más
                   </div>
@@ -710,8 +707,8 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
             {project.estado === 'En evaluación' && (
               <button 
                 className="evaluator-project-card-2-btn-icon evaluator-project-card-2-project-btn-evaluate" 
-                onClick={() => onStartEvaluation(project)}
-                title="Evaluar proyecto"
+                onClick={() => navigate('/evaluador/evaluations/in-progress')}
+                title="Continuar evaluación"
               >
                 <FaStar />
               </button>
@@ -729,7 +726,7 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
             )}
           </div>
           <div className="evaluator-project-card-2-registration-date">
-            Creado: {formatDate(project.fechaEnvio)}
+            Creado: {formatDate(project.fechaCreacion || project.fechaEnvio || project.createdAt || project.fecha_creacion)}
           </div>
         </div>
       </div>
@@ -741,6 +738,18 @@ const EvaluatorProjectCard2 = ({ project, onStartEvaluation, onReviewEvaluation 
           mode="view"
         />
       )}
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        type="error"
+        size="sm"
+      >
+        <div style={{ padding: '0.5rem 0' }}>{errorModalMessage}</div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+          <button className="btn-primary" onClick={() => setShowErrorModal(false)}>Aceptar</button>
+        </div>
+      </Modal>
     </>
   );
 };

@@ -368,8 +368,79 @@
 .evaluation-details-modal-criterios-list {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0rem;
 }
+
+/* Agrupador de criterios: encabezado y caja que contiene sus ítems */
+.evaluation-details-modal-criterio-group {
+  background: linear-gradient(145deg, rgba(249,250,251,0.95), rgba(255,255,255,0.98));
+  border-radius: 14px;
+  border: 1px solid rgba(226,232,240,0.6);
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(15,23,42,0.08);
+  position: relative;
+}
+
+.evaluation-details-modal-criterio-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(240,244,249,0.85), rgba(243,247,255,0.95));
+  border-bottom: 1px solid rgba(226,232,240,0.7);
+  position: relative;
+}
+
+.evaluation-details-modal-criterio-group-title {
+  font-weight: 700;
+  color: #000000;
+  font-size: 1.08rem;
+  margin: 1rem;
+  margin-bottom: -0rem;
+}
+
+.evaluation-details-modal-criterio-count {
+  background: var(--evaluator-primary);
+  color: #ffffff;
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Ajustes a los items dentro de un grupo para visualmente diferenciar */
+.evaluation-details-modal-criterio-group .evaluation-details-modal-criterio-item {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  padding: 1rem;
+  margin: 0.55rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(15,23,42,0.04);
+  position: relative;
+}
+
+.evaluation-details-modal-criterio-group .evaluation-details-modal-criterio-item:first-of-type {
+  margin-top: 0.9rem;
+}
+
+.evaluation-details-modal-criterio-group .evaluation-details-modal-criterio-item:last-of-type {
+  margin-bottom: 0.9rem;
+}
+
+.evaluation-details-modal-criterio-item .evaluation-details-modal-criterio-header {
+  gap: 1rem;
+}
+
+.evaluation-details-modal-criterio-item .evaluation-details-modal-criterio-score {
+  min-width: 60px;
+}
+
+/* Pequena separación entre el título del grupo y la lista de items */
+.evaluation-details-modal-criterio-group .evaluation-details-modal-criterios-list {
+  padding: 0.4rem 0 0.85rem 0;
+}
+
 
 .evaluation-details-modal-criterio-item {
   background: #f8fafc;
@@ -380,8 +451,8 @@
 }
 
 .evaluation-details-modal-criterio-item:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #c7d2fe;
+  box-shadow: 0 18px 30px rgba(99,102,241,0.12);
 }
 
 .evaluation-details-modal-criterio-header {
@@ -401,13 +472,14 @@
 }
 
 .evaluation-details-modal-criterio-score {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
   font-weight: 700;
   font-size: 0.9rem;
-  min-width: 70px;
+  min-width: 72px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, rgba(255,241,242,0.95), rgba(255,228,230,0.95));
 }
 
 .evaluation-details-modal-criterio-desc {
@@ -498,9 +570,9 @@
 }
 
 .evaluation-details-modal-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+
 }
 
 /* Responsive */

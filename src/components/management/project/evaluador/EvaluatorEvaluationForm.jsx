@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, FaExternalLinkAlt } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import projectService from '../../../../services/projectService';
 import { evaluationService } from '../../../../services/evaluationService';
@@ -11,12 +11,17 @@ import '../../../../styles/management/project/evaluador/EvaluatorCriterio.css';
 const EvaluatorEvaluationForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { evaluation, project, format } = location.state || {};
-  
+  const params = useParams();
+
+  // Mantener estados locales para permitir cargar desde API si location.state está vacío
+  const [evaluationState, setEvaluationState] = useState(location.state?.evaluation || null);
+  const [projectState, setProjectState] = useState(location.state?.project || null);
+  const [formatState, setFormatState] = useState(location.state?.format || null);
+
   console.log('📍 Location state:', location.state);
-  console.log('📋 Evaluation:', evaluation);
-  console.log('🏢 Project:', project);
-  console.log('📝 Format:', format);
+  console.log('📋 Evaluation:', evaluationState);
+  console.log('🏢 Project:', projectState);
+  console.log('📝 Format:', formatState);
 
   const [evaluationData, setEvaluationData] = useState({
     items: [],
@@ -29,53 +34,18 @@ const EvaluatorEvaluationForm = () => {
   const [loadingItems, setLoadingItems] = useState(true);
   const [error, setError] = useState(null);
   const [projectDetails, setProjectDetails] = useState(null);
-  const [loadingProject, setLoadingProject] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+    confirmText: 'Aceptar',
+    showCancel: false,
+    onConfirm: null
+  });
 
-  // Cargar items reales del formato desde el backend
-  useEffect(() => {
-    if (format?.id) {
-      loadFormatItems(format.id);
-    } else {
-      setError('No se pudo cargar el formato de evaluación');
-      setLoadingItems(false);
-    }
-  }, [format]);
-
-  // Cargar información completa del proyecto si es necesario
-  useEffect(() => {
-    let mounted = true;
-    const loadProjectDetails = async () => {
-      if (!project) return;
-      // Si ya vienen campos clave, los usamos directamente
-      const needsFullFetch = !project.resumen || !project.objetivoGeneral || !project.lineasInvestigacion;
-      if (!needsFullFetch) {
-        setProjectDetails(project);
-        return;
-      }
-
-      try {
-        setLoadingProject(true);
-        const id = project.id || project.proyectoId || project.proyecto?.id || project.codigo;
-        if (!id) {
-          setProjectDetails(project);
-          return;
-        }
-        const full = await projectService.getById(id);
-        if (mounted) setProjectDetails(full || project);
-      } catch (err) {
-        console.error('❌ Error cargando detalles del proyecto:', err);
-        if (mounted) setProjectDetails(project);
-      } finally {
-        if (mounted) setLoadingProject(false);
-      }
-    };
-
-    loadProjectDetails();
-
-    return () => { mounted = false; };
-  }, [project]);
-
-  const loadFormatItems = async (formatId) => {
+  // Función para cargar items del formato (definida aquí antes de los efectos que la usan)
+  const loadFormatItems = useCallback(async (formatId) => {
     try {
       setLoadingItems(true);
       setError(null);
@@ -86,7 +56,7 @@ const EvaluatorEvaluationForm = () => {
       console.log('✅ Formato obtenido:', formatData);
       
       // Los items vienen en la propiedad 'items' del formato
-      const items = formatData.items || [];
+      const items = formatData.items || formatData.criterios || [];
       console.log('📋 Items del formato:', items);
       
       if (items.length === 0) {
@@ -94,18 +64,56 @@ const EvaluatorEvaluationForm = () => {
       }
       
       setFormatItems(items);
-      
+
       // Inicializar datos de evaluación con los items reales
       const initialItems = items.map(item => ({
         itemFormatoId: item.id,
         calificacion: 0,
         observacion: ''
       }));
-      
-      setEvaluationData(prev => ({
-        ...prev,
-        items: initialItems
-      }));
+
+      // Si ya existen calificaciones guardadas en la evaluación, mezclarlas
+      try {
+        const evalItems = evaluationState?.items || evaluationState?.criterios || evaluationState?.itemsEvaluados || evaluationState?.itemEvaluados || evaluationState?.items_evaluados || [];
+
+        if (Array.isArray(evalItems) && evalItems.length > 0) {
+          const mapEvalByFormatId = (ei) => {
+            // intentar obtener id de item de evaluación usando varias claves
+            return ei.itemFormatoId || ei.item_formato_id || ei.formatoItemId || ei.item_formato || ei.itemFormato?.id || ei.formatoId || ei.itemEvaluadoId || ei.id || null;
+          };
+
+          const merged = initialItems.map(init => {
+            const match = evalItems.find(ei => {
+              const candidate = mapEvalByFormatId(ei);
+              // candidate puede ser número o string
+              if (candidate == null) return false;
+              try {
+                return String(candidate) === String(init.itemFormatoId) || Number(candidate) === Number(init.itemFormatoId);
+              } catch { return false; }
+            });
+
+            if (match) {
+              // posibles campos de calificación
+              const score = match.calificacion || match.valor || match.puntuacion || match.score || match.nota || match.notaFinal || match.calificacionFinal || 0;
+              const obs = match.observacion || match.comentarios || match.comentario || match.observaciones || '';
+              return {
+                ...init,
+                calificacion: typeof score === 'number' ? score : (score ? Number(score) : 0),
+                observacion: obs || ''
+              };
+            }
+
+            return init;
+          });
+
+          setEvaluationData(prev => ({ ...prev, items: merged }));
+        } else {
+          setEvaluationData(prev => ({ ...prev, items: initialItems }));
+        }
+      } catch (mergeErr) {
+        console.warn('Error mezclando items existentes:', mergeErr);
+        setEvaluationData(prev => ({ ...prev, items: initialItems }));
+      }
       
     } catch (error) {
       console.error('❌ Error cargando items del formato:', error);
@@ -113,7 +121,75 @@ const EvaluatorEvaluationForm = () => {
     } finally {
       setLoadingItems(false);
     }
-  };
+  }, [evaluationState]);
+
+  // Si no llegaron datos por location.state, intentar cargar la evaluación por id
+  useEffect(() => {
+    const tryLoadFromApi = async () => {
+      const idFromParams = params.evaluationId || params.id;
+      if ((!evaluationState || !formatState || !projectState) && idFromParams) {
+        try {
+          const ev = await evaluationService.getById(idFromParams);
+          if (ev) {
+            setEvaluationState(ev);
+            // extraer proyecto y formato de la evaluacion si vienen
+            const proj = ev.project || ev.proyecto || ev.proyectoId ? (ev.project || ev.proyecto) : null;
+            setProjectState(proj || projectState);
+            const fmt = ev.evaluationFormat || ev.formatoEvaluacion || ev.formato || ev.format || (ev.formatoId ? { id: ev.formatoId } : null);
+            setFormatState(fmt || formatState);
+          }
+        } catch (err) {
+          console.warn('No se pudo cargar la evaluación desde API:', err);
+        }
+      }
+    };
+
+    tryLoadFromApi();
+  }, [params, evaluationState, formatState, projectState]);
+
+  // Cargar items reales del formato desde el backend
+  useEffect(() => {
+    if (formatState?.id) {
+      loadFormatItems(formatState.id);
+    } else {
+      setError('No se pudo cargar el formato de evaluación');
+      setLoadingItems(false);
+    }
+  }, [formatState, loadFormatItems]);
+
+  // Cargar información completa del proyecto si es necesario
+  useEffect(() => {
+    let mounted = true;
+    const loadProjectDetails = async () => {
+      if (!projectState) return;
+      // Si ya vienen campos clave, los usamos directamente
+      const needsFullFetch = !projectState.resumen || !projectState.objetivoGeneral || !projectState.lineasInvestigacion;
+      if (!needsFullFetch) {
+        setProjectDetails(projectState);
+        return;
+      }
+
+      try {
+        const id = projectState.id || projectState.proyectoId || projectState.proyecto?.id || projectState.codigo;
+        if (!id) {
+          setProjectDetails(projectState);
+          return;
+        }
+        const full = await projectService.getById(id);
+        if (mounted) setProjectDetails(full || projectState);
+      } catch (err) {
+        console.error('❌ Error cargando detalles del proyecto:', err);
+        if (mounted) setProjectDetails(projectState);
+      } finally {
+        // finished loading project details
+      }
+    };
+
+    loadProjectDetails();
+
+    return () => { mounted = false; };
+  }, [projectState]);
+ 
 
   const handleItemChange = (itemId, field, value) => {
     setEvaluationData(prev => ({
@@ -126,34 +202,47 @@ const EvaluatorEvaluationForm = () => {
     }));
   };
 
-  const calculateFinalScore = () => {
+  useEffect(() => {
+    // Recalcular puntuación final cuando cambian los items
     const total = evaluationData.items.reduce((sum, item) => {
       const formatItem = formatItems.find(fi => fi.id === item.itemFormatoId);
       const peso = formatItem?.peso || 0;
       return sum + (item.calificacion * peso / 100);
     }, 0);
-    
+
     setEvaluationData(prev => ({
       ...prev,
       calificacionFinal: Math.round(total)
     }));
-  };
-
-  useEffect(() => {
-    calculateFinalScore();
-  }, [evaluationData.items]);
+  }, [evaluationData.items, formatItems]);
 
   const handleSubmit = async () => {
     // Validar que todos los items tengan calificación
     const itemsIncompletos = evaluationData.items.filter(item => item.calificacion === 0);
     
     if (itemsIncompletos.length > 0) {
-      alert('Por favor califica todos los criterios antes de enviar la evaluación.');
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Criterios incompletos',
+        message: 'Por favor califica todos los criterios antes de enviar la evaluación.',
+        confirmText: 'Entendido',
+        showCancel: false,
+        onConfirm: null
+      });
       return;
     }
 
     if (!evaluationData.comentarios.trim()) {
-      alert('Por favor ingresa comentarios justificativos.');
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Comentarios requeridos',
+        message: 'Por favor ingresa comentarios justificativos.',
+        confirmText: 'Entendido',
+        showCancel: false,
+        onConfirm: null
+      });
       return;
     }
 
@@ -161,28 +250,62 @@ const EvaluatorEvaluationForm = () => {
     try {
       console.log('📤 Enviando evaluación...');
       
-      // Calificar cada item individualmente
-      for (const item of evaluationData.items) {
-        console.log('📝 Calificando item:', item);
-        await evaluationService.gradeItem(evaluation.id, {
-          itemFormatoId: item.itemFormatoId,
-          calificacion: item.calificacion,
-          observacion: item.observacion
-        });
-      }
+        // Calificar cada item individualmente
+        for (const item of evaluationData.items) {
+          console.log('📝 Calificando item:', item);
+          await evaluationService.gradeItem(evaluationState.id, {
+            itemFormatoId: item.itemFormatoId,
+            calificacion: item.calificacion,
+            observacion: item.observacion
+          });
+        }
 
       // Finalizar la evaluación
       console.log('🏁 Finalizando evaluación...');
-      await evaluationService.finishEvaluation(evaluation.id, {
+      await evaluationService.finishEvaluation(evaluationState.id, {
         comentarios: evaluationData.comentarios,
         calificacionFinal: evaluationData.calificacionFinal
       });
 
-        alert('✅ Evaluación completada exitosamente');
-        navigate('/evaluador/evaluations/completed');
+      // Intentar obtener la evaluación actualizada desde la API para mostrar la calificación real
+      let finalFromApi = null;
+      try {
+        const refreshed = await evaluationService.getById(evaluationState.id);
+        finalFromApi = refreshed?.calificacionFinal ?? refreshed?.calificacion ?? null;
+        // actualizar estado local si viene la calificación
+        if (refreshed) setEvaluationState(refreshed);
+      } catch (refreshErr) {
+        console.warn('No se pudo obtener la evaluación finalizada:', refreshErr);
+      }
+
+      const successMessage = finalFromApi != null
+        ? `✅ Evaluación completada exitosamente. Calificación final: ${finalFromApi}`
+        : '✅ Evaluación completada exitosamente.';
+
+      setModalState({
+        isOpen: true,
+        type: 'success',
+        title: 'Evaluación completada',
+        message: successMessage,
+        confirmText: 'Ir a completadas',
+        showCancel: false,
+        onConfirm: () => navigate('/evaluador/evaluations/completed')
+      });
+      // Redirección automática por si el modal no se ve correctamente en la UI
+      setTimeout(() => {
+        try { navigate('/evaluador/evaluations/completed'); } catch { /* ignore */ }
+      }, 1200);
     } catch (error) {
       console.error('❌ Error enviando evaluación:', error);
-      alert(`Error al enviar la evaluación: ${error.message}`);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al enviar',
+        message: `Error al enviar la evaluación: ${error.message}`,
+        confirmText: 'Cerrar',
+        showCancel: false,
+        onConfirm: null
+      });
     } finally {
       setLoading(false);
     }
@@ -195,26 +318,49 @@ const EvaluatorEvaluationForm = () => {
       const itemsConCalificacion = evaluationData.items.filter(item => item.calificacion > 0);
       
       if (itemsConCalificacion.length === 0) {
-        alert('No hay criterios calificados para guardar.');
+        setModalState({
+          isOpen: true,
+          type: 'error',
+          title: 'Nada para guardar',
+          message: 'No hay criterios calificados para guardar.',
+          confirmText: 'Entendido',
+          showCancel: false,
+          onConfirm: null
+        });
         setLoading(false);
         return;
       }
 
       console.log('💾 Guardando progreso...');
-      for (const item of itemsConCalificacion) {
+        for (const item of itemsConCalificacion) {
         console.log('💾 Guardando item:', item);
-        await evaluationService.gradeItem(evaluation.id, {
+        await evaluationService.gradeItem(evaluationState.id, {
           itemFormatoId: item.itemFormatoId,
           calificacion: item.calificacion,
           observacion: item.observacion
         });
       }
       
-      alert('✅ Progreso guardado exitosamente');
-        navigate('/evaluador/evaluations/in-progress');
+      setModalState({
+        isOpen: true,
+        type: 'success',
+        title: 'Progreso guardado',
+        message: '✅ Progreso guardado exitosamente',
+        confirmText: 'Ir a en progreso',
+        showCancel: false,
+        onConfirm: () => navigate('/evaluador/evaluations/in-progress')
+      });
     } catch (error) {
       console.error('❌ Error guardando progreso:', error);
-      alert(`Error al guardar progreso: ${error.message}`);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al guardar',
+        message: `Error al guardar progreso: ${error.message}`,
+        confirmText: 'Cerrar',
+        showCancel: false,
+        onConfirm: null
+      });
     } finally {
       setLoading(false);
     }
@@ -239,23 +385,104 @@ const EvaluatorEvaluationForm = () => {
     );
   }
 
-  if (!evaluation || !project || !format) {
-    const missingMsg = `Faltan datos necesarios: ${!evaluation ? 'Evaluation ' : ''}${!project ? 'Project ' : ''}${!format ? 'Format' : ''}`;
+  if (!evaluationState || !projectState || !formatState) {
+    const missingMsg = `Faltan datos necesarios: ${!evaluationState ? 'Evaluation ' : ''}${!projectState ? 'Project ' : ''}${!formatState ? 'Format' : ''}`;
     return (
-      <Modal
-        isOpen={true}
-        onClose={() => navigate('/evaluador/evaluations/pending')}
-        type="error"
-        title="Información no disponible"
-        message={missingMsg}
-        confirmText="Volver a la lista"
-        showCancel={false}
-        onConfirm={() => navigate('/evaluador/evaluations/pending')}
-      />
+      <>
+        <Modal
+          isOpen={true}
+          onClose={() => navigate('/evaluador/evaluations/pending')}
+          type="error"
+          title="Información no disponible"
+          message={missingMsg}
+          confirmText="Volver a la lista"
+          showCancel={false}
+          onConfirm={() => navigate('/evaluador/evaluations/pending')}
+        />
+      </>
     );
   }
+  const displayProject = projectDetails || projectState || {};
 
-  const displayProject = projectDetails || project || {};
+  // Preferir la calificación final que venga del backend (evaluationState) si está disponible
+  const displayFinal = evaluationState?.calificacionFinal ?? evaluationData.calificacionFinal;
+
+  const getInstitution = () => {
+    // Prefer project-level institution, then evaluation, then format, then fallback
+    return (
+      displayProject.institucion ||
+        displayProject.institucionNombre ||
+        displayProject.institution ||
+        evaluationState?.institucion ||
+        evaluationState?.institucionNombre ||
+        evaluationState?.institution ||
+        formatState?.institucion ||
+        formatState?.institucionNombre ||
+        formatState?.institution ||
+      'No especificada'
+    );
+  };
+
+  // --- Helpers para archivos (similar a EvaluatorProjectCard) ---
+  const getFileName = (archivo) => {
+    return archivo.nombreArchivo || archivo.nombre || 'Archivo sin nombre';
+  };
+
+  // Navegación de regreso: intenta volver a la página anterior, si no hay historial,
+  // usa un fallback basado en el estado de la evaluación (ASIGNADA/ACEPTADA/COMPLETADA)
+  const handleBack = () => {
+    try {
+      // Si la navegación incluyó una ruta origen explícita en location.state, úsala
+      if (location.state && location.state.from) {
+        navigate(location.state.from);
+        return;
+      }
+
+      // Intentar volver en el historial del navegador
+      navigate(-1);
+    } catch {
+      // Fallback: deducir ruta por el estado de la evaluación
+      const status = (evaluationState?.estado || evaluationState?.status || '').toString().toUpperCase();
+      if (status === 'ASIGNADA') navigate('/evaluador/evaluations/pending');
+      else if (status === 'ACEPTADA') navigate('/evaluador/evaluations/in-progress');
+      else if (status === 'COMPLETADA') navigate('/evaluador/evaluations/completed');
+      else navigate('/evaluador/evaluations');
+    }
+  };
+
+  
+
+  const handleOpenFile = async (archivo) => {
+    try {
+      if (archivo.urlArchivo) {
+        window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      setModalState({
+        isOpen: true,
+        type: 'info',
+        title: 'Archivo no disponible',
+        message: 'Este archivo no está disponible para abrir desde aquí. Ve a Mis Documentos si necesitas descargarlo.',
+        confirmText: 'Ir a Mis Documentos',
+        showCancel: true,
+        onConfirm: () => navigate('/evaluador/documents')
+      });
+    } catch (error) {
+      console.error('Error abriendo archivo:', error);
+      setModalState({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al abrir archivo',
+        message: 'No se pudo abrir el archivo. Intenta en Mis Documentos.',
+        confirmText: 'Aceptar',
+        showCancel: false,
+        onConfirm: null
+      });
+    }
+  };
+
+  // Nota: la opción de descarga fue eliminada por diseño — solo permitimos abrir archivos.
 
   const steps = [
     { title: 'Información del Proyecto', completed: currentStep > 0 },
@@ -267,16 +494,15 @@ const EvaluatorEvaluationForm = () => {
     <div className="evaluator-evaluation-form">
       {/* Header */}
       <div className="evaluator-form-header">
-        <button className="evaluator-back-btn" onClick={() => navigate('/evaluador/evaluations/pending')}>
+        <button className="evaluator-back-btn" onClick={handleBack}>
           <FaArrowLeft />
           Volver a la lista
         </button>
         
         <div className="evaluator-form-title">
-          <FaFileAlt className="evaluator-title-icon" />
           <div>
             <h1>Evaluación del Proyecto</h1>
-            <p>{project.titulo || 'Sin título'}</p>
+            <p>{projectState?.titulo || projectState?.nombre || 'Sin título'}</p>
           </div>
         </div>
       </div>
@@ -288,6 +514,8 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-step-number">
               {step.completed ? '✓' : index + 1}
             </div>
+
+            {/* (removed duplicated project files block) */}
             <span className="evaluator-step-label">{step.title}</span>
           </div>
         ))}
@@ -305,10 +533,6 @@ const EvaluatorEvaluationForm = () => {
                 <div className="evaluator-detail-item">
                   <strong>Título:</strong>
                   <span>{displayProject.titulo || displayProject.nombre || 'Sin título'}</span>
-                </div>
-                <div className="evaluator-detail-item">
-                  <strong>Código / ID:</strong>
-                  <span>{displayProject.codigo || displayProject.id || displayProject.proyectoId || 'N/A'}</span>
                 </div>
                 <div className="evaluator-detail-item">
                   <strong>Resumen:</strong>
@@ -332,7 +556,7 @@ const EvaluatorEvaluationForm = () => {
                 </div>
                 <div className="evaluator-detail-item full-width">
                   <strong>Institución:</strong>
-                  <p>{evaluation?.institucion || evaluation?.institucionNombre || evaluation?.institution || 'No especificada'}</p>
+                  <p>{getInstitution()}</p>
                 </div>
               </div>
             </div>
@@ -340,14 +564,36 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-format-info">
               <h3>Formato de Evaluación Asignado</h3>
               <div className="evaluator-format-details">
-                <strong>{format.nombre}</strong>
-                <p>{format.descripcion}</p>
+                <strong>{formatState?.nombre || formatState?.name}</strong>
+                <p>{formatState?.descripcion || formatState?.description}</p>
                 <div className="evaluator-format-stats">
                   <span>{formatItems.length} criterios</span>
                   <span>Valor total: {formatItems.reduce((sum, item) => sum + (item.peso || 0), 0)}%</span>
                 </div>
               </div>
             </div>
+
+            {/* Sección de Archivos del Proyecto (única aparición) */}
+            {Array.isArray(displayProject.archivos) && displayProject.archivos.length > 0 && (
+              <div className="evaluator-project-files">
+                <h3>Archivos del Proyecto</h3>
+                <div className="evaluator-files-list">
+                  {displayProject.archivos.map((archivo) => (
+                    <div key={archivo.id || archivo.nombreArchivo || archivo.urlArchivo} className="evaluator-file-item">
+                      <div className="evaluator-file-meta">
+                        <FaFileAlt className="evaluator-file-icon" />
+                        <span className="evaluator-file-name">{getFileName(archivo)}</span>
+                      </div>
+                      <div className="evaluator-file-actions">
+                        <button className="evaluator-file-open" title="Abrir" onClick={() => handleOpenFile(archivo)}>
+                          <FaExternalLinkAlt />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="evaluator-step-actions">
               <button
@@ -387,7 +633,7 @@ const EvaluatorEvaluationForm = () => {
                       <div className="evaluator-criterion-header">
                         <div className="evaluator-criterion-title">
                           <h4>{index + 1}. {formatItem.nombre}</h4>
-                          <span className="evaluator-criterion-weight">Peso: {formatItem.peso}%</span>
+                          <span className="evaluator-criterion-weight">Valor: {formatItem.peso}%</span>
                         </div>
                         <div className="evaluator-criterion-score">
                           <span className="evaluator-score-display">
@@ -430,6 +676,23 @@ const EvaluatorEvaluationForm = () => {
                             className="evaluator-comments-textarea"
                           />
                         </div>
+                      {/* Modal global para mensajes de éxito / error */}
+                      <Modal
+                        isOpen={modalState.isOpen}
+                        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+                        type={modalState.type}
+                        title={modalState.title}
+                        message={modalState.message}
+                        confirmText={modalState.confirmText}
+                        showCancel={modalState.showCancel}
+                        onConfirm={() => {
+                          try {
+                            if (modalState.onConfirm) modalState.onConfirm();
+                          } finally {
+                            setModalState(prev => ({ ...prev, isOpen: false }));
+                          }
+                        }}
+                      />
                       </div>
                     </div>
                   );
@@ -469,7 +732,6 @@ const EvaluatorEvaluationForm = () => {
             <h2>Comentarios y Finalización</h2>
             
             <div className="evaluator-comments-section">
-              <h3>Comentarios Justificativos</h3>
               <p className="evaluator-help-text">
                 Proporciona observaciones detalladas que justifiquen tu calificación
               </p>
@@ -488,7 +750,7 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-final-score">
               <h3>Calificación Final</h3>
               <div className="evaluator-score-display">
-                <span className="evaluator-score-value">{evaluationData.calificacionFinal}</span>
+                <span className="evaluator-score-value">{displayFinal}</span>
                 <span className="evaluator-score-label">/ 100</span>
               </div>
               <div className="evaluator-score-breakdown">
@@ -498,7 +760,7 @@ const EvaluatorEvaluationForm = () => {
                   return (
                     <div key={formatItem.id} className="evaluator-criterio-score">
                       <span>{formatItem.nombre}</span>
-                      <span>{evaluationItem.calificacion || 0} pts ({formatItem.peso}%)</span>
+                      <span>{evaluationItem.calificacion || 0} pts ({formatItem.peso}% valor)</span>
                     </div>
                   );
                 })}
@@ -525,8 +787,8 @@ const EvaluatorEvaluationForm = () => {
           </div>
         )}
       </div>
-    </div>
-  );
-};
+      </div>
+    );
+  };
 
-export default EvaluatorEvaluationForm;
+  export default EvaluatorEvaluationForm;

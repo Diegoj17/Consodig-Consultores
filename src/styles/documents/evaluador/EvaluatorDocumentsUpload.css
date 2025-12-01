@@ -1,0 +1,456 @@
+/* styles/management/evaluator/EvaluatorDocumentsUpload.css */
+.evaluator-documents-upload {
+  padding: 0rem;
+}
+
+.evaluator-documents-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.evaluator-documents-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.evaluator-documents-subtitle {
+  font-size: 1.2em;
+  color: #000000;
+  margin: 0 auto;
+  line-height: 1.6;
+  margin-bottom: -1rem;
+}
+
+.evaluator-documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.evaluator-documents-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e1e5e9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.evaluator-documents-card:hover {
+  border-color: #007bbf;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.evaluator-documents-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.evaluator-documents-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #007bbf 0%, #005a8f 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.evaluator-documents-info {
+  flex: 1;
+}
+
+.evaluator-documents-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 0.25rem 0;
+}
+
+.evaluator-documents-card-description {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.evaluator-documents-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.evaluator-documents-status-icon {
+  font-size: 1.25rem;
+}
+
+.evaluator-documents-completed {
+  color: #10b981;
+}
+
+.evaluator-documents-pending {
+  color: #6b7280;
+}
+
+.evaluator-documents-status-loading {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #007bbf;
+  border-radius: 50%;
+  animation: evaluator-documents-spin 1s linear infinite;
+}
+
+@keyframes evaluator-documents-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.evaluator-documents-status-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.evaluator-documents-completed {
+  color: #10b981;
+}
+
+.evaluator-documents-uploading {
+  color: #007bbf;
+}
+
+.evaluator-documents-pending {
+  color: #6b7280;
+}
+
+.evaluator-documents-card-content {
+  padding: 1.5rem;
+}
+
+.evaluator-documents-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.evaluator-documents-upload-area:hover {
+  border-color: #007bbf;
+  background: #f8fafc;
+}
+
+.evaluator-documents-file-input {
+  display: none;
+}
+
+.evaluator-documents-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.evaluator-documents-upload-icon {
+  font-size: 2rem;
+  color: #6b7280;
+}
+
+.evaluator-documents-upload-text {
+  font-weight: 600;
+  color: #374151;
+}
+
+.evaluator-documents-upload-hint {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.evaluator-documents-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e1e5e9;
+}
+
+.evaluator-documents-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.evaluator-documents-file-icon {
+  font-size: 1.5rem;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.evaluator-documents-file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.evaluator-documents-file-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.evaluator-documents-file-size,
+.evaluator-documents-file-date {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.evaluator-documents-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.evaluator-documents-btn-preview,
+.evaluator-documents-btn-remove {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evaluator-documents-btn-preview {
+  background: #eff6ff;
+  color: #007bbf;
+}
+
+.evaluator-documents-btn-preview:hover {
+  background: #dbeafe;
+}
+
+.evaluator-documents-btn-remove {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.evaluator-documents-btn-remove:hover {
+  background: #fee2e2;
+}
+
+/* Preview Modal */
+.evaluator-documents-preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+}
+
+.evaluator-documents-preview-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  animation: evaluator-documents-modal-appear 0.3s ease;
+}
+
+@keyframes evaluator-documents-modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.evaluator-documents-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8fafc;
+}
+
+.evaluator-documents-preview-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.evaluator-documents-preview-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.evaluator-documents-preview-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.evaluator-documents-preview-content {
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.evaluator-documents-preview-image {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.evaluator-documents-pdf-preview {
+  text-align: center;
+  padding: 3rem;
+}
+
+.evaluator-documents-pdf-icon {
+  font-size: 4rem;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.evaluator-documents-download-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #007bbf;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.evaluator-documents-download-link:hover {
+  background: #005a8f;
+  transform: translateY(-1px);
+}
+
+/* Summary */
+.evaluator-documents-summary {
+  margin-top: 2rem;
+}
+
+.evaluator-documents-summary-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e1e5e9;
+  padding: 2rem;
+  text-align: center;
+}
+
+.evaluator-documents-summary-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 1.5rem;
+}
+
+.evaluator-documents-summary-stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.evaluator-documents-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evaluator-documents-stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #007bbf;
+}
+
+.evaluator-documents-stat-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .evaluator-documents-upload {
+    padding: 1rem;
+  }
+
+  .evaluator-documents-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .evaluator-documents-card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .evaluator-documents-status {
+    justify-content: center;
+  }
+
+  .evaluator-documents-preview {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .evaluator-documents-summary-stats {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .evaluator-documents-preview-modal {
+    width: 95vw;
+    margin: 1rem;
+  }
+
+  .evaluator-documents-preview-content {
+    padding: 1rem;
+  }
+}

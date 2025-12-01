@@ -211,7 +211,69 @@ export const historyService = {
     if (eficiencia >= 80) return 'Bueno';
     if (eficiencia >= 70) return 'Regular';
     return 'Necesita mejora';
-  }
+  },
+
+  // Obtener proyectos que han sido evaluados (agrupar por proyecto)
+  async getEvaluatedProjects(timeFilter = 'all') {
+    try {
+      console.log('🔄 [historyService] Obteniendo proyectos evaluados...');
+      const evaluaciones = await this.getAllEvaluations();
+
+      // Filtrar solo evaluaciones que parecen completadas (tienen fecha de finalización o calificación)
+      const evaluacionesCompletadas = evaluaciones.filter(ev => ev.fecha_finalizacion || ev.fechaFinalizacion || ev.calificacion_total || ev.calificacionTotal || ev.calificacion);
+
+      const projectsMap = new Map();
+
+      evaluacionesCompletadas.forEach(ev => {
+        const projectObj = ev.proyecto || ev.project || null;
+        const projectId = projectObj?.id ?? ev.proyecto_id ?? ev.proyectoId ?? ev.projectId ?? `p-${ev.id}`;
+        const projectTitle = projectObj?.titulo || projectObj?.name || ev.tituloProyecto || `Proyecto ${projectId}`;
+
+        const score = ev.calificacion_total ?? ev.calificacionTotal ?? ev.calificacion ?? null;
+        const evaluatorId = ev.evaluador_id ?? ev.evaluadorId ?? ev.evaluador?.id ?? ev.evaluador ?? null;
+        const evaluatorName = ev.evaluador?.nombre || ev.evaluadorNombre || ev.evaluador || null;
+        const dateRaw = ev.fecha_finalizacion || ev.fechaFinalizacion || ev.fechaCompletado || ev.fecha;
+
+        if (!projectsMap.has(projectId)) {
+          projectsMap.set(projectId, {
+            id: projectId,
+            titulo: projectTitle,
+            resumen: projectObj?.resumen || projectObj?.descripcion || ev.resumen || '',
+            archivos: projectObj?.archivos || [],
+            evaluacionesCount: 1,
+            evaluadores: evaluatorId ? [{ id: evaluatorId, nombre: evaluatorName }] : [],
+            scores: score !== null ? [Number(score)] : [],
+            lastEvaluation: dateRaw || null
+          });
+        } else {
+          const entry = projectsMap.get(projectId);
+          entry.evaluacionesCount += 1;
+          if (evaluatorId) {
+            const exists = entry.evaluadores.find(e => String(e.id) === String(evaluatorId));
+            if (!exists) entry.evaluadores.push({ id: evaluatorId, nombre: evaluatorName });
+          }
+          if (score !== null) entry.scores.push(Number(score));
+          if (dateRaw) {
+            const currentTs = entry.lastEvaluation ? new Date(entry.lastEvaluation).getTime() : 0;
+            const candidateTs = new Date(dateRaw).getTime();
+            if (!isNaN(candidateTs) && candidateTs > currentTs) entry.lastEvaluation = dateRaw;
+          }
+        }
+      });
+
+      const projects = Array.from(projectsMap.values()).map(p => ({
+        ...p,
+        averageScore: p.scores.length ? Math.round(p.scores.reduce((a,b)=>a+b,0)/p.scores.length) : null,
+        lastEvaluationFormatted: p.lastEvaluation ? new Date(p.lastEvaluation).toLocaleString() : 'N/A'
+      }));
+
+      console.log('✅ [historyService] Proyectos evaluados:', projects.length);
+      return projects;
+    } catch (error) {
+      console.error('❌ [historyService] Error obteniendo proyectos evaluados:', error);
+      return [];
+    }
+  },
 };
 
 export default historyService;
