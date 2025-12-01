@@ -267,20 +267,17 @@ class EvaluationService {
     }
   }
 
-  // Obtener evaluaciones validadas (validada === true)
-  async getValidatedEvaluations() {
-    try {
-      console.log('🔄 Solicitando evaluaciones validadas (backend no expone endpoint específico, se filtra localmente)');
-      const response = await projectApi.get(`${this.basePath}`);
-      const all = response.data || [];
-      const validated = (all || []).filter(ev => ev.validada === true || ev.validada === 'true' || ev.validada === 1);
-      console.log('✅ Evaluaciones validadas encontradas:', validated.length);
-      return validated;
-    } catch (error) {
-      console.error('❌ Error obteniendo evaluaciones validadas:', error);
-      throw error;
-    }
+  async getEvaluationById(id) {
+  try {
+    console.log('🔄 Obteniendo evaluación por ID:', id);
+    const response = await projectApi.get(`${this.basePath}/${id}`);
+    console.log('✅ Evaluación obtenida:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error obteniendo evaluación:', error);
+    throw error;
   }
+}
 
   // Asignar una evaluación a un evaluador
   async assignEvaluation(asignDto) {

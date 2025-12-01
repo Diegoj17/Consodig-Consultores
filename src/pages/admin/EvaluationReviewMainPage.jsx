@@ -1,6 +1,6 @@
 // pages/admin/EvaluationReviewMainPage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaSearch, FaEye, FaEdit, FaSync, FaExclamationTriangle, FaCheckCircle, FaTimes  } from 'react-icons/fa';
 import { evaluationService } from '../../services/evaluationService';
 import { evaluadorService } from '../../services/evaluadorService';
 import EvaluationReviewModal from '../../components/management/project/admin/EvaluationReviewModal';
@@ -109,10 +109,49 @@ const EvaluationReviewMainPage = () => {
     applyFilters();
   }, [applyFilters]);
 
-  const handleViewEvaluation = (evaluation) => {
+  const handleViewEvaluation = async (evaluation) => {
+  try {
+    console.log('🔍 Cargando evaluación completa:', evaluation.id);
+    
+    // Obtener la evaluación completa por ID
+    const fullEvaluation = await evaluationService.getEvaluationById(evaluation.id);
+    console.log('📊 Evaluación completa obtenida:', fullEvaluation);
+    
+    // Enriquecer con información del evaluador
+    let evaluatorName = 'Evaluador no disponible';
+    if (fullEvaluation.evaluadorId) {
+      try {
+        const evaluador = await userService.getEvaluadorById(fullEvaluation.evaluadorId);
+        evaluatorName = `${evaluador.nombre} ${evaluador.apellido || ''}`.trim();
+        console.log('👤 Información del evaluador obtenida:', evaluatorName);
+      } catch (error) {
+        console.warn('⚠️ No se pudo obtener información del evaluador:', error);
+        // Si falla, usar el nombre que ya teníamos de la lista
+        evaluatorName = evaluation.evaluatorName || 'Evaluador no disponible';
+      }
+    }
+    
+    // Combinar datos
+    const enrichedEvaluation = {
+      ...fullEvaluation,
+      evaluatorName: evaluatorName,
+      // Preservar otros datos importantes
+      project: fullEvaluation.proyecto || evaluation.project,
+      formato: fullEvaluation.formato || evaluation.formato
+    };
+    
+    console.log('🎯 Evaluación enriquecida:', enrichedEvaluation);
+    setSelectedEvaluation(enrichedEvaluation);
+    setShowModal(true);
+    
+  } catch (error) {
+    console.error('❌ Error cargando evaluación completa:', error);
+    // Si falla, usar la evaluación de la lista como fallback
     setSelectedEvaluation(evaluation);
     setShowModal(true);
-  };
+    alert('Error al cargar los detalles completos, mostrando información básica');
+  }
+};
 
   const handleAddObservation = async (evaluationId, observation) => {
     try {
