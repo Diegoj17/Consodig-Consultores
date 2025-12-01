@@ -4,7 +4,7 @@ import {
   FaTimes, FaCheck, FaEdit, FaFileAlt, FaUser, FaCalendar, 
   FaClipboardList, FaSave, FaUndo, FaEye, FaComment,
   FaExclamationTriangle, FaInfoCircle, FaCalculator,
-  FaAlignLeft, FaListAlt
+  FaAlignLeft, FaListAlt, FaHashtag
 } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import '../../../../styles/management/project/admin/EvaluationReviewModal.css';
@@ -267,16 +267,31 @@ const EvaluationReviewModal = ({
   // Inicializar estados cuando la evaluación cambia
   useEffect(() => {
     if (evaluation) {
-      set_ObservacionGeneral(evaluation.observacionGeneral || '');
+      console.log('📥 Evaluación recibida en modal:', evaluation);
+      setObservacionGeneral(evaluation.observacionGeneral || '');
       
-      const initialItems = evaluation.items?.map(item => ({
-        itemEvaluadoId: item.id,
-        calificacion: item.calificacion || 0,
-        observacion: item.observacion || '',
-        peso: item.criterio?.peso || item.peso || 100,
-        itemOriginal: { ...item }
-      })) || [];
+      // Mapear items con información del formato
+      const initialItems = evaluation.items?.map((item, index) => {
+        // Buscar el item correspondiente en el formato
+        const formatoItem = evaluation.formato?.items?.find(
+          fmtItem => fmtItem.id === item.itemFormatoId
+        );
+        
+        console.log(`📋 Item ${index}:`, item);
+        console.log(`📝 Formato item encontrado:`, formatoItem);
+        
+        return {
+          itemEvaluadoId: item.id,
+          calificacion: item.calificacion || 0,
+          observacion: item.observacion || '',
+          peso: formatoItem?.peso || 100,
+          itemFormatoId: item.itemFormatoId,
+          itemOriginal: { ...item },
+          formatoItem: formatoItem
+        };
+      }) || [];
       
+      console.log('🔄 Items inicializados:', initialItems);
       setItemsEditados(initialItems);
       setModifiedCount(0);
 
@@ -338,101 +353,69 @@ const EvaluationReviewModal = ({
     setShowSuccessModal(true);
   };
 
-  const showInline = (message, type = 'info', duration = 2500) => {
-    setInlineMessage({ text: message, type });
-    if (duration > 0) {
-      setTimeout(() => setInlineMessage(null), duration);
-    }
-  };
-
-  // Obtener descripción del item
+  // FUNCIÓN CORREGIDA PARA OBTENER LA DESCRIPCIÓN DEL ITEM
   const getItemDescription = (item) => {
-    if (!item) return 'Sin descripción disponible';
-    // Probar múltiples campos comunes que pueden contener la descripción
-    const descriptionCandidates = [
-      item.descripcion,
-      item.descripcionCorta,
-      item.itemDescripcion,
-      item.detalle,
-      item.description,
-      item.criterio?.descripcion,
-      item.criterio?.descripcionCorta,
-      item.criterio?.description,
-      item.criterio?.nombre,
-      item.nombre,
-      item.titulo,
-      item.label
-    ];
-
-    for (const d of descriptionCandidates) {
-      if (d !== undefined && d !== null) {
-        const s = String(d).trim();
-        if (s !== '') return s;
-      }
+    // Buscar en el item del formato primero
+    if (item.formatoItem?.descripcion) {
+      return item.formatoItem.descripcion;
     }
-
-    return 'Sin descripción disponible';
+    
+    // Buscar en diferentes ubicaciones posibles
+    const description = 
+      item.criterio?.descripcion || 
+      item.descripcion || 
+      item.criterioDescripcion ||
+      item.itemDescripcion ||
+      'Sin descripción disponible';
+    
+    console.log('🔍 Buscando descripción para item:', item.id, 'Resultado:', description);
+    return description;
   };
 
-  // Helpers simples para controles de UI
-  const safeSetActiveTab = (tab) => setActiveTab(tab);
-  const handleCloseRequest = () => { if (typeof onClose === 'function') onClose(); };
+  // FUNCIÓN CORREGIDA PARA OBTENER EL NOMBRE DEL ITEM
+  const getItemName = (item) => {
+    // Buscar en el item del formato primero
+    if (item.formatoItem?.nombre) {
+      return item.formatoItem.nombre;
+    }
+    
+    return item.criterio?.nombre || item.nombre || `Item ${item.id || 'N/A'}`;
+  };
 
-  // Obtener peso de un item
+  // FUNCIÓN CORREGIDA PARA OBTENER EL PESO DEL ITEM
   const getItemWeight = (item) => {
-    return item?.criterio?.peso || item?.peso || 100;
+    return item.formatoItem?.peso || item.peso || 100;
   };
 
-  // Calcular puntuación total
+  // CALCULAR PUNTAJE TOTAL CORREGIDO - USAR calificacionTotal DEL BACKEND
   const calculateTotalScore = () => {
-    const backendTotal = evaluation?.calificacion_total ?? evaluation?.calificacionTotal ?? evaluation?.calificacion ?? null;
-    if (backendTotal !== null && backendTotal !== undefined) return Math.round(Number(backendTotal));
-    const items = itemsEditados.length ? itemsEditados : (evaluation?.items || []);
-    if (!items || items.length === 0) return 0;
-    const total = items.reduce((s, it) => s + (Number(it.calificacion) || 0), 0);
-    return Math.round(total / items.length);
-  };
-
-  const calculateMaxPossibleScore = () => 100;
-  const calculateAverageScore = () => calculateTotalScore();
-
-  // Nivel de estudios
-  const getNivelEstudiosText = (project) => {
-    if (!project) return 'N/A';
-    const v = project.nivelEstudios || project.nivel_estudios || project.nivel || project.nivelEstudio || project.nivel_estudio;
-    if (!v && v !== 0) return 'N/A';
-    if (typeof v === 'string') return v;
-    if (typeof v === 'number') return String(v);
-    if (typeof v === 'object') return v.nombre || v.name || v.label || 'N/A';
-    return 'N/A';
-  };
-
-  // Helper: Obtener texto de Líneas de Investigación
-  const getLineasInvestigacionText = (project) => {
-    if (!project) return 'N/A';
-    // Posibles campos donde vienen las líneas
-    const lines = project.lineasInvestigacion || project.lineas_investigacion || project.lineas || project.lineasInvestigacionEvaluador || project.lineasInvestigacionProyecto || project.lineaInvestigacion || project.linea || null;
-    if (!lines) return 'N/A';
-    if (typeof lines === 'string') return lines;
-    if (Array.isArray(lines)) {
-      const parsed = lines.map(l => {
-        if (!l) return null;
-        if (typeof l === 'string') return l;
-        return l.nombre || l.name || l.titulo || l.label || l.descripcion || null;
-      }).filter(Boolean);
-      return parsed.length ? parsed.join(', ') : 'N/A';
+    // Usar directamente el calificacionTotal del backend que es 100
+    if (evaluation.calificacionTotal !== undefined && evaluation.calificacionTotal !== null) {
+      console.log('🎯 Usando calificacionTotal del backend:', evaluation.calificacionTotal);
+      return evaluation.calificacionTotal;
     }
-    return lines.nombre || lines.name || lines.titulo || 'N/A';
+    
+    // Solo calcular si no existe en el backend
+    if (itemsEditados.length === 0) return 0;
+    
+    const total = itemsEditados.reduce((sum, item) => sum + (item.calificacion || 0), 0);
+    const average = Math.round(total / itemsEditados.length);
+    console.log('🧮 CalificacionTotal calculado:', average);
+    return average;
   };
 
-  const [lineasNamesResolved, setLineasNamesResolved] = useState(null);
-  const [resolvedEvaluatorName, setResolvedEvaluatorName] = useState(null);
-  const [resolvedDate, setResolvedDate] = useState(null);
+  // CALCULAR PROMEDIO CORREGIDO - DEBE SER EL MISMO QUE TOTAL
+  const calculateAverageScore = () => {
+    return calculateTotalScore();
+  };
 
-  // Resolver nombres de líneas de investigación cuando el proyecto solo trae IDs
-  useEffect(() => {
-    let mounted = true;
-    const resolveLineNames = async () => {
+  // OBTENER PUNTAJE MÁXIMO
+  const calculateMaxPossibleScore = () => {
+    return 100;
+  };
+
+  const handleSubmitObservation = async () => {
+    if (observation.trim()) {
       try {
         const project = evaluation?.proyecto || evaluation?.project || {};
 
@@ -557,13 +540,21 @@ const EvaluationReviewModal = ({
   };
 
   const handleCancelEdits = () => {
-    const revertedItems = evaluation.items?.map(item => ({
-      itemEvaluadoId: item.id,
-      calificacion: item.calificacion || 0,
-      observacion: item.observacion || '',
-      peso: getItemWeight(item),
-      itemOriginal: { ...item }
-    })) || [];
+    const revertedItems = evaluation.items?.map((item, index) => {
+      const formatoItem = evaluation.formato?.items?.find(
+        fmtItem => fmtItem.id === item.itemFormatoId
+      );
+      
+      return {
+        itemEvaluadoId: item.id,
+        calificacion: item.calificacion || 0,
+        observacion: item.observacion || '',
+        peso: formatoItem?.peso || 100,
+        itemFormatoId: item.itemFormatoId,
+        itemOriginal: { ...item },
+        formatoItem: formatoItem
+      };
+    }) || [];
     
     setItemsEditados(revertedItems);
     setEditingItems(false);
@@ -684,6 +675,15 @@ const EvaluationReviewModal = ({
   // Aceptar proyecto tal como viene del backend (raw) — soportar claves `project` y `proyecto`.
   const projectData = evaluation?.project || evaluation?.proyecto || {};
 
+  console.log('📊 Resumen de puntuaciones:', {
+    totalScore,
+    averageScore,
+    maxScore,
+    backendCalificacionTotal: evaluation.calificacionTotal,
+    itemsCount: evaluation.items?.length,
+    itemsEditadosCount: itemsEditados.length
+  });
+
   return (
     <>
       <div className="evaluation-review-modal-overlay">
@@ -705,11 +705,15 @@ const EvaluationReviewModal = ({
               <div className="evaluation-review-modal-subtitle">
                 <span className="evaluation-review-investigator">
                   <FaUser className="evaluation-inline-icon" />
-                  {resolvedEvaluatorName || evaluation.evaluatorName || evaluation.evaluador?.nombre || 'Evaluador no disponible'}
+                  {evaluation.evaluatorName || 'Evaluador no disponible'}
+                </span>
+                <span className="evaluation-review-id">
+                  <FaHashtag className="evaluation-inline-icon" />
+                  ID: {evaluation.id}
                 </span>
                 <span className="evaluation-review-date">
                   <FaCalendar className="evaluation-inline-icon" />
-                  {resolvedDate || (evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleDateString() : 'Fecha no disponible')}
+                  {evaluation.fechaFinalizacion ? new Date(evaluation.fechaFinalizacion).toLocaleDateString() : 'Fecha no disponible'}
                 </span>
               </div>
             </div>
@@ -753,53 +757,39 @@ const EvaluationReviewModal = ({
                   <div className="evaluation-review-detail-grid">
                     <div className="evaluation-review-detail-item">
                       <strong>Título:</strong>
-                      <span className="project-title">{projectData?.titulo || projectData?.nombre || 'Proyecto no disponible'}</span>
+                      <span className="project-title">{evaluation.proyecto?.titulo || 'Proyecto no disponible'}</span>
                     </div>
 
                     <div className="evaluation-review-detail-item">
-                      <strong>Resumen:</strong>
-                      <span>{projectData?.resumen || projectData?.descripcion || 'No disponible'}</span>
+                      <strong>Proyecto ID:</strong>
+                      <span className="project-id">{evaluation.proyecto?.id || 'N/A'}</span>
                     </div>
 
                     <div className="evaluation-review-detail-item">
-                      <strong>Investigador Principal:</strong>
-                      <span>{projectData?.investigadorPrincipal || projectData?.investigador || 'No especificado'}</span>
+                      <strong>Formato:</strong>
+                      <span>{evaluation.formato?.nombre || 'N/A'}</span>
                     </div>
-
-                    <div className="evaluation-review-detail-item">
-                      <strong>Palabras clave:</strong>
-                      <span>{projectData?.palabrasClave || projectData?.keywords || 'N/A'}</span>
+                    
+                    {/* PUNTUACIÓN TOTAL - CORREGIDA */}
+                    <div className="evaluation-review-detail-item highlight-score">
+                      <strong>
+                        <FaCalculator className="evaluation-inline-icon" />
+                        Puntuación Total:
+                      </strong>
+                      <span className={`evaluation-review-score total-score ${getScoreColorClass(totalScore)}`}>
+                        {totalScore} / {maxScore}
+                      </span>
                     </div>
-
-                    <div className="evaluation-review-detail-item">
-                      <strong>Nivel de Estudios:</strong>
-                      <span>{getNivelEstudiosText(projectData)}</span>
-                    </div>
-
-                    <div className="evaluation-review-detail-item">
-                      <strong>Líneas de Investigación:</strong>
-                      <span>{lineasNamesResolved || getLineasInvestigacionText(projectData)}</span>
-                    </div>
-
-                    <div className="evaluation-review-detail-item evaluation-review-files" style={{ gridColumn: '1 / -1' }}>
-                      <strong>Archivos:</strong>
-                      <div className="project-files-list" style={{ marginTop: '6px' }}>
-                        {(projectData?.archivos || evaluation.archivos || projectData?.files || []).length > 0 ? (
-                          (projectData?.archivos || evaluation.archivos || projectData?.files || []).map((archivo) => (
-                            <div key={archivo.id || archivo.nombre} className="project-file-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                {archivo.tipoMime && archivo.tipoMime.toLowerCase().includes('pdf') ? <FaFileAlt style={{ color: '#d23f3f' }} /> : <FaFileAlt />}
-                                <button type="button" className="project-file-link" onClick={() => openProjectFile(archivo)} style={{ background: 'none', border: 'none', color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer' }}>
-                                  {archivo.nombreArchivo || archivo.nombre || archivo.fileName || 'Archivo sin nombre'}
-                                </button>
-                              </span>
-                              <small style={{ color: '#6b7280' }}>{archivo.tipo || archivo.tipoMime || ''}</small>
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ color: '#6b7280' }}>No hay archivos adjuntos</div>
-                        )}
-                      </div>
+                    
+                    {/* PROMEDIO - CORREGIDO */}
+                    <div className="evaluation-review-detail-item highlight-score">
+                      <strong>
+                        <FaCalculator className="evaluation-inline-icon" />
+                        Promedio:
+                      </strong>
+                      <span className={`evaluation-review-score average-score ${getScoreColorClass(averageScore)}`}>
+                        {averageScore}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -829,10 +819,21 @@ const EvaluationReviewModal = ({
                     <div className="evaluation-review-stat">
                       <span className="stat-label">Fecha Completada:</span>
                       <span className="stat-value">
-                        {resolvedDate || (evaluation.fechaCompletado ? new Date(evaluation.fechaCompletado).toLocaleString() : 'No disponible')}
+                        {evaluation.fechaFinalizacion ? new Date(evaluation.fechaFinalizacion).toLocaleString() : 'No disponible'}
                       </span>
                     </div>
                     
+                    {/* Información del cálculo */}
+                    <div className="evaluation-review-stat full-width calculation-info">
+                      <span className="stat-label">Información del Cálculo:</span>
+                      <div className="calculation-details">
+                        <small>
+                          Calificación total del backend: <strong>{evaluation.calificacionTotal}</strong> | 
+                          Items calificados: <strong>{evaluation.items?.length}</strong> | 
+                          Sistema: <strong>0-100 puntos</strong>
+                        </small>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -842,7 +843,10 @@ const EvaluationReviewModal = ({
             {activeTab === 'items' && (
               <div className="evaluation-review-items">
                 <div className="evaluation-review-items-header">
-                  <h4>Items de Evaluación</h4>
+                  <h4>
+                    <FaListAlt className="evaluation-inline-icon" />
+                    Items de Evaluación ({evaluation.items?.length || 0})
+                  </h4>
                   <div className="evaluation-review-items-actions">
                     {!editingItems ? (
                       <button 
@@ -875,13 +879,93 @@ const EvaluationReviewModal = ({
                 </div>
 
                 <div className="evaluation-review-items-list">
-                  {groupedCriteria.map((criterionGroup, groupIndex) => (
-                    <div key={`criterion-${criterionGroup.id || groupIndex}`} className="evaluation-criterion-group">
-                      <div className="evaluation-criterion-group-header">
-                        <h4>{criterionGroup.nombre}</h4>
-                        <span className="criterion-items-count">
-                          {criterionGroup.items.length} item{criterionGroup.items.length !== 1 ? 's' : ''}
-                        </span>
+                  {itemsEditados.map((editedItem, index) => {
+                    const originalItem = evaluation.items?.[index];
+                    const isChanged = editedItem && (
+                      editedItem.calificacion !== (originalItem?.calificacion || 0) ||
+                      editedItem.observacion !== (originalItem?.observacion || '')
+                    );
+
+                    const itemName = getItemName(editedItem);
+                    const itemDescription = getItemDescription(editedItem);
+                    const itemWeight = getItemWeight(editedItem);
+
+                    console.log(`📝 Renderizando item ${index}:`, {
+                      itemName,
+                      itemDescription,
+                      itemWeight,
+                      formatoItem: editedItem.formatoItem
+                    });
+
+                    return (
+                      <div key={editedItem.itemEvaluadoId} className={`evaluation-review-item ${isChanged ? 'item-changed' : ''}`}>
+                        <div className="evaluation-review-item-header">
+                          <h5>{itemName}</h5>
+                          <div className="evaluation-review-item-meta">
+                            {itemWeight && itemWeight !== 100 && (
+                              <span className="evaluation-review-item-weight">
+                                Peso: {itemWeight}%
+                              </span>
+                            )}
+                            <span className="evaluation-review-item-id">
+                              ID: {editedItem.itemFormatoId}
+                            </span>
+                            {isChanged && editingItems && (
+                              <span className="evaluation-review-item-changed-badge">Modificado</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* DESCRIPCIÓN - CORREGIDA */}
+                        <div className="evaluation-review-item-description-container">
+                          <FaAlignLeft className="evaluation-review-description-icon" />
+                          <div className="evaluation-review-item-description-content">
+                            <label className="evaluation-review-description-label">Descripción:</label>
+                            <p className="evaluation-review-item-description">
+                              {itemDescription}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="evaluation-review-item-controls">
+                          <div className="evaluation-review-item-score">
+                            <label>Calificación (0-100 puntos):</label>
+                            {editingItems ? (
+                              <div className="score-input-container">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={editedItem.calificacion || 0}
+                                  onChange={(e) => updateItemScore(index, e.target.value)}
+                                  className="evaluation-review-score-input"
+                                />
+                                <span className="score-range">/ 100</span>
+                              </div>
+                            ) : (
+                              <span className="evaluation-review-item-score-value">
+                                {editedItem.calificacion || 0} / 100
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="evaluation-review-item-observation">
+                            <label>Observación del Evaluador:</label>
+                            {editingItems ? (
+                              <textarea
+                                value={editedItem.observacion || ''}
+                                onChange={(e) => updateItemObservation(index, e.target.value)}
+                                placeholder="Agregar o modificar observación..."
+                                rows="3"
+                                className="evaluation-review-observation-textarea"
+                              />
+                            ) : (
+                              <div className="evaluation-review-observation-display">
+                                {editedItem.observacion || 'Sin observaciones'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
                       <div className="evaluation-criterion-items">
@@ -983,11 +1067,23 @@ const EvaluationReviewModal = ({
                         })}
                       </div>
                     </div>
-                  ))}
+                  </div>
+                )}
 
-                  {groupedCriteria.length === 0 && (
-                    <div className="evaluation-review-no-items">
-                      <p>No hay items evaluados disponibles.</p>
+                {/* Observaciones por Item */}
+                <div className="evaluation-review-item-observations">
+                  <h5>Observaciones por Item</h5>
+                  {evaluation.items?.filter(item => item.observacion).length > 0 ? (
+                    <div className="evaluation-review-item-observations-list">
+                      {evaluation.items
+                        .filter(item => item.observacion)
+                        .map((item, index) => (
+                          <div key={item.id} className="evaluation-review-item-observation">
+                            <strong>{getItemName({...item, formatoItem: evaluation.formato?.items?.find(fmt => fmt.id === item.itemFormatoId)})}:</strong>
+                            <p>{item.observacion}</p>
+                          </div>
+                        ))
+                      }
                     </div>
                   )}
                 </div>
