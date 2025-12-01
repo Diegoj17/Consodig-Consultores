@@ -4,11 +4,11 @@ import {
   FaClipboardList, FaSearch, FaCheckCircle, FaTimesCircle, 
   FaFileAlt, FaDownload, FaEye, FaExclamationTriangle 
 } from 'react-icons/fa';
-import evaluationService from '../../services/evaluationService';
-import projectService from '../../services/projectService';
-import EvaluatorProjectCard from '../../components/management/project/evaluador/EvaluatorProjectCard';
-import Modal from '../../components/common/Modal';
-import '../../styles/pages/user/EvaluatorPages.css';
+import evaluationService from '../../../services/evaluationService';
+import projectService from '../../../services/projectService';
+import EvaluatorProjectCard from '../../../components/management/project/evaluador/EvaluatorProjectCard';
+import Modal from '../../../components/common/Modal';
+import '../../../styles/pages/user/evaluador/EvaluatorPages.css';
 
 const EvaluatorProjectsPage = () => {
   const { type = 'assigned' } = useParams();

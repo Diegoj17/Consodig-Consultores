@@ -3,11 +3,11 @@ import { FaSearch, FaDownload, FaFilter } from 'react-icons/fa';
 import EvaluationReportsHeader from '../../components/reports/EvaluationReportsHeader';
 import EvaluationReportsMetrics from '../../components/reports/EvaluationReportsMetrics';
 import EvaluationReportsProjectsTable from '../../components/reports/EvaluationReportsProjectsTable';
-import EvaluationReviewModal from '../../components/management/project/admin/EvaluationReviewModal';
+import EvaluationReviewModal2 from '../../components/management/project/admin/EvaluationReviewModal2';
 import EvaluationReportsAdditionalStats from '../../components/reports/EvaluationReportsAdditionalStats';
 import '../../styles/pages/admin/EvaluationReportsPage.css';
 import evaluationService from '../../services/evaluationService';
-import { userService } from '../../services/userService';
+import userService from '../../services/userService';
 import Modal from '../../components/common/Modal';
 import evaluationFormatService from '../../services/evaluationFormatService';
 
@@ -329,54 +329,8 @@ const EvaluationReportsPage = () => {
     setSelectedEvaluation(null);
   };
 
-  // Callbacks mínimos (mock) que el modal espera
-  const onAddObservation = async (evaluationId, observation) => {
-    setModalState({
-      isOpen: true,
-      type: 'info',
-      title: 'Agregar observación',
-      message: `Observación para evaluación ${evaluationId}: ${observation}`,
-      confirmText: 'Cerrar',
-      showCancel: false,
-      onConfirm: null
-    });
-  };
-
-  const onApprove = async (evaluationId) => {
-    setModalState({
-      isOpen: true,
-      type: 'success',
-      title: 'Aprobar evaluación',
-      message: `Evaluación ${evaluationId} aprobada (mock).`,
-      confirmText: 'Cerrar',
-      showCancel: false,
-      onConfirm: () => handleCloseReviewModal()
-    });
-  };
-
-  const onRequestChanges = async (evaluationId, reason) => {
-    setModalState({
-      isOpen: true,
-      type: 'info',
-      title: 'Solicitud de cambios',
-      message: `Solicitud de cambios para evaluación ${evaluationId}: ${reason}`,
-      confirmText: 'Cerrar',
-      showCancel: false,
-      onConfirm: () => handleCloseReviewModal()
-    });
-  };
-
-  const onEditEvaluation = async (evaluationId) => {
-    setModalState({
-      isOpen: true,
-      type: 'success',
-      title: 'Editar evaluación',
-      message: `Edición guardada (mock) para evaluación ${evaluationId}`,
-      confirmText: 'Cerrar',
-      showCancel: false,
-      onConfirm: null
-    });
-  };
+  // NOTE: This reports page uses the read-only review modal (`EvaluationReviewModal2`),
+  // so editor/approve callbacks are not needed here.
 
   return (
     <div className="evaluation-reports-page">
@@ -400,13 +354,9 @@ const EvaluationReportsPage = () => {
       />
 
       {showReviewModal && selectedEvaluation && (
-        <EvaluationReviewModal
+        <EvaluationReviewModal2
           evaluation={selectedEvaluation}
           onClose={handleCloseReviewModal}
-          onAddObservation={onAddObservation}
-          onApprove={onApprove}
-          onRequestChanges={onRequestChanges}
-          onEditEvaluation={onEditEvaluation}
         />
       )}
 

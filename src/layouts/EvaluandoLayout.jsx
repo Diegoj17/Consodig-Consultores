@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-import EvaluandoDashboard from '../pages/user/EvaluandoDashboardPage';
+import EvaluandoDashboard from '../pages/user/evaluando/EvaluandoDashboardPage';
+import EvaluandoCompletedPage from '../pages/user/evaluando/EvaluandoCompletedPage';
+import ProjectsListPage from '../pages/user/evaluando/ProjectsListPage';
 import ProfileEditPage from '../pages/ProfileEditPage';
 import ChangePasswordPage from '../pages/ChangePasswordPage';
 import '../styles/pages/admin/DashboardPage.css';
@@ -22,6 +24,7 @@ function EvaluandoLayout() {
     
     // Otras rutas
     if (path.includes('/evaluando/evaluations')) return 'evaluations';
+    // Proyectos (evaluando) - abrir lista directamente
     if (path.includes('/evaluando/projects')) return 'my-projects';
     if (path.includes('/evaluando/results')) return 'results';
     if (path.includes('/evaluando/messages')) return 'messages';
@@ -64,9 +67,9 @@ function EvaluandoLayout() {
             <Route path="/profile/edit" element={<ProfileEditPage />} />
             <Route path="/change-password" element={<ChangePasswordPage />} />
 
-            <Route path="/evaluations" element={<div>Mis Evaluaciones (Evaluando)</div>} />
+            <Route path="/evaluations" element={<EvaluandoCompletedPage />} />
 
-            <Route path="/projects" element={<div>Mis Proyectos (Evaluando)</div>} />
+            <Route path="/projects" element={<ProjectsListPage />} />
 
             {/* Rutas del submenú de Resultados */}
             <Route path="/results/current" element={<div>Resultados Actuales (Evaluando)</div>} />

@@ -4,10 +4,10 @@ import {
   FaClipboardList, FaSearch, FaFileAlt, FaDownload, 
   FaEye, FaExclamationTriangle, FaClock 
 } from 'react-icons/fa';
-import evaluationService from '../../services/evaluationService';
-import projectService from '../../services/projectService';
-import EvaluatorProjectCard2 from '../../components/management/project/evaluador/EvaluatorProjectCard2';
-import '../../styles/pages/user/EvaluatorInProgressProjectsPage.css';
+import evaluationService from '../../../services/evaluationService';
+import projectService from '../../../services/projectService';
+import EvaluatorProjectCard2 from '../../../components/management/project/evaluador/EvaluatorProjectCard2';
+import '../../../styles/pages/user/evaluador/EvaluatorInProgressProjectsPage.css';
 
 const EvaluatorInProgressProjectsPage = () => {
   const navigate = useNavigate();
@@ -39,9 +39,24 @@ const EvaluatorInProgressProjectsPage = () => {
       const allProjects = await projectService.getAll();
       console.log('✅ Proyectos disponibles:', allProjects);
 
-      // Mapear evaluaciones con proyectos
+      // Obtener evaluaciones completadas para excluir proyectos ya calificados
+      let completedEvals = [];
+      try {
+        completedEvals = await evaluationService.getCompletedEvaluations();
+      } catch (err) {
+        console.warn('No se pudo obtener evaluaciones completadas, continuará sin excluir por completadas', err?.message || err);
+      }
+      const completedProjectIds = new Set((completedEvals || []).map(ev => extractProyectoId(ev)).filter(Boolean));
+
+      // Mapear evaluaciones con proyectos (excluir proyectos que ya tengan evaluaciones COMPLETADA)
       const projectsWithDetails = await Promise.all(
         evaluations.map(async (evaluation) => {
+          // Si la evaluación pertenece a un proyecto que ya tiene evaluación COMPLETADA, omitir
+          const maybePid = extractProyectoId(evaluation);
+          if (maybePid && completedProjectIds.has(maybePid)) {
+            console.debug('Omitiendo proyecto por evaluación completada existente:', maybePid);
+            return null;
+          }
           try {
             // Extraer proyectoId de la evaluación
             const proyectoId = extractProyectoId(evaluation);

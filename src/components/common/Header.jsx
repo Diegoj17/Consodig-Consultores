@@ -112,9 +112,15 @@ const Header = ({ onToggleSidebar, pageTitle = "Dashboard" }) => {
   const menuItems = [
     { icon: FaUser, label: "Editar Perfil", action: "edit-profile" },
     { icon: FaKey, label: "Cambiar Contraseña", action: "change-password" },
-    { icon: FaFilePdf, label: "Mis Documentos", action: "documents" }, // AÑADE ESTE ITEM
-    { icon: FaSignOutAlt, label: "Cerrar Sesión", action: "logout", isDanger: true },
-  ]
+  ];
+
+  // Solo añadir "Mis Documentos" para evaluadores
+  const userType = getUserType();
+  if (userType === 'evaluador') {
+    menuItems.push({ icon: FaFilePdf, label: "Mis Documentos", action: "documents" });
+  }
+
+  menuItems.push({ icon: FaSignOutAlt, label: "Cerrar Sesión", action: "logout", isDanger: true });
 
   return (
     <header className="dashboard-header">

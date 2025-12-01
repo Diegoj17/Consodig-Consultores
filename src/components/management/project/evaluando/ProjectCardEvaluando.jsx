@@ -9,39 +9,40 @@ import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
 import userService from '../../../../services/userService';
 
-const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation }) => {
+const ProjectCardEvaluando = ({ project, onViewDetails, onView, onEdit }) => {
   const [researchOptions, setResearchOptions] = useState([]);
   const [isLoadingLines, setIsLoadingLines] = useState(true);
-
-  const archivos = project.archivos || [];
   const [resolvedInvestigatorName, setResolvedInvestigatorName] = useState(null);
 
-  // DEBUG: Mostrar en consola los campos relacionados al investigador
-  useEffect(() => {
-    console.log('🔎 [ProjectCard] investigador fields for project:', {
-      id_candidates: {
-        investigadorId: project?.investigadorId,
-        investigador_id: project?.investigador_id,
-        investigadorIdAlt: project?.investigatorId
-      },
-      investigadorPrincipal: project?.investigadorPrincipal,
-      investigador: project?.investigador,
-      investigadorObj: project?.investigadorPrincipalObj || project?.investigadorObj || null,
-      rawProject: project
-    });
-  }, [project]);
+  const archivos = project.archivos || [];
 
   const getStatusClass = (estado) => {
     const statusMap = {
       'Pendiente': 'project-admin-status-pending',
       'Preasignado': 'project-admin-status-preasigned',
       'En evaluación': 'project-admin-status-evaluation',
-      'Evaluado': 'project-admin-status-evaluated'
+      'Evaluado': 'project-admin-status-evaluated',
+      'Enviado': 'project-admin-status-pending'
     };
     return statusMap[estado] || 'project-admin-status-default';
   };
 
-  // Extraer estado real del backend y mapear a etiqueta legible
+  const getInitials = (name) => {
+    if (!name) return 'PR';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  // Obtener estado tal como viene del backend (soporta varias claves posibles)
   const extractBackendStatus = (p) => {
     const possibleKeys = ['estado', 'estadoProyecto', 'estado_proyecto', 'status', 'estadoActual', 'estado_sistema', 'state', 'estadoSistema', 'estado_db'];
     let code = null;
@@ -52,6 +53,7 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
       }
     }
 
+    // Normalizar y mapear a etiquetas legibles
     const normalize = (s) => (s == null ? '' : String(s).trim().toUpperCase());
     const labelMap = {
       'PENDIENTE': 'Pendiente',
@@ -72,20 +74,11 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
   };
 
   const backendStatus = extractBackendStatus(project);
-  const getInitials = (name) => {
-    if (!name) return 'PR';
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const displayedStatus = backendStatus.label;
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
+  // Obtener fecha de creación (variantes posibles)
+  const creationDateRaw = project?.fechaCreacion || project?.createdAt || project?.fechaEnvio || project?.created_at || project?.fecha_creacion || project?.fecha || project?.created || null;
+  const creationDate = creationDateRaw ? formatDate(creationDateRaw) : null;
 
   // Cargar líneas de investigación al montar el componente
   useEffect(() => {
@@ -103,10 +96,9 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
           : [];
         if (mounted) {
           setResearchOptions(opts);
-          console.log('📚 [ProjectCard] Líneas cargadas:', opts);
         }
       } catch (error) {
-        console.error('❌ [ProjectCard] Error cargando líneas:', error);
+        console.error('Error cargando líneas:', error);
         if (mounted) setResearchOptions([]);
       } finally {
         if (mounted) setIsLoadingLines(false);
@@ -116,7 +108,7 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     return () => { mounted = false; };
   }, []);
 
-  // Resolver investigador principal si no viene el nombre completo
+  // Resolver investigador principal
   useEffect(() => {
     let mounted = true;
     const resolveInvestigator = async () => {
@@ -127,7 +119,6 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
           return;
         }
 
-        // detectar posibles IDs en distintos campos (string/number/object)
         const invIdCandidate = project?.investigadorId || project?.investigador_id || project?.investigador?.id || project?.investigador || null;
         const normalizeId = (val) => {
           if (val == null) return null;
@@ -144,23 +135,17 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
 
         const invId = normalizeId(invIdCandidate);
         if (invId) {
-          console.log(`🔎 [ProjectCard] Intentando resolver investigador con ID: ${invId}`);
           let u = null;
-          // Priorizar obtener como evaluando (el investigador puede ser un evaluando)
           try {
             u = await userService.getEvaluandoById(invId);
-            console.log('🔍 [ProjectCard] Resultado getEvaluandoById:', u);
-          } catch (e) {
-            console.log('🟠 [ProjectCard] getEvaluandoById falló:', e?.message || e);
+          } catch {
             u = null;
           }
 
           if (!u) {
             try {
               u = await userService.getEvaluadorById(invId);
-              console.log('🔍 [ProjectCard] Resultado getEvaluadorById:', u);
-            } catch (e) {
-              console.log('🟠 [ProjectCard] getEvaluadorById falló:', e?.message || e);
+            } catch {
               u = null;
             }
           }
@@ -168,46 +153,38 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
           if (!u) {
             try {
               u = await userService.getAdminById(invId);
-              console.log('🔍 [ProjectCard] Resultado getAdminById:', u);
-            } catch (e) {
-              console.log('🟠 [ProjectCard] getAdminById falló:', e?.message || e);
+            } catch {
               u = null;
             }
           }
 
           if (!mounted) return;
-          console.log('🔎 [ProjectCard] Usuario resuelto final (u):', u);
           const resolved = u ? `${u.nombre || u.name || ''}${u.apellido ? ' ' + u.apellido : ''}`.trim() : null;
           if (mounted) setResolvedInvestigatorName(resolved || null);
         }
       } catch (err) {
-        console.error('Error resolviendo investigador en ProjectCard:', err);
+        console.error('Error resolviendo investigador:', err);
       }
     };
     resolveInvestigator();
     return () => { mounted = false; };
   }, [project]);
 
-  // Función mejorada para obtener líneas de investigación
+  // Función para obtener líneas de investigación
   const getResearchLines = () => {
-    // 1. Si ya vienen los nombres mapeados desde el servicio
     if (project?.lineasInvestigacionNames && Array.isArray(project.lineasInvestigacionNames) && project.lineasInvestigacionNames.length > 0) {
-      console.log('✅ [ProjectCard] Usando lineasInvestigacionNames:', project.lineasInvestigacionNames);
       return project.lineasInvestigacionNames.join(', ');
     }
 
-    // 2. Si vienen objetos completos con nombre
     if (project?.lineasInvestigacion && Array.isArray(project.lineasInvestigacion) && project.lineasInvestigacion.length > 0) {
       const names = project.lineasInvestigacion
         .map(li => li?.nombre || li?.name)
         .filter(Boolean);
       if (names.length > 0) {
-        console.log('✅ [ProjectCard] Usando lineasInvestigacion objetos:', names);
         return names.join(', ');
       }
     }
 
-    // 3. Buscar IDs en diferentes posibles claves
     const possibleKeys = [
       'lineasInvestigacionIds',
       'lineasIds', 
@@ -220,17 +197,14 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
     for (const key of possibleKeys) {
       if (project?.[key]) {
         lineIds = project[key];
-        console.log(`🔍 [ProjectCard] IDs encontrados en '${key}':`, lineIds);
         break;
       }
     }
 
     if (!lineIds) {
-      console.warn('⚠️ [ProjectCard] No se encontraron líneas de investigación');
       return '-';
     }
 
-    // Normalizar a array de IDs
     let idsArray = [];
     if (Array.isArray(lineIds)) {
       idsArray = lineIds.map(id => {
@@ -245,45 +219,33 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
       idsArray = [lineIds];
     }
 
-    console.log('🔢 [ProjectCard] IDs normalizados:', idsArray);
-
-    // Si no hay researchOptions cargadas aún
     if (isLoadingLines) {
       return 'Cargando líneas...';
     }
 
     if (researchOptions.length === 0) {
-      console.warn('⚠️ [ProjectCard] researchOptions vacío, mostrando IDs');
       return idsArray.join(', ');
     }
 
-    // Mapear IDs a nombres
     const names = idsArray.map(id => {
       const idNum = Number(id);
       const line = researchOptions.find(opt => Number(opt.id) === idNum);
-      if (line) {
-        console.log(`✅ [ProjectCard] ID ${id} → ${line.nombre}`);
-        return line.nombre;
-      }
-      console.warn(`⚠️ [ProjectCard] ID ${id} no encontrado`);
-      return `ID: ${id}`;
+      return line ? line.nombre : `ID: ${id}`;
     });
 
     return names.length > 0 ? names.join(', ') : '-';
   };
 
-  // Función mejorada para formatear nivel de estudios
+  // Función para formatear nivel de estudios
   const formatNivelEstudios = (nivel) => {
     if (!nivel) return '-';
 
-    // Si es objeto, extraer el valor
     if (typeof nivel === 'object' && nivel !== null) {
       nivel = nivel.nombre || nivel.name || nivel.id || nivel.value;
     }
 
     const nivelStr = String(nivel).trim();
     
-    // Mapeo de IDs numéricos a nombres
     const nivelMap = {
       '1': 'Pregrado',
       '2': 'Técnico',
@@ -295,12 +257,10 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
       '8': 'Postdoctorado'
     };
 
-    // Si es un ID numérico
     if (nivelMap[nivelStr]) {
       return nivelMap[nivelStr];
     }
 
-    // Si es texto, normalizar
     const code = nivelStr.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const textMap = {
       'PREGRADO': 'Pregrado',
@@ -459,16 +419,12 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
         </div>
         <div className="project-admin-user-meta">
           <h3 className="project-admin-project-title">{project.titulo}</h3>
-          <div className="project-admin-project-investigator">
-            <small>Investigador: </small>
-            <strong>{resolvedInvestigatorName || project.investigadorPrincipal || project.investigador || '—'}</strong>
-          </div>
         </div>
         <div className="project-admin-status-indicator">
-          <span className={`project-admin-status-badge ${getStatusClass(backendStatus.label || 'Enviado')}`}>
-            {backendStatus.label || 'Enviado'}
+          <span className={`project-admin-status-badge ${getStatusClass(displayedStatus || 'Enviado')}`}>
+            {displayedStatus || 'Enviado'}
           </span>
-          {backendStatus.code && backendStatus.code !== backendStatus.label && (
+          {backendStatus.code && backendStatus.code !== displayedStatus && (
             <small className="project-admin-status-code" style={{display: 'block', fontSize: '0.75rem', color: '#6b7280'}}>
               ({String(backendStatus.code)})
             </small>
@@ -588,7 +544,6 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
                     >
                       <FaExternalLinkAlt />
                     </button>
-                    
                   </div>
                 </div>
               ))}
@@ -606,36 +561,29 @@ const ProjectCard = ({ project, onViewDetails, onEditProject, onReviewEvaluation
 
       <div className="project-admin-card-footer">
         <div className="project-admin-action-buttons">
+          {/** Editar (abrir modal en modo edición) */}
           <button 
             className="project-admin-btn-icon project-admin-btn-edit" 
-            onClick={() => onEditProject(project)}
+            onClick={() => onEdit && onEdit(project)}
             title="Editar proyecto"
           >
             <FaEdit />
           </button>
+
           <button 
             className="project-admin-btn-icon project-admin-project-btn-view" 
-            onClick={() => onViewDetails(project)}
+            onClick={() => (onView || onViewDetails) && (onView || onViewDetails)(project)}
             title="Ver detalles"
           >
             <FaEye />
           </button>
-          {project.estado === 'Evaluado' && (
-            <button 
-              className="project-admin-btn-icon project-admin-project-btn-review" 
-              onClick={() => onReviewEvaluation(project.id)}
-              title="Revisar evaluación"
-            >
-              <FaFileAlt />
-            </button>
-          )}
         </div>
         <div className="project-admin-registration-date">
-          Creado: {formatDate(project.fechaEnvio)}
+          Creado: {creationDate || '—'}
         </div>
       </div>
     </div>
   );
 };
 
-export default ProjectCard;
+export default ProjectCardEvaluando;

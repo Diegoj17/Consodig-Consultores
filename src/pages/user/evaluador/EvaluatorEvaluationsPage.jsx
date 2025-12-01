@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaClock, FaPlay, FaCheck, FaFileAlt, FaBug } from 'react-icons/fa';
-import EvaluatorEvaluationForm from '../../components/management/project/evaluador/EvaluatorEvaluationForm';
-import EvaluatorEvaluationList from '../../components/management/project/evaluador/EvaluatorEvaluationList';
-import { evaluationService, EVALUATION_STATUS } from '../../services/evaluationService';
-import '../../styles/pages/user/EvaluatorEvaluationsPage.css';
+import EvaluatorEvaluationForm from '../../../components/management/project/evaluador/EvaluatorEvaluationForm';
+import EvaluatorEvaluationList from '../../../components/management/project/evaluador/EvaluatorEvaluationList';
+import { evaluationService, EVALUATION_STATUS } from '../../../services/evaluationService';
+import '../../../styles/pages/user/evaluador/EvaluatorEvaluationsPage.css';
 
 const EvaluatorEvaluationsPage = () => {
   const [evaluations, setEvaluations] = useState([]);

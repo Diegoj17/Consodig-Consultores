@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaClock, FaFileAlt } from 'react-icons/fa';
-import EvaluatorEvaluationList from '../../components/management/project/evaluador/EvaluatorEvaluationList';
-import { evaluationService } from '../../services/evaluationService';
+import EvaluatorEvaluationList from '../../../components/management/project/evaluador/EvaluatorEvaluationList';
+import { evaluationService } from '../../../services/evaluationService';
 
 const EvaluatorPendingPage = () => {
   const [evaluations, setEvaluations] = useState([]);

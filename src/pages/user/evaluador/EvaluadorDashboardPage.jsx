@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import EvaluadorStats from '../../components/dashboard/evaluador/EvaluadorStats';
-import EvaluadorActions from '../../components/dashboard/evaluador/EvaluadorActions';
-import RecentEvaluations from '../../components/dashboard/evaluador/RecentEvaluations';
-import AssignedProjects from '../../components/dashboard/evaluador/AssignedProjects';
-import InProgressEvaluations from '../../components/dashboard/evaluador/InProgressEvaluations';
-import '../../styles/pages/user/EvaluadorDashboardPage.css';
-import { evaluationService } from '../../services/evaluationService';
-import projectService from '../../services/projectService';
+import EvaluadorStats from '../../../components/dashboard/evaluador/EvaluadorStats';
+import EvaluadorActions from '../../../components/dashboard/evaluador/EvaluadorActions';
+import RecentEvaluations from '../../../components/dashboard/evaluador/RecentEvaluations';
+import AssignedProjects from '../../../components/dashboard/evaluador/AssignedProjects';
+import InProgressEvaluations from '../../../components/dashboard/evaluador/InProgressEvaluations';
+import { evaluationService } from '../../../services/evaluationService';
+import projectService from '../../../services/projectService';
+import '../../../styles/pages/user/evaluador/EvaluadorDashboardPage.css';
 
 const EvaluadorDashboardPage = () => {
   const navigate = useNavigate();

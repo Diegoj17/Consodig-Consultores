@@ -15,6 +15,8 @@ const EvaluatorEvaluationList = ({
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedEvaluation, setSelectedEvaluation] = useState(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   // Descargar archivo usando la instancia `api` (añade Authorization si existe)
   const handleDownload = async (url, filename) => {
@@ -52,7 +54,7 @@ const EvaluatorEvaluationList = ({
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
       return;
-    } catch {
+        } catch {
       // Si falla (CORS u otro), intentamos con fetch incluyendo credenciales/Authorization
       try {
         const headers = {};
@@ -71,12 +73,13 @@ const EvaluatorEvaluationList = ({
         a.remove();
         window.URL.revokeObjectURL(blobUrl);
         return;
-      } catch {
+        } catch {
         // último recurso: abrir en nueva pestaña para que el navegador/servidor gestione la descarga
         try {
           window.open(url, '_blank', 'noopener');
         } catch {
-          alert('No se pudo descargar el archivo. Intente abrir el enlace en una nueva pestaña.');
+          setErrorModalMessage('No se pudo descargar el archivo. Intente abrir el enlace en una nueva pestaña.');
+          setShowErrorModal(true);
         }
       }
     }
@@ -90,7 +93,8 @@ const EvaluatorEvaluationList = ({
   const confirmReject = () => {
     if (!selectedEvaluation) return;
     if (!rejectReason.trim()) {
-      alert('Por favor indique el motivo del rechazo.');
+      setErrorModalMessage('Por favor indique el motivo del rechazo.');
+      setShowErrorModal(true);
       return;
     }
     onRejectEvaluation(selectedEvaluation.id, rejectReason);
@@ -106,6 +110,10 @@ const EvaluatorEvaluationList = ({
 
   // Calcular progreso de la evaluación (delegado al servicio para usar totalItems cuando exista)
   const calculateProgress = (evaluation) => {
+    // Preferir valor calculado por la página si está disponible
+    if (evaluation && typeof evaluation.gradedPercent === 'number') {
+      return evaluation.gradedPercent;
+    }
     try {
       return evaluationService.calculateProgress(evaluation);
     } catch (err) {
@@ -119,23 +127,16 @@ const EvaluatorEvaluationList = ({
 
   // Obtener etiqueta de estado basado en progreso
   const getStatusBadge = (evaluation) => {
-    const status = getEvaluationStatus(evaluation);
+    const statusRaw = (getEvaluationStatus(evaluation) || '').toString();
+    const status = statusRaw.toUpperCase();
     const progress = calculateProgress(evaluation);
 
     // Para estado ACEPTADA, mostramos diferente según el progreso
-    if (status === 'ACEPTADA') {
+    if (status.includes('ACEPT') || status === 'ACEPTADA') {
       if (progress === 0) {
-        return {
-          label: 'Pendiente', 
-          class: 'evaluator-evaluation-list-status-pending', 
-          icon: <FaClock />
-        };
+        return { label: 'Pendiente', class: 'evaluator-evaluation-list-status-pending', icon: <FaClock /> };
       } else if (progress < 100) {
-        return {
-          label: 'En Progreso', 
-          class: 'evaluator-evaluation-list-status-in-progress', 
-          icon: <FaPlay />
-        };
+        return { label: 'En Progreso', class: 'evaluator-evaluation-list-status-in-progress', icon: <FaPlay /> };
       }
     }
 
@@ -201,14 +202,15 @@ const EvaluatorEvaluationList = ({
 
   // Obtener texto del botón según el estado y progreso
   const getButtonText = (evaluation) => {
-    const status = getEvaluationStatus(evaluation);
+    const statusRaw = (getEvaluationStatus(evaluation) || '').toString();
+    const status = statusRaw.toUpperCase();
     const progress = calculateProgress(evaluation);
 
-    if (status === 'ASIGNADA') {
+    if (status.includes('ASIGN')) {
       return { text: 'Aceptar Evaluación', icon: <FaCheckCircle />, class: 'evaluator-evaluation-list-btn-accept' };
     }
     
-    if (status === 'ACEPTADA') {
+    if (status.includes('ACEPT') || status === 'ACEPTADA') {
       if (progress === 0) {
         return { text: 'Iniciar Evaluación', icon: <FaPlay />, class: 'evaluator-evaluation-list-btn-primary' };
       } else {
@@ -216,7 +218,7 @@ const EvaluatorEvaluationList = ({
       }
     }
     
-    if (status === 'COMPLETADA') {
+    if (status.includes('COMP')) {
       return { text: 'Ver Evaluación', icon: <FaEye />, class: 'evaluator-evaluation-list-btn-secondary' };
     }
     
@@ -237,7 +239,7 @@ const EvaluatorEvaluationList = ({
     <div className="evaluator-evaluation-list">
       <div className="evaluator-evaluation-list-grid">
         {evaluations.map(evaluation => {
-          const status = getEvaluationStatus(evaluation);
+          const status = (getEvaluationStatus(evaluation) || '').toString().toUpperCase();
           const progress = calculateProgress(evaluation);
           const project = getProjectInfo(evaluation);
           const format = getEvaluationFormat(evaluation);
@@ -327,6 +329,14 @@ const EvaluatorEvaluationList = ({
                   </span>
                   <span className="evaluator-evaluation-list-detail-value">
                     {formatDate(evaluation.fechaAsignacion || evaluation.fechaCreacion)}
+                  </span>
+                </div>
+
+                {/* Fecha de creación del proyecto */}
+                <div className="evaluator-evaluation-list-detail-item">
+                  <span className="evaluator-evaluation-list-detail-label">Creado:</span>
+                  <span className="evaluator-evaluation-list-detail-value">
+                    {formatDate(project.fechaCreacion || project.createdAt || project.fecha_creacion || project.created_at || project.fechaEnvio || project.fechaEnvio || project.fechaCreacion)}
                   </span>
                 </div>
                 
@@ -476,6 +486,18 @@ const EvaluatorEvaluationList = ({
           className="evaluator-evaluation-list-reject-reason-textarea"
           rows="4"
         />
+      </Modal>
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        type="error"
+        size="sm"
+      >
+        <div style={{ padding: '0.5rem 0' }}>{errorModalMessage}</div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+          <button className="btn-primary" onClick={() => setShowErrorModal(false)}>Aceptar</button>
+        </div>
       </Modal>
     </div>
   );

@@ -11,6 +11,13 @@ const projectApi = axios.create({
   },
 });
 
+// Informar en consola qué baseURL está usando la app en tiempo de ejecución (útil para depuración)
+try {
+  console.info(`[ProjectAxios] baseURL=${PROJECT_API_BASE_URL}`);
+} catch {
+  // noop
+}
+
 // Interceptor para agregar el token a las peticiones
 projectApi.interceptors.request.use(
   (config) => {

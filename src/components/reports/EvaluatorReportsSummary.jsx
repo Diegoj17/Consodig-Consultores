@@ -1,6 +1,5 @@
 import React from 'react';
 import { FaUserTie, FaChartLine, FaStar } from 'react-icons/fa';
-import '../../styles/reports/EvaluatorReportsSummary.css';
 
 const EvaluatorReportsSummary = ({ summary }) => {
   return (

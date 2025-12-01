@@ -9,11 +9,14 @@ import '../../../../styles/management/project/evaluador/EvaluatorProjectCard2.cs
 import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
 import EvaluatorProjectModal from './EvaluatorProjectModal';
+import Modal from '../../../common/Modal';
 
 const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }) => {
   const [researchOptions, setResearchOptions] = useState([]);
   const [isLoadingLines, setIsLoadingLines] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   const archivos = project.archivos || [];
 
@@ -302,7 +305,8 @@ const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }
       if (archivo.urlArchivo) {
         window.open(archivo.urlArchivo, '_blank', 'noopener,noreferrer');
       } else {
-        alert('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
+        setErrorModalMessage('Error al descargar el archivo: ' + (error.message || 'Error desconocido'));
+        setShowErrorModal(true);
       }
     }
   };
@@ -422,7 +426,7 @@ const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }
         <body>
           <div class="header">
             <h1>${project.titulo || 'Proyecto de Investigación'}</h1>
-            <p><strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion || project.fechaEnvio)}</p>
+            <p><strong>Fecha de creación:</strong> ${formatDate(project.fechaCreacion || project.fechaEnvio || project.createdAt || project.fecha_creacion)}</p>
           </div>
 
           <div class="section">
@@ -520,7 +524,8 @@ const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }
 
     } catch (error) {
       console.error('❌ [EvaluatorProjectCard2] Error generando PDF:', error);
-      alert('Error al generar el PDF: ' + (error.message || 'Error desconocido'));
+      setErrorModalMessage('Error al generar el PDF: ' + (error.message || 'Error desconocido'));
+      setShowErrorModal(true);
     }
   };
 
@@ -721,7 +726,7 @@ const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }
             )}
           </div>
           <div className="evaluator-project-card-2-registration-date">
-            Creado: {formatDate(project.fechaEnvio)}
+            Creado: {formatDate(project.fechaCreacion || project.fechaEnvio || project.createdAt || project.fecha_creacion)}
           </div>
         </div>
       </div>
@@ -733,6 +738,18 @@ const EvaluatorProjectCard2 = ({ project, onReviewEvaluation, showFull = false }
           mode="view"
         />
       )}
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        type="error"
+        size="sm"
+      >
+        <div style={{ padding: '0.5rem 0' }}>{errorModalMessage}</div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+          <button className="btn-primary" onClick={() => setShowErrorModal(false)}>Aceptar</button>
+        </div>
+      </Modal>
     </>
   );
 };

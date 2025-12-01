@@ -21,6 +21,7 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   const baseAdminMenu = [
     { key: 'dashboard', label: 'Inicio', path: '/admin/dashboard', icon: <MdDashboard /> },
     { key: 'users', label: 'Gestión de Usuarios', path: '/admin/users', icon: <FaUsers /> },
+    { key: 'documents', label: 'Documentos', path: '/admin/documents', icon: <FaFileUpload /> },
     { 
       key: 'projects-parent', 
       label: 'Proyectos', 
@@ -52,8 +53,7 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   // Submenú de Evaluaciones para Admin
   const adminEvaluationsSubmenu = useMemo(() => [
     { key: 'review-evaluations', label: 'Revisar Evaluaciones', path: '/admin/evaluations/review', icon: <FaSearch /> },
-    { key: 'completed-evaluations', label: 'Evaluaciones Completadas', path: '/admin/evaluations/completed', icon: <FaCheckCircle /> },
-    { key: 'feedback-management', label: 'Gestión de Observaciones', path: '/admin/evaluations/feedback', icon: <FaEdit /> }
+    { key: 'validated-evaluations', label: 'Evaluaciones Validadas', path: '/admin/evaluations/validated', icon: <FaCheckCircle /> },
   ], []);
 
   const adminReportsSubmenu = useMemo(() => [
@@ -95,15 +95,8 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
   // Menú para Evaluando
   const evaluandoMenu = [
     { key: 'dashboard', label: 'Inicio', path: '/evaluando/dashboard', icon: <MdDashboard /> },
-    { key: 'my-projects', label: 'Mis Proyectos', path: '/evaluando/projects', icon: <FaProjectDiagram /> },
+    { key: 'my-projects', label: 'Proyectos', path: '/evaluando/projects', icon: <FaProjectDiagram /> },
     { key: 'evaluations', label: 'Mis Evaluaciones', path: '/evaluando/evaluations', icon: <FaClipboardList /> },
-    { 
-      key: 'results-parent', 
-      label: 'Resultados', 
-      isParent: true,
-      icon: <FaChartBar /> 
-    },
-    { key: 'messages', label: 'Mensajes', path: '/evaluando/messages', icon: <FaEnvelope /> },
   ];
 
   // Submenú de Resultados para Evaluando
@@ -112,6 +105,8 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
     { key: 'results-history', label: 'Historial', path: '/evaluando/results/history', icon: <FaHistory /> },
     { key: 'results-comparative', label: 'Análisis Comparativo', path: '/evaluando/results/comparative', icon: <FaChartBar /> }
   ], []);
+
+  // NOTE: Evaluando no tiene submenú de Proyectos; el ítem lleva directamente a /evaluando/projects
 
   // Seleccionar menú según el tipo de usuario
   const getMenuItems = () => {
@@ -140,6 +135,7 @@ const Sidebar = ({ activeSection, isOpen = true, userType = 'admin' }) => {
     if (userType === 'evaluador' && parentKey === 'projects-parent') {
       return evaluadorProjectsSubmenu;
     }
+    // evaluando no usa submenu para projects
     if (userType === 'evaluando' && parentKey === 'results-parent') {
       return evaluandoResultsSubmenu;
     }

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import EvaluatorStats from '../../components/management/project/evaluador/EvaluatorStats';
-import EvaluatorProjectsList from '../../components/management/project/evaluador/EvaluatorProjectsList';
-import EvaluatorEvaluationForm from '../../components/management/project/evaluador/EvaluatorEvaluationForm';
-import EvaluatorHistory from '../../components/management/project/evaluador/EvaluatorHistory';
-import '../../styles/pages/user/EvaluatorEvaluationPage.css';
+import EvaluatorStats from '../../../components/management/project/evaluador/EvaluatorStats';
+import EvaluatorProjectsList from '../../../components/management/project/evaluador/EvaluatorProjectsList';
+import EvaluatorEvaluationForm from '../../../components/management/project/evaluador/EvaluatorEvaluationForm';
+import EvaluatorHistory from '../../../components/management/project/evaluador/EvaluatorHistory';
+import '../../../styles/pages/user/evaluador/EvaluatorEvaluationPage.css';
 
 const EvaluatorEvaluationPage = ({ projects = [], onAccept, onReject, onSubmitEvaluation }) => {
   const [activeTab, setActiveTab] = useState('assigned');

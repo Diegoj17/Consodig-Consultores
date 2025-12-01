@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { FaUpload, FaFilePdf, FaCheckCircle, FaTimes, FaIdCard, FaGraduationCap, FaUniversity, FaEye, FaTrash } from 'react-icons/fa'
-import '../../../../styles/management/project/evaluador/EvaluatorDocumentsUpload.css'
+import '../../../styles/documents/evaluador/EvaluatorDocumentsUpload.css'
+import userService from '../../../services/userService'
+import { useAuth } from '../../../contexts/AuthContext'
 
 const EvaluatorDocumentsUpload = () => {
   const [documents, setDocuments] = useState({
@@ -16,6 +18,42 @@ const EvaluatorDocumentsUpload = () => {
   })
 
   const [previewFile, setPreviewFile] = useState(null)
+  const { user } = useAuth() || {}
+
+  // Cargar archivos ya subidos por el evaluador al montar
+  React.useEffect(() => {
+    const evaluatorId = user?.id || user?.userId || user?._id || null;
+    if (!evaluatorId) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await userService.getEvaluadorArchivos(evaluatorId);
+        if (!mounted || !resp) return;
+
+        const newDocs = {};
+        const newStatus = {};
+
+        if (resp.fotocopiaUrl) {
+          newDocs.cedula = { remoteUrl: resp.fotocopiaUrl, name: resp.fotocopiaUrl.split('/').pop(), remote: resp };
+          newStatus.cedula = 'completed';
+        }
+        if (resp.certificadosUrl) {
+          newDocs.titulos = { remoteUrl: resp.certificadosUrl, name: resp.certificadosUrl.split('/').pop(), remote: resp };
+          newStatus.titulos = 'completed';
+        }
+        if (resp.cuentaBancariaUrl) {
+          newDocs.cuentaBancaria = { remoteUrl: resp.cuentaBancariaUrl, name: resp.cuentaBancariaUrl.split('/').pop(), remote: resp };
+          newStatus.cuentaBancaria = 'completed';
+        }
+
+        setDocuments(prev => ({ ...prev, ...newDocs }));
+        setUploadStatus(prev => ({ ...prev, ...newStatus }));
+      } catch (err) {
+        console.debug('No se pudieron cargar archivos existentes del evaluador:', err?.message || err);
+      }
+    })();
+    return () => { mounted = false };
+  }, [user]);
 
   const documentTypes = {
     cedula: {
@@ -59,22 +97,50 @@ const EvaluatorDocumentsUpload = () => {
       return
     }
 
-    // Simular upload
+    // Real upload via API
     setUploadStatus(prev => ({ ...prev, [documentType]: 'uploading' }))
-    
-    setTimeout(() => {
-      setDocuments(prev => ({
-        ...prev,
-        [documentType]: {
-          file,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploadDate: new Date().toISOString()
-        }
-      }))
-      setUploadStatus(prev => ({ ...prev, [documentType]: 'completed' }))
-    }, 1500)
+    const payload = {
+      fotocopiaDocumento: null,
+      certificadosEstudios: null,
+      certificadoCuentaBancaria: null
+    }
+    if (documentType === 'cedula') payload.fotocopiaDocumento = file
+    if (documentType === 'titulos') payload.certificadosEstudios = file
+    if (documentType === 'cuentaBancaria') payload.certificadoCuentaBancaria = file
+
+    const evaluatorId = user?.id || user?.userId || user?._id || null
+
+    if (!evaluatorId) {
+      alert('No se pudo determinar el evaluador. Por favor inicie sesión.');
+      setUploadStatus(prev => ({ ...prev, [documentType]: 'pending' }))
+      return
+    }
+
+    userService.uploadEvaluadorArchivos(evaluatorId, payload)
+      .then((resp) => {
+        // actualizar estado con lo que devuelva el backend
+        const now = new Date().toISOString()
+        // extraer URL remota si el backend la devuelve
+        const remoteUrl = resp?.fotocopiaUrl || resp?.certificadosUrl || resp?.cuentaBancariaUrl || resp?.fotocopia_url || resp?.certificados_url || resp?.cuenta_bancaria_url || null
+        setDocuments(prev => ({
+          ...prev,
+          [documentType]: {
+            file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadDate: now,
+            remote: resp,
+            remoteUrl
+          }
+        }))
+        setUploadStatus(prev => ({ ...prev, [documentType]: 'completed' }))
+      })
+      .catch((err) => {
+        console.error('Error subiendo archivo:', err)
+        alert('Error subiendo archivo: ' + (err?.message || err))
+        setUploadStatus(prev => ({ ...prev, [documentType]: 'pending' }))
+      })
   }
 
   const handleFileRemove = (documentType) => {
@@ -95,6 +161,7 @@ const EvaluatorDocumentsUpload = () => {
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
+    if (bytes == null) return ''
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -128,13 +195,18 @@ const EvaluatorDocumentsUpload = () => {
   }
 
   const handlePreview = (documentType) => {
-    const file = documents[documentType]
-    if (file) {
-      setPreviewFile({
-        type: documentType,
-        data: file,
-        url: URL.createObjectURL(file.file)
-      })
+    const doc = documents[documentType]
+    if (!doc) return
+    // Abrir URL remota si existe
+    const remote = doc.remoteUrl || doc.remote?.fotocopiaUrl || doc.remote?.certificadosUrl || doc.remote?.cuentaBancariaUrl
+    if (remote) {
+      window.open(remote, '_blank')
+      return
+    }
+    // Si hay archivo local, mostrar preview
+    const file = doc.file
+    if (file && file instanceof File) {
+      setPreviewFile({ type: documentType, data: file, url: URL.createObjectURL(file) })
     }
   }
 
@@ -183,21 +255,34 @@ const EvaluatorDocumentsUpload = () => {
                     <div className="evaluator-documents-preview-info">
                       <FaFilePdf className="evaluator-documents-file-icon" />
                       <div className="evaluator-documents-file-details">
-                        <span className="evaluator-documents-file-name">{document.name}</span>
-                        <span className="evaluator-documents-file-size">{formatFileSize(document.size)}</span>
+                        <span className="evaluator-documents-file-name">{document.name || document.remoteUrl?.split('/').pop() || ''}</span>
+                        {document.size ? (
+                          <span className="evaluator-documents-file-size">{formatFileSize(document.size)}</span>
+                        ) : null}
                         <span className="evaluator-documents-file-date">
-                          Subido: {new Date(document.uploadDate).toLocaleDateString()}
+                          {(() => {
+                            const raw = document.uploadDate || document.remote?.created_at || document.remote?.createdAt || document.remote?.createdAt;
+                            if (!raw) return '';
+                            // Normalizar formato 'YYYY-MM-DD HH:mm:ss' -> 'YYYY-MM-DDTHH:mm:ss' para Date
+                            let s = String(raw);
+                            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)) {
+                              s = s.replace(' ', 'T');
+                            }
+                            const d = new Date(s);
+                            if (isNaN(d.getTime())) return '';
+                            return 'Subido: ' + d.toLocaleDateString();
+                          })()}
                         </span>
                       </div>
                     </div>
                     <div className="evaluator-documents-actions">
-                      <button
-                        className="evaluator-documents-btn-preview"
-                        onClick={() => handlePreview(key)}
-                        title="Vista previa"
-                      >
-                        <FaEye />
-                      </button>
+                        <button
+                          className="evaluator-documents-btn-preview"
+                          onClick={() => handlePreview(key)}
+                          title="Vista previa"
+                        >
+                          <FaEye />
+                        </button>
                       <button
                         className="evaluator-documents-btn-remove"
                         onClick={() => handleFileRemove(key)}

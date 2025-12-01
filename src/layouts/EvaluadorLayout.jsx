@@ -3,16 +3,16 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import ProfileEditPage from '../pages/ProfileEditPage';
-import EvaluatorDocumentsPage from '../pages/user/EvaluatorDocumentsPage';
+import EvaluatorDocumentsPage from '../pages/user/evaluador/EvaluatorDocumentsPage';
 import ChangePasswordPage from '../pages/ChangePasswordPage';
-import EvaluadorDashboard from '../pages/user/EvaluadorDashboardPage';
-import EvaluatorProjectsPage from '../pages/user/EvaluatorProjectsPage';
-import EvaluatorPendingPage from '../pages/user/EvaluatorPendingPage';
-import EvaluatorInProgressPage from '../pages/user/EvaluatorInProgressPage';
-import EvaluatorCompletedPage from '../pages/user/EvaluatorCompletedPage';
+import EvaluadorDashboard from '../pages/user/evaluador/EvaluadorDashboardPage';
+import EvaluatorProjectsPage from '../pages/user/evaluador/EvaluatorProjectsPage';
+import EvaluatorPendingPage from '../pages/user/evaluador/EvaluatorPendingPage';
+import EvaluatorInProgressPage from '../pages/user/evaluador/EvaluatorInProgressPage';
+import EvaluatorCompletedPage from '../pages/user/evaluador/EvaluatorCompletedPage';
 import EvaluatorEvaluationForm from '../components/management/project/evaluador/EvaluatorEvaluationForm';
-import EvaluatorHistoryPage from '../pages/user/EvaluatorHistoryPage';
-import EvaluatorInProgressProjectsPage from '../pages/user/EvaluatorInProgressProjectsPage';
+import EvaluatorHistoryPage from '../pages/user/evaluador/EvaluatorHistoryPage';
+import EvaluatorInProgressProjectsPage from '../pages/user/evaluador/EvaluatorInProgressProjectsPage';
 import '../styles/pages/admin/DashboardPage.css';
 
 function EvaluadorLayout() {

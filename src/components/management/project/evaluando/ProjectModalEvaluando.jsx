@@ -10,10 +10,11 @@ import { MdSchool } from 'react-icons/md';
 import { researchService } from '../../../../services/researchService';
 import { projectService } from '../../../../services/projectService';
 import userService from '../../../../services/userService';
+import { useAuth } from '../../../../contexts/AuthContext';
 import '../../../../styles/management/project/admin/ProjectModal.css';
 import Modal from '../../../common/Modal';
 
-const ProjectModal = ({ 
+const ProjectModalEvaluando = ({ 
   isOpen = false,
   project, 
   onClose, 
@@ -31,82 +32,20 @@ const ProjectModal = ({
     objetivosEspecificos: '',
     justificacion: '',
     nivelEstudios: '',
-    investigadorPrincipal: '',
-    investigadorId: null,
     lineasInvestigacionIds: []
   });
   
-  const [availableProjects, setAvailableProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projectFiles, setProjectFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
-
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const projects = await projectService.getAll();
-        setAvailableProjects(projects);
-        
-        if (project && mode === 'edit') {
-          setSelectedProjectId(project.id);
-        }
-      } catch (error) {
-        console.error('Error cargando proyectos:', error);
-      }
-    };
-
-    if (mode === 'edit' || mode === 'create') {
-      loadProjects();
-    }
-  }, [project, mode]);
-
-  // Cargar archivos del proyecto cuando se abre en modo edición o vista
-  useEffect(() => {
-    const loadProjectFiles = async () => {
-      if ((mode === 'edit' || mode === 'view') && project?.id) {
-        setLoadingFiles(true);
-        try {
-          console.log('🟡 [ProjectModal] Cargando archivos del proyecto:', project.id);
-          const files = await projectService.getProjectFiles(project.id);
-          console.log('🟢 [ProjectModal] Archivos cargados:', files);
-          setProjectFiles(files);
-        } catch (error) {
-          console.error('❌ [ProjectModal] Error cargando archivos:', error);
-          setProjectFiles([]);
-        } finally {
-          setLoadingFiles(false);
-        }
-      }
-    };
-
-    loadProjectFiles();
-  }, [project, mode]);
-
   const [changesMade, setChangesMade] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [researchOptions, setResearchOptions] = useState([]);
   const [nivelEstudiosOptions, setNivelEstudiosOptions] = useState([]);
-  const [investigadoresOptions, setInvestigadoresOptions] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({
     pdf: null,
     excel: null
   });
 
-  // DEBUG: Mostrar en consola cómo viene el investigador cuando cambia el proyecto
-  useEffect(() => {
-    console.log('🔎 [ProjectModal] investigador fields for project:', {
-      id_candidates: {
-        investigadorId: project?.investigadorId,
-        investigador_id: project?.investigador_id,
-        investigadorIdAlt: project?.investigatorId,
-      },
-      investigadorPrincipal: project?.investigadorPrincipal,
-      investigador: project?.investigador,
-      investigadorObj: project?.investigadorPrincipalObj || project?.investigadorObj || null,
-      investigadoresOptionsLength: investigadoresOptions?.length,
-      rawProject: project
-    });
-  }, [project, investigadoresOptions]);
   const [uploadStatus, setUploadStatus] = useState({
     pdf: { status: 'idle', message: '' },
     excel: { status: 'idle', message: '' }
@@ -122,175 +61,60 @@ const ProjectModal = ({
     onConfirm: null
   });
 
-  useEffect(() => {
-    console.log('🔍 ProjectModal Upload State:', {
-      projectId: project?.id,
-      mode,
-      selectedFiles,
-      uploadStatus,
-      uploading,
-      projectFiles
-    });
-  }, [project, mode, selectedFiles, uploadStatus, uploading, projectFiles]);
-
   const fileInputRef = useRef({ pdf: null, excel: null });
   const linesRef = useRef(null);
   const [showLinesDropdown, setShowLinesDropdown] = useState(false);
 
+  const { user } = useAuth();
+
   // Cargar opciones de nivel de estudios y líneas de investigación
   useEffect(() => {
-  const loadOptions = async () => {
-    try {
-      // Obtener niveles de estudio desde el servicio de proyectos (que ahora usa userService)
-      const niveles = await projectService.getNivelesEstudio();
-      setNivelEstudiosOptions(niveles);
+    const loadOptions = async () => {
+      try {
+        const niveles = await projectService.getNivelesEstudio();
+        setNivelEstudiosOptions(niveles);
 
-      // Obtener líneas de investigación desde researchService (que usa el servicio de usuarios)
-      const lineas = await researchService.getAll();
-      console.log('🔍 [ProjectModal] Líneas de investigación cargadas:', lineas);
-      
-      const opts = Array.isArray(lineas) 
-        ? lineas.map((r) => ({ 
-            id: Number(r.id), 
-            nombre: r.nombre || r.nombreLinea || 'Sin nombre'
-          })).filter(o => o.id && o.nombre)
-        : [];
-      
-      console.log('🟢 [ProjectModal] Opciones procesadas:', opts);
-      setResearchOptions(opts);
-    } catch (error) {
-      console.error('❌ [ProjectModal] Error cargando opciones:', error);
-      setResearchOptions([]);
-    }
-  };
+        const lineas = await researchService.getAll();
+        console.log('🔍 [ProjectModalEvaluando] Líneas de investigación cargadas:', lineas);
+        
+        const opts = Array.isArray(lineas) 
+          ? lineas.map((r) => ({ 
+              id: Number(r.id), 
+              nombre: r.nombre || r.nombreLinea || 'Sin nombre'
+            })).filter(o => o.id && o.nombre)
+          : [];
+        
+        console.log('🟢 [ProjectModalEvaluando] Opciones procesadas:', opts);
+        setResearchOptions(opts);
+      } catch (error) {
+        console.error('❌ [ProjectModalEvaluando] Error cargando opciones:', error);
+        setResearchOptions([]);
+      }
+    };
 
-  loadOptions();
-}, []);
+    loadOptions();
+  }, []);
 
-// Cargar lista de investigadors (evaluandos) para seleccionar por nombre pero enviar id
-useEffect(() => {
-  const loadInvestigadores = async () => {
-    try {
-      const items = await userService.getEvaluandos();
-      setInvestigadoresOptions(items || []);
-    } catch (e) {
-      console.error('Error cargando investigadors:', e);
-    }
-  };
-
-  loadInvestigadores();
-}, []);
-
-  // Inicializar formData cuando cambia el proyecto o el modo
+  // Cargar archivos del proyecto cuando se abre en modo edición o vista
   useEffect(() => {
-    if (project) {
-      console.log('🔍 [ProjectModal] Inicializando con proyecto:', project);
-      
-      // Extraer IDs de líneas de investigación de diferentes formatos posibles
-      let lineasIds = [];
-      if (project.lineasInvestigacionIds && project.lineasInvestigacionIds.length > 0) {
-        lineasIds = project.lineasInvestigacionIds.map(id => Number(id));
-      } else if (project.lineasInvestigacion && project.lineasInvestigacion.length > 0) {
-        lineasIds = project.lineasInvestigacion
-          .map(li => li.id || li.lineaInvestigacionId)
-          .filter(id => id != null)
-          .map(id => Number(id));
-      } else if (project.lineaInvestigacionIds) {
-        lineasIds = project.lineaInvestigacionIds.map(id => Number(id));
+    const loadProjectFiles = async () => {
+      if ((mode === 'edit' || mode === 'view') && project?.id) {
+        setLoadingFiles(true);
+        try {
+          console.log('🟡 [ProjectModalEvaluando] Cargando archivos del proyecto:', project.id);
+          const files = await projectService.getProjectFiles(project.id);
+          console.log('🟢 [ProjectModalEvaluando] Archivos cargados:', files);
+          setProjectFiles(files);
+        } catch (error) {
+          console.error('❌ [ProjectModalEvaluando] Error cargando archivos:', error);
+          setProjectFiles([]);
+        } finally {
+          setLoadingFiles(false);
+        }
       }
+    };
 
-      console.log('🟢 [ProjectModal] IDs de líneas extraídos:', lineasIds);
-
-      // Determinar investigador: nombre o id desde múltiples claves
-      const invNameRaw = project.investigadorPrincipal || project.investigador || project.investigadorNombre || project.investigador_principal || (project.investigador && (project.investigador.nombre || project.investigador.nombreCompleto)) || null;
-      const invIdRaw = project.investigadorId || project.investigador_id || (project.investigador && (project.investigador.id || project.investigadorId)) || null;
-
-      setFormData({
-        titulo: project.titulo || '',
-        resumen: project.resumen || '',
-        palabrasClave: project.palabrasClave || '',
-        objetivoGeneral: project.objetivoGeneral || '',
-        objetivosEspecificos: project.objetivoEspecifico || project.objetivosEspecificos || '',
-        justificacion: project.justificacion || '',
-        nivelEstudios: project.nivelEstudios || '',
-        investigadorPrincipal: invNameRaw || '',
-        investigadorId: invIdRaw || null,
-        lineasInvestigacionIds: lineasIds
-      });
-
-      // Si no tenemos nombre pero sí ID, resolver el nombre mediante userService
-      if ((!invNameRaw || invNameRaw === '') && invIdRaw) {
-        let mounted = true;
-        (async () => {
-          try {
-            let u = null;
-            // Normalizar posibles valores extraños (p.ej. cadenas serializadas): extraer primer número si existe
-            const normalizeId = (val) => {
-              if (val == null) return null;
-              if (typeof val === 'number') return val;
-              if (typeof val === 'string') {
-                const m = val.match(/(\d+)/);
-                if (m) return Number(m[1]);
-                const asNum = Number(val);
-                return isNaN(asNum) ? val : asNum;
-              }
-              if (typeof val === 'object' && val !== null) return val.id || val.identificacion || null;
-              return val;
-            };
-            const invId = normalizeId(invIdRaw);
-            // Priorizar buscar como evaluando (tal como indicas)
-            try { u = await userService.getEvaluandoById(invId); } catch { u = null; }
-            if (!u) { try { u = await userService.getEvaluadorById(invId); } catch { u = null; } }
-            if (!u) { try { u = await userService.getAdminById(invId); } catch { u = null; } }
-            if (!mounted) return;
-            const resolved = u ? `${u.nombre || u.name || ''}${u.apellido ? ' ' + u.apellido : ''}`.trim() : '';
-            if (resolved) {
-              setFormData(prev => ({ ...prev, investigadorPrincipal: resolved || prev.investigadorPrincipal, investigadorId: u?.id || invId || prev.investigadorId }));
-
-              // Asegurar que el select de investigadores incluya a este usuario
-              const normalized = {
-                id: u.id || invIdRaw,
-                nombre: u.nombre || u.name || '',
-                apellido: u.apellido || u.lastName || '' ,
-                email: u.email || u.correo || ''
-              };
-              setInvestigadoresOptions(prev => {
-                const exists = prev.some(p => String(p.id) === String(normalized.id));
-                return exists ? prev : [normalized, ...prev];
-              });
-            }
-          } catch (err) {
-            console.error('Error resolviendo investigador en ProjectModal:', err);
-          }
-        })();
-      }
-
-      // Inicializar también selectedLineIds
-      setSelectedLineIds(lineasIds);
-    } else if (mode === 'create') {
-      setFormData({
-        titulo: '',
-        resumen: '',
-        palabrasClave: '',
-        objetivoGeneral: '',
-        objetivosEspecificos: '',
-        justificacion: '',
-        nivelEstudios: '',
-        investigadorPrincipal: '',
-        investigadorId: null,
-        lineasInvestigacionIds: []
-      });
-      setSelectedLineIds([]);
-    }
-    
-    setIsEditing(mode === 'edit' || mode === 'create');
-    setChangesMade(false);
-    setFormErrors({});
-    setSelectedFiles({ pdf: null, excel: null });
-    setUploadStatus({
-      pdf: { status: 'idle', message: '' },
-      excel: { status: 'idle', message: '' }
-    });
+    loadProjectFiles();
   }, [project, mode]);
 
   // Cerrar dropdown al hacer click fuera
@@ -349,6 +173,63 @@ useEffect(() => {
     }
   }, [formData.lineasInvestigacionIds]);
 
+  // Inicializar formData cuando cambia el proyecto o el modo
+  useEffect(() => {
+    if (project) {
+      console.log('🔍 [ProjectModalEvaluando] Inicializando con proyecto:', project);
+      
+      // Extraer IDs de líneas de investigación de diferentes formatos posibles
+      let lineasIds = [];
+      if (project.lineasInvestigacionIds && project.lineasInvestigacionIds.length > 0) {
+        lineasIds = project.lineasInvestigacionIds.map(id => Number(id));
+      } else if (project.lineasInvestigacion && project.lineasInvestigacion.length > 0) {
+        lineasIds = project.lineasInvestigacion
+          .map(li => li.id || li.lineaInvestigacionId)
+          .filter(id => id != null)
+          .map(id => Number(id));
+      } else if (project.lineaInvestigacionIds) {
+        lineasIds = project.lineaInvestigacionIds.map(id => Number(id));
+      }
+
+      console.log('🟢 [ProjectModalEvaluando] IDs de líneas extraídos:', lineasIds);
+
+      setFormData({
+        titulo: project.titulo || '',
+        resumen: project.resumen || '',
+        palabrasClave: project.palabrasClave || '',
+        objetivoGeneral: project.objetivoGeneral || '',
+        objetivosEspecificos: project.objetivoEspecifico || project.objetivosEspecificos || '',
+        justificacion: project.justificacion || '',
+        nivelEstudios: project.nivelEstudios || '',
+        lineasInvestigacionIds: lineasIds
+      });
+
+      // Inicializar también selectedLineIds
+      setSelectedLineIds(lineasIds);
+    } else if (mode === 'create') {
+      setFormData({
+        titulo: '',
+        resumen: '',
+        palabrasClave: '',
+        objetivoGeneral: '',
+        objetivosEspecificos: '',
+        justificacion: '',
+        nivelEstudios: '',
+        lineasInvestigacionIds: []
+      });
+      setSelectedLineIds([]);
+    }
+    
+    setIsEditing(mode === 'edit' || mode === 'create');
+    setChangesMade(false);
+    setFormErrors({});
+    setSelectedFiles({ pdf: null, excel: null });
+    setUploadStatus({
+      pdf: { status: 'idle', message: '' },
+      excel: { status: 'idle', message: '' }
+    });
+  }, [project, mode]);
+
   const handleLineaInvestigacionToggle = (lineaId) => {
     const numericId = Number(lineaId);
     setSelectedLineIds(prev => {
@@ -357,7 +238,7 @@ useEffect(() => {
         ? prev.filter(id => id !== numericId) 
         : [...prev, numericId];
       
-      console.log('🔄 [ProjectModal] Líneas actualizadas:', {
+      console.log('🔄 [ProjectModalEvaluando] Líneas actualizadas:', {
         lineaId: numericId,
         wasSelected: isSelected,
         newSelection: next
@@ -457,9 +338,9 @@ useEffect(() => {
     }));
 
     try {
-      console.log(`🟡 [ProjectModal] Subiendo archivo ${fileType} para proyecto ${project.id}`);
+      console.log(`🟡 [ProjectModalEvaluando] Subiendo archivo ${fileType} para proyecto ${project.id}`);
       const uploadedFile = await projectService.uploadFile(project.id, file);
-      console.log(`🟢 [ProjectModal] Archivo ${fileType} subido:`, uploadedFile);
+      console.log(`🟢 [ProjectModalEvaluando] Archivo ${fileType} subido:`, uploadedFile);
       
       // Recargar la lista de archivos después de subir
       const files = await projectService.getProjectFiles(project.id);
@@ -486,7 +367,7 @@ useEffect(() => {
       }, 3000);
 
     } catch (error) {
-      console.error(`❌ [ProjectModal] Error subiendo archivo ${fileType}:`, error);
+      console.error(`❌ [ProjectModalEvaluando] Error subiendo archivo ${fileType}:`, error);
       
       let userMessage = 'Error al subir el archivo';
       if (error.message.includes('HTTP 413')) {
@@ -520,9 +401,9 @@ useEffect(() => {
       cancelText: 'Cancelar',
       onConfirm: async () => {
         try {
-          console.log('🟡 [ProjectModal] Eliminando archivo:', archivoId);
+          console.log('🟡 [ProjectModalEvaluando] Eliminando archivo:', archivoId);
           await projectService.deleteFile(archivoId);
-          console.log('🟢 [ProjectModal] Archivo eliminado');
+          console.log('🟢 [ProjectModalEvaluando] Archivo eliminado');
           
           // Recargar la lista de archivos
           if (project?.id) {
@@ -530,7 +411,7 @@ useEffect(() => {
             setProjectFiles(files);
           }
         } catch (error) {
-          console.error('❌ [ProjectModal] Error eliminando archivo:', error);
+          console.error('❌ [ProjectModalEvaluando] Error eliminando archivo:', error);
           alert('Error al eliminar el archivo: ' + (error.message || 'Error desconocido'));
         } finally {
           setConfirmState(prev => ({ ...prev, open: false }));
@@ -558,7 +439,7 @@ useEffect(() => {
 
       alert('No hay URL pública disponible para abrir este archivo.');
     } catch (error) {
-      console.error('❌ [ProjectModal] Error abriendo archivo:', error);
+      console.error('❌ [ProjectModalEvaluando] Error abriendo archivo:', error);
       alert('Error al abrir el archivo: ' + (error.message || 'Error desconocido'));
     }
   };
@@ -575,28 +456,6 @@ useEffect(() => {
       return <FaFileExcel className="file-icon-excel" />;
     }
     return <FaFileAlt className="file-icon-default" />;
-  };
-
-  const getFileType = (archivo) => {
-    if (archivo.tipo) return archivo.tipo;
-    
-    const ext = archivo.nombreArchivo?.split('.').pop()?.toLowerCase();
-    const typeMap = {
-      'pdf': 'PDF',
-      'xls': 'Excel',
-      'xlsx': 'Excel',
-      'doc': 'Word',
-      'docx': 'Word',
-      'jpg': 'Imagen',
-      'jpeg': 'Imagen',
-      'png': 'Imagen',
-      'gif': 'Imagen',
-      'zip': 'Zip',
-      'rar': 'RAR',
-      'txt': 'Texto'
-    };
-    
-    return typeMap[ext] || 'Archivo';
   };
 
   const validateForm = () => {
@@ -625,36 +484,40 @@ useEffect(() => {
   };
 
   const handleSave = async () => {
-  if (!validateForm()) {
-    return;
-  }
+    if (!validateForm()) {
+      return;
+    }
 
-  if (onSave) {
-    // Asegurar que nivelEstudios sea enviado como string (el backend lo convertirá a número)
-    const nivelEstudiosValue = formData.nivelEstudios;
-    
-    // Asegurar que lineasInvestigacionIds sea un array de números
-    const lineasInvestigacionIdsValue = Array.isArray(selectedLineIds) 
-      ? selectedLineIds.map(id => Number(id)).filter(id => !isNaN(id))
-      : [];
+    if (onSave) {
+      // Asegurar que el payload incluya el ID del investigador (evaluando en sesión)
+      const investigadorId = user?.id || user?.identificacion || user?.identidad || null;
+      const investigadorPrincipal = `${user?.nombre || user?.nombreCompleto || user?.name || ''}`.trim() || undefined;
+      const nivelEstudiosValue = formData.nivelEstudios;
+      
+      const lineasInvestigacionIdsValue = Array.isArray(selectedLineIds) 
+        ? selectedLineIds.map(id => Number(id)).filter(id => !isNaN(id))
+        : [];
 
-    const payload = {
-      titulo: formData.titulo,
-      resumen: formData.resumen,
-      palabrasClave: formData.palabrasClave,
-      objetivoGeneral: formData.objetivoGeneral,
-      objetivoEspecifico: formData.objetivosEspecificos,
-      justificacion: formData.justificacion,
-      nivelEstudios: nivelEstudiosValue, // Enviar como string (ej: "PREGRADO")
-      lineasInvestigacionIds: lineasInvestigacionIdsValue, // Enviar como array de números
-      investigadorId: formData.investigadorId || null,
-      investigadorPrincipal: formData.investigadorPrincipal || null
-    };
+      const payload = {
+        titulo: formData.titulo,
+        resumen: formData.resumen,
+        palabrasClave: formData.palabrasClave,
+        objetivoGeneral: formData.objetivoGeneral,
+        objetivoEspecifico: formData.objetivosEspecificos,
+        justificacion: formData.justificacion,
+        nivelEstudios: nivelEstudiosValue,
+        lineasInvestigacionIds: lineasInvestigacionIdsValue
+        ,
+        investigadorId: investigadorId,
+        investigadorPrincipal: investigadorPrincipal,
+        // Incluir id del proyecto cuando estemos editando
+        ...(mode === 'edit' && project?.id ? { projectId: project.id } : {})
+      };
 
-    console.log('🟡 [ProjectModal] Enviando payload al backend:', payload);
-    onSave(payload, mode === 'create' ? 'create' : 'edit');
-  }
-};
+      console.log('🟡 [ProjectModalEvaluando] Enviando payload al backend:', payload);
+      onSave(payload, mode === 'create' ? 'create' : 'edit');
+    }
+  };
 
   const handleDelete = () => {
     setConfirmState({
@@ -672,7 +535,7 @@ useEffect(() => {
   };
 
   const handleDownload = () => {
-    const headers = ['Título', 'Resumen', 'Palabras Clave', 'Objetivo General', 'Objetivos Específicos', 'Justificación', 'Nivel de Estudios', 'Investigador Principal'];
+    const headers = ['Título', 'Resumen', 'Palabras Clave', 'Objetivo General', 'Objetivos Específicos', 'Justificación', 'Nivel de Estudios'];
     const values = [
       formData.titulo || '',
       formData.resumen || '',
@@ -680,8 +543,7 @@ useEffect(() => {
       formData.objetivoGeneral || '',
       (formData.objetivosEspecificos || '').replace(/\r?\n/g, ' | '),
       formData.justificacion || '',
-      formData.nivelEstudios || '',
-      formData.investigadorPrincipal || ''
+      formData.nivelEstudios || ''
     ];
     
     const csv = `${headers.join(',')}\n${values.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')}`;
@@ -748,7 +610,6 @@ useEffect(() => {
               objetivosEspecificos: project.objetivoEspecifico || project.objetivosEspecificos || '',
               justificacion: project.justificacion || '',
               nivelEstudios: project.nivelEstudios || '',
-              investigadorPrincipal: project.investigadorPrincipal || '',
               lineasInvestigacionIds: lineasIds
             });
             setSelectedLineIds(lineasIds);
@@ -775,6 +636,9 @@ useEffect(() => {
         return null;
     }
   };
+
+  // Respectar la prop `isOpen` pasada por el padre: si está cerrada, no renderizar el modal
+  if (!isOpen) return null;
 
   if (!project && mode !== 'create') return null;
 
@@ -814,7 +678,6 @@ useEffect(() => {
             <button 
               className="project-modal-close" 
               onClick={handleCancel}
-              disabled={isSubmitting || uploading}
             >
               <FaTimes />
             </button>
@@ -832,64 +695,29 @@ useEffect(() => {
               
               <div className="project-modal-section-content">
                 <div className="project-modal-form-row">
-                  <div className="project-modal-form-group project-modal-title-column">
-                    <label className="project-modal-form-label project-modal-form-label-required">
-                      Título del Proyecto
-                    </label>
-                    {isEditing ? (
-                      <>
-                        <textarea
-                          className={`project-modal-form-input ${formErrors.titulo ? 'project-modal-input-error' : ''}`}
-                          value={formData.titulo}
-                          onChange={(e) => handleInputChange('titulo', e.target.value)}
-                          placeholder="Ingrese el título del proyecto..."
-                          rows="2"
-                          disabled={isSubmitting || uploading}
-                        />
-                        {formErrors.titulo && (
-                          <span className="project-modal-error-text">{formErrors.titulo}</span>
-                        )}
-                      </>
-                    ) : (
-                      <p className="project-modal-readonly-text">{formData.titulo}</p>
-                    )}
-                  </div>
-
-                  <div className="project-modal-form-group project-modal-investigator-column">
-                    <label className="project-modal-form-label">Investigador Principal</label>
-                    {isEditing ? (
-                      <div className="investigator-input-wrapper">
-                        <div className="investigator-input-left">
-                          <select
-                            className="project-modal-form-input"
-                            value={formData.investigadorId ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const id = val === '' ? null : Number(val);
-                              handleInputChange('investigadorId', id);
-                              // Actualizar también el nombre mostrado
-                              const sel = investigadoresOptions.find(i => String(i.id) === String(val));
-                              if (sel) {
-                                const name = `${sel.nombre || ''} ${sel.apellido || ''}`.trim();
-                                handleInputChange('investigadorPrincipal', name);
-                              } else if (!val) {
-                                handleInputChange('investigadorPrincipal', '');
-                              }
-                            }}
+                    <div className="project-modal-form-group project-modal-title-column">
+                      <label className="project-modal-form-label project-modal-form-label-required">
+                        Título del Proyecto
+                      </label>
+                      {isEditing ? (
+                        <>
+                          <textarea
+                            className={`project-modal-form-input ${formErrors.titulo ? 'project-modal-input-error' : ''}`}
+                            value={formData.titulo}
+                            onChange={(e) => handleInputChange('titulo', e.target.value)}
+                            placeholder="Ingrese el título del proyecto..."
+                            rows="2"
                             disabled={isSubmitting || uploading}
-                          >
-                            <option value="">Seleccionar investigador</option>
-                            {investigadoresOptions.map(inv => (
-                              <option key={inv.id} value={inv.id}>{inv.nombre}{inv.apellido ? ` ${inv.apellido}` : ''}{inv.email ? ` (${inv.email})` : ''}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="project-modal-readonly-text">{formData.investigadorPrincipal || '—'}</p>
-                    )}
+                          />
+                          {formErrors.titulo && (
+                            <span className="project-modal-error-text">{formErrors.titulo}</span>
+                          )}
+                        </>
+                      ) : (
+                        <p className="project-modal-readonly-text">{formData.titulo}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 <div className="project-modal-form-row">
                   <div className="project-modal-form-group">
@@ -1016,37 +844,37 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Sección de Palabras Clave */}
-            <div className="project-modal-section">
-              <div className="project-modal-section-header">
-                <FaTag className="project-modal-section-icon" />
-                <h3>Palabras clave</h3>
+              {/* Sección de Palabras Clave */}
+              <div className="project-modal-section">
+                <div className="project-modal-section-header">
+                  <FaTag className="project-modal-section-icon" />
+                  <h3>Palabras clave</h3>
+                </div>
+                <div className="project-modal-section-content">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="project-modal-form-input"
+                      value={formData.palabrasClave}
+                      onChange={(e) => handleInputChange('palabrasClave', e.target.value)}
+                      placeholder="Ingrese palabras separadas por comas, p.ej. IA, salud, energía"
+                      disabled={isSubmitting || uploading}
+                    />
+                  ) : (
+                    <div className="project-modal-keywords">
+                      {formData.palabrasClave ? (
+                        formData.palabrasClave.split(',').map((k, i) => (
+                          <span key={i} className="project-modal-keyword-badge">{k.trim()}</span>
+                        ))
+                      ) : (
+                        <p className="project-modal-readonly-text">No hay palabras clave definidas.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="project-modal-section-content">
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="project-modal-form-input"
-                    value={formData.palabrasClave}
-                    onChange={(e) => handleInputChange('palabrasClave', e.target.value)}
-                    placeholder="Ingrese palabras separadas por comas, p.ej. IA, salud, energía"
-                    disabled={isSubmitting || uploading}
-                  />
-                ) : (
-                  <div className="project-modal-keywords">
-                    {formData.palabrasClave ? (
-                      formData.palabrasClave.split(',').map((k, i) => (
-                        <span key={i} className="project-modal-keyword-badge">{k.trim()}</span>
-                      ))
-                    ) : (
-                      <p className="project-modal-readonly-text">No hay palabras clave definidas.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* Sección de Objetivos */}
+              {/* Sección de Objetivos */}
             <div className="project-modal-section">
               <div className="project-modal-section-header">
                 <FaBullseye className="project-modal-section-icon" />
@@ -1189,7 +1017,6 @@ useEffect(() => {
                     </div>
                   ) : (
                     <div className="project-modal-no-files">
-                      <FaFileAlt className="project-modal-no-files-icon" />
                       <p>No hay archivos adjuntos a este proyecto.</p>
                     </div>
                   )}
@@ -1259,7 +1086,6 @@ useEffect(() => {
             <button 
               className="project-modal-btn-secondary" 
               onClick={handleCancel}
-              disabled={isSubmitting || uploading}
             >
               {isEditing ? 'Cancelar' : 'Cerrar'}
             </button>
@@ -1318,4 +1144,4 @@ useEffect(() => {
   );
 };
 
-export default ProjectModal;
+export default ProjectModalEvaluando;

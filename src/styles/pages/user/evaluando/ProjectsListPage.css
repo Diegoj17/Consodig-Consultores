@@ -1,0 +1,253 @@
+/* src/styles/pages/user/evaluando/ProjectsListPage.css */
+.project-list-evaluando-page {
+  width: 100%;
+  animation: project-list-evaluando-fadeIn 0.4s ease-out;
+}
+
+/* Acciones */
+.project-list-evaluando-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.project-list-evaluando-actions-left,
+.project-list-evaluando-actions-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.project-list-evaluando-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.project-list-evaluando-btn-primary:hover {
+  transform: translateY(-2px);
+}
+
+/* Filtros */
+.project-list-evaluando-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+}
+  .project-list-evaluating-filters-right,
+  .project-list-evaluando-filters-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+  }
+
+.project-list-evaluando-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-list-evaluando-search-input {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-width: 300px;
+}
+
+.project-list-evaluando-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+.project-list-evaluando-status-filter {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.project-list-evaluando-status-filter:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
+}
+
+/* Estado de carga */
+.project-list-evaluando-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: var(--text-light);
+}
+
+.project-list-evaluando-spinning {
+  animation: project-list-evaluando-spin 1s linear infinite;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Grid de proyectos */
+.project-list-evaluando-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.75rem;
+  margin-top: 1rem;
+}
+
+/* Estado vacío */
+.project-list-evaluando-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  border: 2px dashed var(--border-color);
+  animation: project-list-evaluando-fadeIn 0.5s ease-out;
+}
+
+.project-list-evaluando-empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.3;
+  color: var(--text-light);
+  animation: project-list-evaluando-float 3s ease-in-out infinite;
+}
+
+.project-list-evaluando-empty-state h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.project-list-evaluando-empty-state p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Botón secundario */
+.project-list-evaluando-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-dark);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.project-list-evaluando-btn-secondary:hover {
+  background: var(--background-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.project-list-evaluando-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Animaciones */
+@keyframes project-list-evaluando-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes project-list-evaluando-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes project-list-evaluando-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .project-list-evaluando-filters {
+    flex-direction: column;
+  }
+  
+  .project-list-evaluando-search-input,
+  .project-list-evaluando-status-filter {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .project-list-evaluando-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .project-list-evaluando-actions-left,
+  .project-list-evaluando-actions-right {
+    width: 100%;
+  }
+  
+  .project-list-evaluando-actions-left button,
+  .project-list-evaluando-actions-right button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .project-list-evaluando-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .project-list-evaluando-empty-state {
+    padding: 3rem 1.5rem;
+  }
+  
+  .project-list-evaluando-empty-icon {
+    font-size: 4rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .project-list-evaluando-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}

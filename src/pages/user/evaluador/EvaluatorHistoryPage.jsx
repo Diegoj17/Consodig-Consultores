@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaHistory, FaUser, FaFilter, FaCheckCircle } from 'react-icons/fa';
-import { projectService } from '../../services/projectService';
-import { evaluationService } from '../../services/evaluationService';
-import { userService } from '../../services/userService';
-import EvaluatorProjectCard2 from '../../components/management/project/evaluador/EvaluatorProjectCard2';
-import '../../styles/pages/user/EvaluatorHistoryPage.css';
+import { projectService } from '../../../services/projectService';
+import { evaluationService } from '../../../services/evaluationService';
+import { userService } from '../../../services/userService';
+import EvaluatorProjectCard2 from '../../../components/management/project/evaluador/EvaluatorProjectCard2';
+import '../../../styles/pages/user/evaluador/EvaluatorHistoryPage.css';
 
 const EvaluatorHistoryPage = () => {
   const [projects, setProjects] = useState([]);

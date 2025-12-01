@@ -1,17 +1,16 @@
 import React from 'react';
 import { FaSearch, FaDownload } from 'react-icons/fa';
-import '../../styles/reports/EvaluatorReportsHeader.css';
+import '../../styles/reports/EvaluationReportsHeader.css';
 
 const EvaluatorReportsHeader = ({ searchTerm, setSearchTerm, timeFilter, setTimeFilter, onExport }) => {
   return (
-    <div className="evaluator-reports-header">
-      <div className="evaluator-reports-header-content">
-        <h1>Reportes por Evaluador</h1>
+    <div className="evaluation-reports-header">
+      <div className="evaluation-reports-header-content">
         <p>Analiza el desempeño individual de cada evaluador</p>
       </div>
-      <div className="evaluator-reports-header-actions">
-        <div className="evaluator-reports-search-box">
-          <FaSearch className="evaluator-reports-search-icon" />
+      <div className="evaluation-reports-header-actions">
+        <div className="evaluation-reports-search-box">
+          <FaSearch className="evaluation-reports-search-icon" />
           <input
             type="text"
             placeholder="Buscar evaluadores..."
@@ -20,7 +19,7 @@ const EvaluatorReportsHeader = ({ searchTerm, setSearchTerm, timeFilter, setTime
           />
         </div>
         <select 
-          className="evaluator-reports-time-filter"
+          className="evaluation-reports-time-filter"
           value={timeFilter}
           onChange={(e) => setTimeFilter(e.target.value)}
         >
@@ -29,7 +28,7 @@ const EvaluatorReportsHeader = ({ searchTerm, setSearchTerm, timeFilter, setTime
           <option value="last-quarter">Último trimestre</option>
           <option value="last-year">Último año</option>
         </select>
-        <button className="evaluator-reports-export-btn" onClick={onExport}>
+        <button className="evaluation-reports-export-btn" onClick={onExport}>
           <FaDownload /> Exportar Reporte
         </button>
       </div>

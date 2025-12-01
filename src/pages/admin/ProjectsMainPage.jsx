@@ -7,6 +7,7 @@ import ProjectGrid from '../../components/management/project/admin/ProjectGrid';
 import ProjectModal from '../../components/management/project/admin/ProjectModal';
 import Modal from '../../components/common/Modal';
 import { projectService } from '../../services/projectService';
+import userService from '../../services/userService';
 import '../../styles/pages/admin/ProjectsMainPage.css';
 
 const ProjectsMainPage = () => {
@@ -44,14 +45,42 @@ const ProjectsMainPage = () => {
     console.log('🟢 [ProjectsMainPage] Proyectos cargados y limpiados:', projectsData);
     
     // Mapear los datos ya limpios del backend al formato esperado por el frontend
-    const formattedProjects = projectsData.map(project => {
+    const formattedProjects = await Promise.all(projectsData.map(async (project) => {
       // Los archivos ya vienen limpios del service
       const archivos = project.archivos || [];
-      
+
+      // Resolver investigador si hay un investigadorId
+      let investigadorObj = project.investigador || null;
+      if (!investigadorObj && project.investigadorId) {
+        try {
+          investigadorObj = await userService.getEvaluandoById(project.investigadorId);
+        } catch {
+          investigadorObj = null;
+        }
+        if (!investigadorObj && project.investigadorId) {
+          try {
+            investigadorObj = await userService.getEvaluadorById(project.investigadorId);
+          } catch {
+            investigadorObj = null;
+          }
+        }
+        if (!investigadorObj && project.investigadorId) {
+          try {
+            investigadorObj = await userService.getAdminById(project.investigadorId);
+          } catch {
+            investigadorObj = null;
+          }
+        }
+      }
+
+      const resolvedName = investigadorObj ? `${investigadorObj.nombre || investigadorObj.name || ''}${investigadorObj.apellido ? ' ' + investigadorObj.apellido : ''}`.trim() : (project.investigadorPrincipal || 'Por definir');
+
       return {
         id: project.id,
         titulo: project.titulo || '',
-        investigadorPrincipal: project.investigadorPrincipal || 'Por definir',
+        investigadorId: project.investigadorId || project.investigador?.id || null,
+        investigador: investigadorObj || null,
+        investigadorPrincipal: resolvedName,
         fechaEnvio: project.fechaCreacion || project.fechaEnvio || new Date().toISOString().split('T')[0],
         estado: project.estado || 'Pendiente',
         evaluadorAsignado: project.evaluadorAsignado || null,
@@ -70,7 +99,7 @@ const ProjectsMainPage = () => {
         archivos: archivos, // Ya vienen limpios
         totalArchivos: archivos.length
       };
-    });
+    }));
     
     console.log('🟢 [ProjectsMainPage] Proyectos formateados:', formattedProjects);
     
@@ -143,6 +172,7 @@ const ProjectsMainPage = () => {
           id: newProject.id,
           titulo: newProject.titulo,
           investigadorPrincipal: formData.investigadorPrincipal || 'Por definir',
+          investigadorId: newProject.investigadorId || formData.investigadorId || null,
           fechaEnvio: newProject.fechaCreacion || new Date().toISOString().split('T')[0],
           estado: 'Pendiente',
           evaluadorAsignado: null,

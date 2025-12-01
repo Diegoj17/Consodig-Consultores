@@ -7,18 +7,16 @@ import {
   FaStar, 
   FaCheckCircle,
   FaClipboardList,
-  FaIdCard,
-  FaCode,
   FaFileAlt,
   FaChartBar,
   FaComment
 } from 'react-icons/fa';
-import '../../../../styles/management/project/evaluador/EvaluatorCompletedList.css';
 
-const EvaluatorCompletedList = ({ 
+const EvaluandoCompletedList = ({ 
   evaluations, 
   onViewEvaluation, 
-  onExportPDF,
+  onExportPDF, 
+  onExportExcel 
 }) => {
 
   const getScoreColor = (score) => {
@@ -53,22 +51,18 @@ const EvaluatorCompletedList = ({
     }
   };
 
-  // Obtener datos del proyecto de manera segura
   const getProjectData = (evaluation) => {
     return evaluation.proyecto || evaluation.project || {};
   };
 
-  // Obtener puntaje final con valores por defecto
   const getFinalScore = (evaluation) => {
     return evaluation.calificacionTotal ?? evaluation.puntajeFinal ?? evaluation.finalScore ?? evaluation.score ?? 0;
   };
 
-  // Obtener fecha de finalización
   const getCompletedDate = (evaluation) => {
     return evaluation.fechaFinalizacion || evaluation.completedDate || evaluation.finishedAt;
   };
 
-  // Obtener comentarios finales
   const getFinalComments = (evaluation) => {
     if (evaluation.items && Array.isArray(evaluation.items)) {
       const comments = evaluation.items
@@ -80,39 +74,19 @@ const EvaluatorCompletedList = ({
     return evaluation.comentariosFinales || evaluation.finalComments || '';
   };
 
-  // Obtener código del proyecto
-  const getProjectCode = (evaluation, project) => {
-    return project.codigo || project.code || evaluation.proyectoId || evaluation.projectId || 
-           (evaluation.proyecto && evaluation.proyecto.id) || 
-           (evaluation.project && evaluation.project.id) || 'N/A';
-  };
-
-  // Obtener título del proyecto
   const getProjectTitle = (project) => {
     return project.titulo || project.title || 'Sin título';
   };
 
-  // Obtener nombre del formato
-  const getFormatName = (evaluation) => {
-    return evaluation.formato?.nombre || evaluation.evaluationFormat?.name || 'N/A';
-  };
-
-  // Manejar clic en ver detalles
   const handleViewDetails = (evaluation) => {
-    if (onViewEvaluation) {
-      onViewEvaluation(evaluation);
-    }
+    if (onViewEvaluation) onViewEvaluation(evaluation);
   };
 
-  // Manejar exportación PDF
   const handleExportPDF = (evaluationId, event) => {
     event.stopPropagation();
-    if (onExportPDF) {
-      onExportPDF(evaluationId);
-    }
+    if (onExportPDF) onExportPDF(evaluationId);
   };
 
-  // Estado vacío
   if (!evaluations || evaluations.length === 0) {
     return (
       <div className="evaluator-evaluation-completed-empty-state">
@@ -132,11 +106,10 @@ const EvaluatorCompletedList = ({
           const completedDate = getCompletedDate(evaluation);
           const finalComments = getFinalComments(evaluation);
           const projectTitle = getProjectTitle(project);
-          const formatName = getFormatName(evaluation);
 
           return (
             <div 
-              key={evaluation.id} 
+              key={evaluation.id || Math.random()}
               className="evaluator-evaluation-completed-card evaluator-evaluation-completed-completed-card"
               onClick={() => handleViewDetails(evaluation)}
               style={{ cursor: 'pointer' }}
@@ -147,22 +120,9 @@ const EvaluatorCompletedList = ({
                 </h3>
                 {getStatusBadge()}
               </div>
-              
+
               <div className="evaluator-evaluation-completed-details">
 
-                {/* Código del Proyecto */}
-                
-                {/* Formato de Evaluación */}
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    <FaFileAlt />
-                    Formato:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    {formatName}
-                  </span>
-                </div>
-                
                 {/* Puntaje Final */}
                 <div className="evaluator-evaluation-completed-detail-item evaluator-evaluation-completed-score-item">
                   <span className="evaluator-evaluation-completed-detail-label">
@@ -202,24 +162,6 @@ const EvaluatorCompletedList = ({
                   </span>
                 </div>
 
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    Asignada:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    {formatDate(evaluation.fechaAsignacion || evaluation.assignedDate)}
-                  </span>
-                </div>
-
-                <div className="evaluator-evaluation-completed-detail-item">
-                  <span className="evaluator-evaluation-completed-detail-label">
-                    Aceptada:
-                  </span>
-                  <span className="evaluator-evaluation-completed-detail-value">
-                    {formatDate(evaluation.fechaAceptacion)}
-                  </span>
-                </div>
-
                 {/* Comentarios Finales */}
                 {finalComments && (
                   <div className="evaluator-evaluation-completed-detail-item evaluator-evaluation-completed-detail-item-full-width">
@@ -250,22 +192,18 @@ const EvaluatorCompletedList = ({
                 )}
               </div>
 
-              {/* Acciones */}
               <div className="evaluator-evaluation-completed-actions">
                 <div className="evaluator-evaluation-completed-action-group">
                   <button
                     className="evaluator-evaluation-completed-btn evaluator-evaluation-completed-btn-primary evaluator-evaluation-completed-btn-view"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleViewDetails(evaluation);
-                    }}
-                    aria-label={`Ver detalles de la evaluación ${evaluation.id}`}
+                    onClick={(e) => { e.stopPropagation(); handleViewDetails(evaluation); }}
+                    aria-label={`Ver detalles de la evaluación`}
                   >
                     <FaEye />
                     Ver Detalles
                   </button>
                 </div>
-                
+
                 <div className="evaluator-evaluation-completed-export-group">
                   <span className="evaluator-evaluation-completed-export-label">
                     Exportar:
@@ -275,12 +213,12 @@ const EvaluatorCompletedList = ({
                       className="evaluator-evaluation-completed-btn evaluator-evaluation-completed-btn-export evaluator-evaluation-completed-btn-pdf"
                       onClick={(e) => handleExportPDF(evaluation.id, e)}
                       title="Descargar PDF"
-                      aria-label={`Exportar evaluación ${evaluation.id} a PDF`}
+                      aria-label={`Exportar evaluación a PDF`}
                     >
                       <FaFilePdf />
                       <span>PDF</span>
                     </button>
-                  
+                    
                   </div>
                 </div>
               </div>
@@ -292,4 +230,4 @@ const EvaluatorCompletedList = ({
   );
 };
 
-export default EvaluatorCompletedList;
+export default EvaluandoCompletedList;

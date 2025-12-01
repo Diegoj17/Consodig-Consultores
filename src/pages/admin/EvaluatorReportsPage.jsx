@@ -1,7 +1,75 @@
-// pages/admin/EvaluatorReportsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaDownload, FaFilter, FaUserTie, FaChartLine, FaEnvelope, FaStar } from 'react-icons/fa';
 import '../../styles/pages/admin/EvaluatorReportsPage.css';
+import userService from '../../services/userService';
+import projectApi from '../../api/ProjectAxios';
+import evaluationService from '../../services/evaluationService';
+import EvaluatorReportsHeader from '../../components/reports/EvaluatorReportsHeader';
+import EvaluatorReportsSummary from '../../components/reports/EvaluatorReportsSummary';
+import EvaluatorReportsSelection from '../../components/reports/EvaluatorReportsSelection';
+import EvaluatorReportsDetails from '../../components/reports/EvaluatorReportsDetails';
+
+const pickString = (values, fallback = '') => {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value.trim();
+    }
+  }
+  return fallback;
+};
+
+const extractRating = (ev) => {
+  if (!ev) return null;
+  const candidates = [
+    ev.calificacion_total, ev.calificacionTotal, ev.calificacion,
+    ev.score, ev.promedio, ev.rating, ev.nota
+  ];
+  let r = null;
+  for (const c of candidates) {
+    if (typeof c === 'number' && !isNaN(c)) { r = c; break; }
+    if (typeof c === 'string' && c.trim() !== '' && !isNaN(Number(c))) { r = Number(c); break; }
+  }
+
+  if (r == null) {
+    const items = ev.items || ev.criterios || ev.itemsEvaluados || ev.itemEvaluados || ev.itemEvaluado;
+    if (Array.isArray(items) && items.length > 0) {
+      const sum = items.reduce((s, it) => {
+        const v = it.calificacion || it.score || it.valor || it.puntuacion || it.nota;
+        return s + (typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : 0));
+      }, 0);
+      r = sum / items.length;
+    }
+  }
+
+  if (r == null) return null;
+  if (r > 5) r = r / 20;
+  return Number(r);
+};
+
+const getProjectName = (evaluation) => pickString([
+  evaluation?.proyecto?.nombre,
+  evaluation?.proyecto?.titulo,
+  evaluation?.project?.name,
+  evaluation?.project?.title,
+  evaluation?.projectName,
+  evaluation?.proyectoNombre,
+  evaluation?.nombreProyecto,
+  evaluation?.projectTitle,
+  evaluation?.proyectoTitulo
+], `Proyecto #${evaluation?.proyectoId || evaluation?.projectId || evaluation?.id || ''}`);
+
+const getEvaluationName = (evaluation) => pickString([
+  evaluation?.formato?.nombre,
+  evaluation?.formatoEvaluacion?.nombre,
+  evaluation?.evaluationFormat?.name,
+  evaluation?.format?.name,
+  evaluation?.nombre,
+  evaluation?.titulo,
+  evaluation?.nombreEvaluacion,
+  evaluation?.evaluacionNombre,
+  evaluation?.evaluationName,
+  evaluation?.evaluationTitle,
+  evaluation?.descripcion
+], `Evaluación #${evaluation?.id || ''}`);
 
 const EvaluatorReportsPage = () => {
   const [timeFilter, setTimeFilter] = useState('last-month');
@@ -9,114 +77,141 @@ const EvaluatorReportsPage = () => {
   const [selectedEvaluator, setSelectedEvaluator] = useState('');
   const [reportData, setReportData] = useState({
     evaluators: [],
-    summary: {},
+    summary: {
+      totalEvaluators: 0,
+      activeEvaluators: 0,
+      averageRating: 0,
+      totalEvaluations: 0
+    },
     selectedEvaluatorData: null
   });
 
+  // Reutilizable: intentar obtener una calificación normalizada 0-5 desde una evaluación
+
   useEffect(() => {
-    // Datos de ejemplo para reportes por evaluador
-    const mockData = {
-      evaluators: [
-        {
-          id: 1,
-          name: 'Diego Jaimes',
-          email: 'diego.jaimes@uffs.edu',
-          institution: 'Universidad UFFS',
-          specialization: 'Computación en la Nube',
-          status: 'Activo',
-          averageRating: 4.3,
-          totalProjects: 5,
-          completedEvaluations: 8,
-          pendingEvaluations: 2,
-          joinDate: '2023-01-15',
-          lastActivity: '2024-01-15'
-        },
-        {
-          id: 2,
-          name: 'María López',
-          email: 'maria.lopez@tecnologico.edu',
-          institution: 'Tecnológico Nacional',
-          specialization: 'Desarrollo Web',
-          status: 'Activo',
-          averageRating: 4.0,
-          totalProjects: 3,
-          completedEvaluations: 6,
-          pendingEvaluations: 1,
-          joinDate: '2023-02-20',
-          lastActivity: '2024-01-10'
-        },
-        {
-          id: 3,
-          name: 'Carlos Rodríguez',
-          email: 'carlos.rodriguez@central.edu',
-          institution: 'Universidad Central',
-          specialization: 'Base de Datos',
-          status: 'Inactivo',
-          averageRating: 4.1,
-          totalProjects: 4,
-          completedEvaluations: 7,
-          pendingEvaluations: 0,
-          joinDate: '2023-03-10',
-          lastActivity: '2024-01-05'
-        }
-      ],
-      summary: {
-        totalEvaluators: 8,
-        activeEvaluators: 6,
-        averageRating: 4.1,
-        totalEvaluations: 45
+    // Cargar evaluadores reales y sus evaluaciones desde la API
+    const load = async () => {
+      try {
+        const evaluadores = await userService.getEvaluadores();
+        const resp = await projectApi.get('/evaluaciones');
+        const evaluations = resp.data || [];
+
+        // Agrupar evaluaciones por evaluador (soportar varios nombres de campo)
+        const grouped = {};
+        evaluations.forEach((ev) => {
+          let eid = ev.evaluadorId || (ev.evaluador && ev.evaluador.id) || ev.evaluatorId || ev.asignadoA || ev.assignedToId || ev.evaluador;
+          if (typeof eid === 'object') eid = eid?.id;
+          if (!eid) return;
+          const key = String(eid);
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(ev);
+        });
+
+        // usamos la función extractRating definida fuera del useEffect
+
+        const evaluatorsProcessed = (evaluadores || []).map((ev) => {
+          const idKey = String(ev.id);
+          const evals = grouped[idKey] || [];
+
+          const ratings = evals.map(extractRating).filter(v => v != null && !isNaN(v));
+          const averageRating = ratings.length ? Number((ratings.reduce((s, v) => s + v, 0) / ratings.length).toFixed(1)) : null;
+
+          const ratingsDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+          ratings.forEach(r => {
+            const star = Math.min(5, Math.max(1, Math.round(r)));
+            ratingsDistribution[star] = (ratingsDistribution[star] || 0) + 1;
+          });
+
+          const completed = evals.filter(e => ((e.estado || e.status || '').toUpperCase()) === 'COMPLETADA').length;
+          const pending = evals.filter(e => {
+            const st = ((e.estado || e.status || '') || '').toUpperCase();
+            if (st === 'ASIGNADA') return true;
+            if (st === 'ACEPTADA') {
+              return (evaluationService && evaluationService.calculateProgress) ? evaluationService.calculateProgress(e) === 0 : true;
+            }
+            return false;
+          }).length;
+
+          return {
+            id: ev.id,
+            name: ev.nombre || `${ev.nombre || ''} ${ev.apellido || ''}`.trim() || ev.nombreCompleto || ev.nombre || ev.email || (`ID ${ev.id}`),
+            email: ev.email || ev.correo || ev.mail || ev.email || '',
+            institution: ev.afiliacionInstitucional || ev.afiliacion || ev.institucion || ev.institution || '',
+            specialization: ev.nivelEducativo || ev.especializacion || '',
+            status: ev.estado || ev.estado || (ev.estado === 'INACTIVO' ? 'Inactivo' : 'Activo'),
+            averageRating,
+            totalProjects: evals.length,
+            completedEvaluations: completed,
+            pendingEvaluations: pending,
+            joinDate: ev.registrationDate || ev.fechaRegistro || ev.createdAt || '',
+            lastActivity: ev.lastActivity || '',
+            evaluations: evals,
+            ratingsDistribution
+          };
+        });
+
+        const summary = {
+          totalEvaluators: evaluatorsProcessed.length,
+          activeEvaluators: evaluatorsProcessed.filter(e => (e.status || '').toUpperCase() === 'ACTIVO').length,
+          averageRating: (evaluatorsProcessed.reduce((s, e) => s + (Number(e.averageRating) || 0), 0) / Math.max(1, evaluatorsProcessed.length)).toFixed(1),
+          totalEvaluations: evaluations.length
+        };
+
+        setReportData({ evaluators: evaluatorsProcessed, summary, selectedEvaluatorData: null });
+        setSelectedEvaluator(evaluatorsProcessed[0]?.id || '');
+      } catch (error) {
+        console.error('Error cargando datos de evaluadores/evaluaciones:', error);
       }
     };
 
-    setReportData(mockData);
-    setSelectedEvaluator(mockData.evaluators[0].id);
+    load();
   }, []);
 
   useEffect(() => {
     if (selectedEvaluator) {
-      // Simular carga de datos detallados del evaluador seleccionado
-      const evaluator = reportData.evaluators.find(e => e.id === parseInt(selectedEvaluator));
+      const evaluator = reportData.evaluators.find(e => String(e.id) === String(selectedEvaluator));
       if (evaluator) {
-        const detailedData = {
-          ...evaluator,
-          performance: {
-            timeline: [
-              { month: 'Oct', evaluations: 4, averageRating: 4.2 },
-              { month: 'Nov', evaluations: 5, averageRating: 4.3 },
-              { month: 'Dic', evaluations: 3, averageRating: 4.1 },
-              { month: 'Ene', evaluations: 6, averageRating: 4.4 }
-            ],
-            projects: [
-              { name: 'Sistema Académico', rating: 4.5, date: '2024-01-15', status: 'Completado' },
-              { name: 'Plataforma E-learning', rating: 4.5, date: '2024-01-08', status: 'Completado' },
-              { name: 'App Móvil', rating: 4.0, date: '2024-01-10', status: 'Completado' },
-              { name: 'Sistema de Inventarios', rating: 4.5, date: '2024-01-05', status: 'Completado' }
-            ],
-            ratingsDistribution: { 5: 3, 4: 4, 3: 1, 2: 0, 1: 0 }
-          }
-        };
+        const evals = evaluator.evaluations || [];
+
+        // Construir timeline por mes
+        const timelineMap = {};
+        evals.forEach(ev => {
+          const dateStr = ev.fecha || ev.fechaAsignacion || ev.createdAt || ev.createdAt || ev.updatedAt || ev.date;
+          const d = dateStr ? new Date(dateStr) : null;
+          const month = d ? d.toLocaleString('default', { month: 'short' }) : 'N/A';
+          if (!timelineMap[month]) timelineMap[month] = { evaluations: 0, avgSum: 0, count: 0 };
+          timelineMap[month].evaluations += 1;
+          const ratingVal = extractRating(ev);
+          const rating = (typeof ratingVal === 'number' && !isNaN(ratingVal)) ? ratingVal : 0;
+          if (rating > 0) { timelineMap[month].avgSum += rating; timelineMap[month].count += 1; }
+        });
+
+        const timeline = Object.keys(timelineMap).map(m => ({ month: m, evaluations: timelineMap[m].evaluations, averageRating: timelineMap[m].count ? +(timelineMap[m].avgSum / timelineMap[m].count).toFixed(2) : 0 })).slice(-12);
+
+        const projects = evals.map(ev => {
+          const ratingValue = extractRating(ev);
+          return {
+            projectName: getProjectName(ev),
+            evaluationName: getEvaluationName(ev),
+            rating: ratingValue != null ? Number(ratingValue).toFixed(1) : '0.0',
+            date: ev.fecha || ev.createdAt || '',
+            status: ev.estado || ev.status || ''
+          };
+        }).slice(0, 12);
+
+        const ratingsDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        evals.forEach(ev => {
+          const val = extractRating(ev);
+          const rounded = typeof val === 'number' && !isNaN(val) ? Math.round(val) : 0;
+          const r = Math.min(5, Math.max(0, rounded));
+          if (r >= 1 && r <= 5) ratingsDistribution[r] += 1;
+        });
+
+        const detailedData = { ...evaluator, performance: { timeline, projects, ratingsDistribution } };
         setReportData(prev => ({ ...prev, selectedEvaluatorData: detailedData }));
       }
     }
   }, [selectedEvaluator, reportData.evaluators]);
-
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(<FaStar key={i} className="star filled" />);
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(<FaStar key={i} className="star half-filled" />);
-      } else {
-        stars.push(<FaStar key={i} className="star empty" />);
-      }
-    }
-
-    return stars;
-  };
 
   const exportReport = () => {
     alert('Exportando reporte del evaluador...');
@@ -127,227 +222,35 @@ const EvaluatorReportsPage = () => {
   };
 
   const filteredEvaluators = reportData.evaluators.filter(evaluator =>
-    evaluator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    evaluator.institution.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    evaluator.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+    (evaluator.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (evaluator.institution || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (evaluator.specialization || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="evaluator-reports-page">
-      {/* Header de la página */}
-      <div className="page-header">
-        <div className="header-content">
-          <h1>Reportes por Evaluador</h1>
-          <p>Analiza el desempeño individual de cada evaluador</p>
-        </div>
-        <div className="header-actions">
-          <div className="search-box">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Buscar evaluadores..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select 
-            className="time-filter"
-            value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value)}
-          >
-            <option value="last-week">Última semana</option>
-            <option value="last-month">Último mes</option>
-            <option value="last-quarter">Último trimestre</option>
-            <option value="last-year">Último año</option>
-          </select>
-          <button className="export-btn" onClick={exportReport}>
-            <FaDownload /> Exportar Reporte
-          </button>
-        </div>
-      </div>
+      <EvaluatorReportsHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        timeFilter={timeFilter}
+        setTimeFilter={setTimeFilter}
+        onExport={exportReport}
+      />
 
-      {/* Resumen General */}
-      <div className="summary-metrics">
-        <div className="summary-card">
-          <div className="summary-icon">
-            <FaUserTie />
-          </div>
-          <div className="summary-info">
-            <h3>Total Evaluadores</h3>
-            <div className="summary-value">{reportData.summary.totalEvaluators}</div>
-            <div className="summary-subtext">{reportData.summary.activeEvaluators} activos</div>
-          </div>
-        </div>
+      <EvaluatorReportsSummary summary={reportData.summary} />
 
-        <div className="summary-card">
-          <div className="summary-icon">
-            <FaChartLine />
-          </div>
-          <div className="summary-info">
-            <h3>Calificación Promedio</h3>
-            <div className="summary-value">{reportData.summary.averageRating}/5.0</div>
-            <div className="summary-subtext">General del sistema</div>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon">
-            <FaStar />
-          </div>
-          <div className="summary-info">
-            <h3>Evaluaciones Totales</h3>
-            <div className="summary-value">{reportData.summary.totalEvaluations}</div>
-            <div className="summary-subtext">Completadas</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Selector de Evaluador y Lista */}
-      <div className="evaluator-selection">
-        <div className="selection-header">
-          <h2>Seleccionar Evaluador</h2>
-          <select 
-            value={selectedEvaluator} 
-            onChange={(e) => setSelectedEvaluator(e.target.value)}
-            className="evaluator-select"
-          >
-            {filteredEvaluators.map(evaluator => (
-              <option key={evaluator.id} value={evaluator.id}>
-                {evaluator.name} - {evaluator.institution}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Lista de Evaluadores */}
-        <div className="evaluators-list">
-          <h3>Lista de Evaluadores</h3>
-          <div className="evaluators-grid">
-            {filteredEvaluators.map(evaluator => (
-              <div 
-                key={evaluator.id} 
-                className={`evaluator-card ${selectedEvaluator == evaluator.id ? 'selected' : ''}`}
-                onClick={() => setSelectedEvaluator(evaluator.id)}
-              >
-                <div className="evaluator-header">
-                  <div className="evaluator-avatar">
-                    <FaUserTie />
-                  </div>
-                  <div className="evaluator-info">
-                    <h4>{evaluator.name}</h4>
-                    <p>{evaluator.institution}</p>
-                    <span className={`status-badge ${evaluator.status.toLowerCase()}`}>
-                      {evaluator.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="evaluator-stats">
-                  <div className="stat">
-                    <span className="stat-value">{evaluator.averageRating}</span>
-                    <span className="stat-label">Calificación</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-value">{evaluator.completedEvaluations}</span>
-                    <span className="stat-label">Completadas</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-value">{evaluator.pendingEvaluations}</span>
-                    <span className="stat-label">Pendientes</span>
-                  </div>
-                </div>
-                <button 
-                  className="message-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    sendMessage(evaluator);
-                  }}
-                >
-                  <FaEnvelope /> Mensaje
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <EvaluatorReportsSelection
+        evaluators={filteredEvaluators}
+        selectedEvaluator={selectedEvaluator}
+        onSelectEvaluator={setSelectedEvaluator}
+        onSendMessage={sendMessage}
+      />
 
       {/* Detalles del Evaluador Seleccionado */}
       {reportData.selectedEvaluatorData && (
-        <div className="evaluator-details">
-          <div className="details-header">
-            <h2>Reporte Detallado: {reportData.selectedEvaluatorData.name}</h2>
-            <div className="evaluator-meta">
-              <span>{reportData.selectedEvaluatorData.institution}</span>
-              <span>{reportData.selectedEvaluatorData.specialization}</span>
-              <span>Miembro desde: {reportData.selectedEvaluatorData.joinDate}</span>
-            </div>
-          </div>
-
-          <div className="performance-metrics">
-            <div className="performance-card">
-              <h3>Desempeño General</h3>
-              <div className="metrics-grid">
-                <div className="metric">
-                  <div className="metric-value">
-                    {renderStars(reportData.selectedEvaluatorData.averageRating)}
-                    <span>{reportData.selectedEvaluatorData.averageRating}</span>
-                  </div>
-                  <div className="metric-label">Calificación Promedio</div>
-                </div>
-                <div className="metric">
-                  <div className="metric-value">{reportData.selectedEvaluatorData.totalProjects}</div>
-                  <div className="metric-label">Proyectos Asignados</div>
-                </div>
-                <div className="metric">
-                  <div className="metric-value">{reportData.selectedEvaluatorData.completedEvaluations}</div>
-                  <div className="metric-label">Evaluaciones Completadas</div>
-                </div>
-                <div className="metric">
-                  <div className="metric-value">{reportData.selectedEvaluatorData.pendingEvaluations}</div>
-                  <div className="metric-label">Evaluaciones Pendientes</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="performance-card">
-              <h3>Distribución de Calificaciones</h3>
-              <div className="distribution-bars">
-                {[5, 4, 3, 2, 1].map(rating => (
-                  <div key={rating} className="distribution-item">
-                    <span className="rating-label">{rating} ★</span>
-                    <div className="bar-container">
-                      <div 
-                        className="bar-fill"
-                        style={{
-                          width: `${(reportData.selectedEvaluatorData.performance.ratingsDistribution[rating] / reportData.selectedEvaluatorData.completedEvaluations) * 100}%`
-                        }}
-                      ></div>
-                    </div>
-                    <span className="count">{reportData.selectedEvaluatorData.performance.ratingsDistribution[rating]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Proyectos Recientes */}
-          <div className="recent-projects">
-            <h3>Proyectos Evaluados Recientemente</h3>
-            <div className="projects-list">
-              {reportData.selectedEvaluatorData.performance.projects.map((project, index) => (
-                <div key={index} className="project-item">
-                  <div className="project-info">
-                    <h4>{project.name}</h4>
-                    <span className="project-date">{project.date}</span>
-                  </div>
-                  <div className="project-rating">
-                    <span className="rating-badge">{project.rating} ★</span>
-                    <span className="project-status">{project.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <>
+          <EvaluatorReportsDetails evaluator={reportData.selectedEvaluatorData} />
+        </>
       )}
     </div>
   );

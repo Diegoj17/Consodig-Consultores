@@ -44,12 +44,6 @@ const ProfileMenu = ({ isOpen, user = {}, menuItems = [], onAction, onClose }) =
       isDanger: false
     },
     {
-      action: 'documents',
-      label: 'Mis Documentos',
-      icon: FaFilePdf,
-      isDanger: false
-    },
-    {
       action: 'logout',
       label: 'Cerrar Sesión',
       icon: FaSignOutAlt,

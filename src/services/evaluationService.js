@@ -101,7 +101,14 @@ class EvaluationService {
   try {
     console.log('🔄 Solicitando evaluaciones completadas...');
     const response = await projectApi.get(`${this.basePath}/estado/COMPLETADA`);
-    console.log('✅ Respuesta de evaluaciones completadas:', response.data);
+    // Loguear la respuesta RAW del backend como string para evitar que la consola
+    // muestre objetos que luego cambian al expandir (snapshot fijo).
+    try {
+      console.log('✅ Respuesta de evaluaciones completadas (raw):', JSON.stringify(response.data, null, 2));
+    } catch {
+      // Fallback si stringify falla por circular refs
+      console.log('✅ Respuesta de evaluaciones completadas (raw, fallback):', response.data);
+    }
     return response.data;
   } catch (error) {
     console.error('❌ Error obteniendo evaluaciones completadas:', error);
@@ -260,6 +267,21 @@ class EvaluationService {
     }
   }
 
+  // Obtener evaluaciones validadas (validada === true)
+  async getValidatedEvaluations() {
+    try {
+      console.log('🔄 Solicitando evaluaciones validadas (backend no expone endpoint específico, se filtra localmente)');
+      const response = await projectApi.get(`${this.basePath}`);
+      const all = response.data || [];
+      const validated = (all || []).filter(ev => ev.validada === true || ev.validada === 'true' || ev.validada === 1);
+      console.log('✅ Evaluaciones validadas encontradas:', validated.length);
+      return validated;
+    } catch (error) {
+      console.error('❌ Error obteniendo evaluaciones validadas:', error);
+      throw error;
+    }
+  }
+
   // Asignar una evaluación a un evaluador
   async assignEvaluation(asignDto) {
     try {
@@ -347,6 +369,41 @@ class EvaluationService {
     } catch (error) {
       console.error('❌ Error editando evaluación:', error);
       console.error('📡 Detalles del error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  // Validar una evaluación (POST /evaluaciones/{id}/validar)
+  async validateEvaluation(id) {
+    try {
+      const resp = await projectApi.post(`${this.basePath}/${id}/validar`);
+      console.log('✅ Evaluación validada:', resp.data || resp);
+      return resp.data || resp;
+    } catch (error) {
+      console.error('❌ Error validando evaluación:', error);
+      throw error;
+    }
+  }
+
+  // Invalidar una evaluación (POST /evaluaciones/{id}/invalidar) — dto puede contener motivoInvalidacion y otros campos
+  async invalidateEvaluation(id, dto) {
+    try {
+      const resp = await projectApi.post(`${this.basePath}/${id}/invalidar`, dto || {});
+      console.log('✅ Evaluación invalidada:', resp.data || resp);
+      return resp.data || resp;
+    } catch (error) {
+      console.error('❌ Error invalidando evaluación:', error);
+      throw error;
+    }
+  }
+
+  // Obtener evaluación por id
+  async getById(id) {
+    try {
+      const resp = await projectApi.get(`${this.basePath}/${id}`);
+      return resp.data || resp;
+    } catch (error) {
+      console.error('Error obteniendo evaluación por id:', id, error);
       throw error;
     }
   }

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft, FaSave, FaFileAlt, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, FaExternalLinkAlt } from 'react-icons/fa';
 import Modal from '../../../common/Modal';
 import projectService from '../../../../services/projectService';
@@ -11,12 +11,17 @@ import '../../../../styles/management/project/evaluador/EvaluatorCriterio.css';
 const EvaluatorEvaluationForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { evaluation, project, format } = location.state || {};
-  
+  const params = useParams();
+
+  // Mantener estados locales para permitir cargar desde API si location.state está vacío
+  const [evaluationState, setEvaluationState] = useState(location.state?.evaluation || null);
+  const [projectState, setProjectState] = useState(location.state?.project || null);
+  const [formatState, setFormatState] = useState(location.state?.format || null);
+
   console.log('📍 Location state:', location.state);
-  console.log('📋 Evaluation:', evaluation);
-  console.log('🏢 Project:', project);
-  console.log('📝 Format:', format);
+  console.log('📋 Evaluation:', evaluationState);
+  console.log('🏢 Project:', projectState);
+  console.log('📝 Format:', formatState);
 
   const [evaluationData, setEvaluationData] = useState({
     items: [],
@@ -39,51 +44,8 @@ const EvaluatorEvaluationForm = () => {
     onConfirm: null
   });
 
-  // Cargar items reales del formato desde el backend
-  useEffect(() => {
-    if (format?.id) {
-      loadFormatItems(format.id);
-    } else {
-      setError('No se pudo cargar el formato de evaluación');
-      setLoadingItems(false);
-    }
-  }, [format]);
-
-  // Cargar información completa del proyecto si es necesario
-  useEffect(() => {
-    let mounted = true;
-    const loadProjectDetails = async () => {
-      if (!project) return;
-      // Si ya vienen campos clave, los usamos directamente
-      const needsFullFetch = !project.resumen || !project.objetivoGeneral || !project.lineasInvestigacion;
-      if (!needsFullFetch) {
-        setProjectDetails(project);
-        return;
-      }
-
-      try {
-        // setLoadingProject(true);
-        const id = project.id || project.proyectoId || project.proyecto?.id || project.codigo;
-        if (!id) {
-          setProjectDetails(project);
-          return;
-        }
-        const full = await projectService.getById(id);
-        if (mounted) setProjectDetails(full || project);
-      } catch (err) {
-        console.error('❌ Error cargando detalles del proyecto:', err);
-        if (mounted) setProjectDetails(project);
-      } finally {
-        // finished loading project details
-      }
-    };
-
-    loadProjectDetails();
-
-    return () => { mounted = false; };
-  }, [project]);
-
-  const loadFormatItems = async (formatId) => {
+  // Función para cargar items del formato (definida aquí antes de los efectos que la usan)
+  const loadFormatItems = useCallback(async (formatId) => {
     try {
       setLoadingItems(true);
       setError(null);
@@ -94,7 +56,7 @@ const EvaluatorEvaluationForm = () => {
       console.log('✅ Formato obtenido:', formatData);
       
       // Los items vienen en la propiedad 'items' del formato
-      const items = formatData.items || [];
+      const items = formatData.items || formatData.criterios || [];
       console.log('📋 Items del formato:', items);
       
       if (items.length === 0) {
@@ -102,18 +64,56 @@ const EvaluatorEvaluationForm = () => {
       }
       
       setFormatItems(items);
-      
+
       // Inicializar datos de evaluación con los items reales
       const initialItems = items.map(item => ({
         itemFormatoId: item.id,
         calificacion: 0,
         observacion: ''
       }));
-      
-      setEvaluationData(prev => ({
-        ...prev,
-        items: initialItems
-      }));
+
+      // Si ya existen calificaciones guardadas en la evaluación, mezclarlas
+      try {
+        const evalItems = evaluationState?.items || evaluationState?.criterios || evaluationState?.itemsEvaluados || evaluationState?.itemEvaluados || evaluationState?.items_evaluados || [];
+
+        if (Array.isArray(evalItems) && evalItems.length > 0) {
+          const mapEvalByFormatId = (ei) => {
+            // intentar obtener id de item de evaluación usando varias claves
+            return ei.itemFormatoId || ei.item_formato_id || ei.formatoItemId || ei.item_formato || ei.itemFormato?.id || ei.formatoId || ei.itemEvaluadoId || ei.id || null;
+          };
+
+          const merged = initialItems.map(init => {
+            const match = evalItems.find(ei => {
+              const candidate = mapEvalByFormatId(ei);
+              // candidate puede ser número o string
+              if (candidate == null) return false;
+              try {
+                return String(candidate) === String(init.itemFormatoId) || Number(candidate) === Number(init.itemFormatoId);
+              } catch { return false; }
+            });
+
+            if (match) {
+              // posibles campos de calificación
+              const score = match.calificacion || match.valor || match.puntuacion || match.score || match.nota || match.notaFinal || match.calificacionFinal || 0;
+              const obs = match.observacion || match.comentarios || match.comentario || match.observaciones || '';
+              return {
+                ...init,
+                calificacion: typeof score === 'number' ? score : (score ? Number(score) : 0),
+                observacion: obs || ''
+              };
+            }
+
+            return init;
+          });
+
+          setEvaluationData(prev => ({ ...prev, items: merged }));
+        } else {
+          setEvaluationData(prev => ({ ...prev, items: initialItems }));
+        }
+      } catch (mergeErr) {
+        console.warn('Error mezclando items existentes:', mergeErr);
+        setEvaluationData(prev => ({ ...prev, items: initialItems }));
+      }
       
     } catch (error) {
       console.error('❌ Error cargando items del formato:', error);
@@ -121,7 +121,75 @@ const EvaluatorEvaluationForm = () => {
     } finally {
       setLoadingItems(false);
     }
-  };
+  }, [evaluationState]);
+
+  // Si no llegaron datos por location.state, intentar cargar la evaluación por id
+  useEffect(() => {
+    const tryLoadFromApi = async () => {
+      const idFromParams = params.evaluationId || params.id;
+      if ((!evaluationState || !formatState || !projectState) && idFromParams) {
+        try {
+          const ev = await evaluationService.getById(idFromParams);
+          if (ev) {
+            setEvaluationState(ev);
+            // extraer proyecto y formato de la evaluacion si vienen
+            const proj = ev.project || ev.proyecto || ev.proyectoId ? (ev.project || ev.proyecto) : null;
+            setProjectState(proj || projectState);
+            const fmt = ev.evaluationFormat || ev.formatoEvaluacion || ev.formato || ev.format || (ev.formatoId ? { id: ev.formatoId } : null);
+            setFormatState(fmt || formatState);
+          }
+        } catch (err) {
+          console.warn('No se pudo cargar la evaluación desde API:', err);
+        }
+      }
+    };
+
+    tryLoadFromApi();
+  }, [params, evaluationState, formatState, projectState]);
+
+  // Cargar items reales del formato desde el backend
+  useEffect(() => {
+    if (formatState?.id) {
+      loadFormatItems(formatState.id);
+    } else {
+      setError('No se pudo cargar el formato de evaluación');
+      setLoadingItems(false);
+    }
+  }, [formatState, loadFormatItems]);
+
+  // Cargar información completa del proyecto si es necesario
+  useEffect(() => {
+    let mounted = true;
+    const loadProjectDetails = async () => {
+      if (!projectState) return;
+      // Si ya vienen campos clave, los usamos directamente
+      const needsFullFetch = !projectState.resumen || !projectState.objetivoGeneral || !projectState.lineasInvestigacion;
+      if (!needsFullFetch) {
+        setProjectDetails(projectState);
+        return;
+      }
+
+      try {
+        const id = projectState.id || projectState.proyectoId || projectState.proyecto?.id || projectState.codigo;
+        if (!id) {
+          setProjectDetails(projectState);
+          return;
+        }
+        const full = await projectService.getById(id);
+        if (mounted) setProjectDetails(full || projectState);
+      } catch (err) {
+        console.error('❌ Error cargando detalles del proyecto:', err);
+        if (mounted) setProjectDetails(projectState);
+      } finally {
+        // finished loading project details
+      }
+    };
+
+    loadProjectDetails();
+
+    return () => { mounted = false; };
+  }, [projectState]);
+ 
 
   const handleItemChange = (itemId, field, value) => {
     setEvaluationData(prev => ({
@@ -182,31 +250,47 @@ const EvaluatorEvaluationForm = () => {
     try {
       console.log('📤 Enviando evaluación...');
       
-      // Calificar cada item individualmente
-      for (const item of evaluationData.items) {
-        console.log('📝 Calificando item:', item);
-        await evaluationService.gradeItem(evaluation.id, {
-          itemFormatoId: item.itemFormatoId,
-          calificacion: item.calificacion,
-          observacion: item.observacion
-        });
-      }
+        // Calificar cada item individualmente
+        for (const item of evaluationData.items) {
+          console.log('📝 Calificando item:', item);
+          await evaluationService.gradeItem(evaluationState.id, {
+            itemFormatoId: item.itemFormatoId,
+            calificacion: item.calificacion,
+            observacion: item.observacion
+          });
+        }
 
       // Finalizar la evaluación
       console.log('🏁 Finalizando evaluación...');
-      await evaluationService.finishEvaluation(evaluation.id, {
+      await evaluationService.finishEvaluation(evaluationState.id, {
         comentarios: evaluationData.comentarios,
         calificacionFinal: evaluationData.calificacionFinal
       });
-        setModalState({
-          isOpen: true,
-          type: 'success',
-          title: 'Evaluación completada',
-          message: '✅ Evaluación completada exitosamente',
-          confirmText: 'Ir a completadas',
-          showCancel: false,
-          onConfirm: () => navigate('/evaluador/evaluations/completed')
-        });
+
+      // Intentar obtener la evaluación actualizada desde la API para mostrar la calificación real
+      let finalFromApi = null;
+      try {
+        const refreshed = await evaluationService.getById(evaluationState.id);
+        finalFromApi = refreshed?.calificacionFinal ?? refreshed?.calificacion ?? null;
+        // actualizar estado local si viene la calificación
+        if (refreshed) setEvaluationState(refreshed);
+      } catch (refreshErr) {
+        console.warn('No se pudo obtener la evaluación finalizada:', refreshErr);
+      }
+
+      const successMessage = finalFromApi != null
+        ? `✅ Evaluación completada exitosamente. Calificación final: ${finalFromApi}`
+        : '✅ Evaluación completada exitosamente.';
+
+      setModalState({
+        isOpen: true,
+        type: 'success',
+        title: 'Evaluación completada',
+        message: successMessage,
+        confirmText: 'Ir a completadas',
+        showCancel: false,
+        onConfirm: () => navigate('/evaluador/evaluations/completed')
+      });
     } catch (error) {
       console.error('❌ Error enviando evaluación:', error);
       setModalState({
@@ -244,9 +328,9 @@ const EvaluatorEvaluationForm = () => {
       }
 
       console.log('💾 Guardando progreso...');
-      for (const item of itemsConCalificacion) {
+        for (const item of itemsConCalificacion) {
         console.log('💾 Guardando item:', item);
-        await evaluationService.gradeItem(evaluation.id, {
+        await evaluationService.gradeItem(evaluationState.id, {
           itemFormatoId: item.itemFormatoId,
           calificacion: item.calificacion,
           observacion: item.observacion
@@ -297,8 +381,8 @@ const EvaluatorEvaluationForm = () => {
     );
   }
 
-  if (!evaluation || !project || !format) {
-    const missingMsg = `Faltan datos necesarios: ${!evaluation ? 'Evaluation ' : ''}${!project ? 'Project ' : ''}${!format ? 'Format' : ''}`;
+  if (!evaluationState || !projectState || !formatState) {
+    const missingMsg = `Faltan datos necesarios: ${!evaluationState ? 'Evaluation ' : ''}${!projectState ? 'Project ' : ''}${!formatState ? 'Format' : ''}`;
     return (
       <>
         <Modal
@@ -314,21 +398,23 @@ const EvaluatorEvaluationForm = () => {
       </>
     );
   }
+  const displayProject = projectDetails || projectState || {};
 
-  const displayProject = projectDetails || project || {};
+  // Preferir la calificación final que venga del backend (evaluationState) si está disponible
+  const displayFinal = evaluationState?.calificacionFinal ?? evaluationData.calificacionFinal;
 
   const getInstitution = () => {
     // Prefer project-level institution, then evaluation, then format, then fallback
     return (
       displayProject.institucion ||
-      displayProject.institucionNombre ||
-      displayProject.institution ||
-      evaluation?.institucion ||
-      evaluation?.institucionNombre ||
-      evaluation?.institution ||
-      format?.institucion ||
-      format?.institucionNombre ||
-      format?.institution ||
+        displayProject.institucionNombre ||
+        displayProject.institution ||
+        evaluationState?.institucion ||
+        evaluationState?.institucionNombre ||
+        evaluationState?.institution ||
+        formatState?.institucion ||
+        formatState?.institucionNombre ||
+        formatState?.institution ||
       'No especificada'
     );
   };
@@ -336,6 +422,28 @@ const EvaluatorEvaluationForm = () => {
   // --- Helpers para archivos (similar a EvaluatorProjectCard) ---
   const getFileName = (archivo) => {
     return archivo.nombreArchivo || archivo.nombre || 'Archivo sin nombre';
+  };
+
+  // Navegación de regreso: intenta volver a la página anterior, si no hay historial,
+  // usa un fallback basado en el estado de la evaluación (ASIGNADA/ACEPTADA/COMPLETADA)
+  const handleBack = () => {
+    try {
+      // Si la navegación incluyó una ruta origen explícita en location.state, úsala
+      if (location.state && location.state.from) {
+        navigate(location.state.from);
+        return;
+      }
+
+      // Intentar volver en el historial del navegador
+      navigate(-1);
+    } catch {
+      // Fallback: deducir ruta por el estado de la evaluación
+      const status = (evaluationState?.estado || evaluationState?.status || '').toString().toUpperCase();
+      if (status === 'ASIGNADA') navigate('/evaluador/evaluations/pending');
+      else if (status === 'ACEPTADA') navigate('/evaluador/evaluations/in-progress');
+      else if (status === 'COMPLETADA') navigate('/evaluador/evaluations/completed');
+      else navigate('/evaluador/evaluations');
+    }
   };
 
   
@@ -382,7 +490,7 @@ const EvaluatorEvaluationForm = () => {
     <div className="evaluator-evaluation-form">
       {/* Header */}
       <div className="evaluator-form-header">
-        <button className="evaluator-back-btn" onClick={() => navigate('/evaluador/evaluations/pending')}>
+        <button className="evaluator-back-btn" onClick={handleBack}>
           <FaArrowLeft />
           Volver a la lista
         </button>
@@ -390,7 +498,7 @@ const EvaluatorEvaluationForm = () => {
         <div className="evaluator-form-title">
           <div>
             <h1>Evaluación del Proyecto</h1>
-            <p>{project.titulo || 'Sin título'}</p>
+            <p>{projectState?.titulo || projectState?.nombre || 'Sin título'}</p>
           </div>
         </div>
       </div>
@@ -452,8 +560,8 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-format-info">
               <h3>Formato de Evaluación Asignado</h3>
               <div className="evaluator-format-details">
-                <strong>{format.nombre}</strong>
-                <p>{format.descripcion}</p>
+                <strong>{formatState?.nombre || formatState?.name}</strong>
+                <p>{formatState?.descripcion || formatState?.description}</p>
                 <div className="evaluator-format-stats">
                   <span>{formatItems.length} criterios</span>
                   <span>Valor total: {formatItems.reduce((sum, item) => sum + (item.peso || 0), 0)}%</span>
@@ -620,7 +728,6 @@ const EvaluatorEvaluationForm = () => {
             <h2>Comentarios y Finalización</h2>
             
             <div className="evaluator-comments-section">
-              <h3>Comentarios Justificativos</h3>
               <p className="evaluator-help-text">
                 Proporciona observaciones detalladas que justifiquen tu calificación
               </p>
@@ -639,7 +746,7 @@ const EvaluatorEvaluationForm = () => {
             <div className="evaluator-final-score">
               <h3>Calificación Final</h3>
               <div className="evaluator-score-display">
-                <span className="evaluator-score-value">{evaluationData.calificacionFinal}</span>
+                <span className="evaluator-score-value">{displayFinal}</span>
                 <span className="evaluator-score-label">/ 100</span>
               </div>
               <div className="evaluator-score-breakdown">

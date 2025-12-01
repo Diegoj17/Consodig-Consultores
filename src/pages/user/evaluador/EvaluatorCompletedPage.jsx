@@ -1,10 +1,10 @@
 // src/components/management/evaluation/evaluador/EvaluatorCompletedPage.js
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaCheck, FaEye, FaFilePdf, FaFileExcel } from 'react-icons/fa';
-import EvaluatorCompletedList from '../../components/management/project/evaluador/EvaluatorCompletedList';
-import EvaluationDetailsModal from '../../components/management/project/evaluador/EvaluationDetailsModal'; 
-import { evaluationService } from '../../services/evaluationService';
-import '../../styles/pages/user/EvaluatorEvaluationsPage.css';
+import EvaluatorCompletedList from '../../../components/management/project/evaluador/EvaluatorCompletedList';
+import EvaluationDetailsModal from '../../../components/management/project/evaluador/EvaluationDetailsModal'; 
+import { evaluationService } from '../../../services/evaluationService';
+import '../../../styles/pages/user/evaluador/EvaluatorEvaluationsPage.css';
 
 const EvaluatorCompletedPage = () => {
   const [evaluations, setEvaluations] = useState([]);

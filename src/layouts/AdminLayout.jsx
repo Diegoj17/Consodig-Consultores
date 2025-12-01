@@ -12,8 +12,10 @@ import ProjectEvaluationsMainPage from '../pages/admin/ProjectEvaluationsMainPag
 import ProjectAssignmentMainPage from '../pages/admin/ProjectAssignmentMainPage';
 import ProjectHistoryMainPage from '../pages/admin/ProjectHistoryMainPage';
 import EvaluationReviewMainPage from '../pages/admin/EvaluationReviewMainPage';
+import ValidatedEvaluationsPage from '../pages/admin/ValidatedEvaluationsPage';
 import EvaluationReportsPage from '../pages/admin/EvaluationReportsPage'; 
 import EvaluatorReportsPage from '../pages/admin/EvaluatorReportsPage'; 
+import DocumentsPage from '../pages/admin/DocumentsPage';
 import '../styles/pages/admin/DashboardPage.css';
 
 function AdminLayout() {
@@ -26,8 +28,7 @@ function AdminLayout() {
     
     // Rutas del submenú de Evaluaciones (más específicas primero)
     if (path.includes('/admin/evaluations/review')) return 'review-evaluations';
-    if (path.includes('/admin/evaluations/completed')) return 'completed-evaluations';
-    if (path.includes('/admin/evaluations/feedback')) return 'feedback-management';
+    if (path.includes('/admin/evaluations/validated')) return 'validated-evaluations';
     
     // Rutas del submenú de Proyectos
     if (path.includes('/admin/projects')) return 'manage-projects';
@@ -41,6 +42,7 @@ function AdminLayout() {
 
     // Otras rutas
     if (path.includes('/admin/users')) return 'users';
+    if (path.includes('/admin/documents')) return 'documents';
     if (path.includes('/admin/reports')) return 'reports';
     if (path.includes('/admin/templates')) return 'templates';
 
@@ -57,8 +59,8 @@ function AdminLayout() {
 
     // Títulos específicos para las nuevas rutas
     if (path.includes('/admin/evaluations/review')) return 'Revisar Evaluaciones';
-    if (path.includes('/admin/evaluations/completed')) return 'Evaluaciones Completadas';
-    if (path.includes('/admin/evaluations/feedback')) return 'Gestión de Observaciones';
+    if (path.includes('/admin/evaluations/validated')) return 'Evaluaciones Validadas';
+    if (path.includes('/admin/documents')) return 'Documentos';
     
     // Títulos para Reportes
     if (path.includes('/admin/reports/evaluations')) return 'Reportes por Evaluaciones';
@@ -110,10 +112,12 @@ function AdminLayout() {
             {/* Rutas específicas del submenú de Evaluaciones */}
             <Route path="/evaluations/review" element={<EvaluationReviewMainPage initialTab="review" />} />
             <Route path="/evaluations/completed" element={<EvaluationReviewMainPage initialTab="completed" />} />
+            <Route path="/evaluations/validated" element={<ValidatedEvaluationsPage />} />
             <Route path="/evaluations/feedback" element={<EvaluationReviewMainPage initialTab="feedback" />} />
             
             <Route path="/reports/evaluations" element={<EvaluationReportsPage />} />
             <Route path="/reports/evaluators" element={<EvaluatorReportsPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
             
             <Route path="/reports" element={<Navigate to="/admin/reports/evaluations" replace />} />
             

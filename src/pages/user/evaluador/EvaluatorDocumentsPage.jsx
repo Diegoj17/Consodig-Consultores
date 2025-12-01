@@ -1,7 +1,7 @@
 import React from 'react'
 import { FaFileUpload } from 'react-icons/fa'
-import EvaluatorDocumentsUpload from '../../components/management/project/evaluador/EvaluatorDocumentsUpload'
-import '../../styles/pages/user/EvaluatorDocumentsPage.css'
+import EvaluatorDocumentsUpload from '../../../components/documents/evaluador/EvaluatorDocumentsUpload'
+import '../../../styles/pages/user/evaluador/EvaluatorDocumentsPage.css'
 
 const EvaluatorDocumentsPage = () => {
   return (
